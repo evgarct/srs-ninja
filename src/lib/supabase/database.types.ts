@@ -15,6 +15,8 @@ export type Database = {
           user_id: string
           name: string
           language: string
+          description: string | null
+          field_schema: Json | null
           created_at: string
           updated_at: string
         }
@@ -23,6 +25,8 @@ export type Database = {
           user_id: string
           name: string
           language: string
+          description?: string | null
+          field_schema?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -31,6 +35,8 @@ export type Database = {
           user_id?: string
           name?: string
           language?: string
+          description?: string | null
+          field_schema?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -42,6 +48,7 @@ export type Database = {
           deck_id: string
           fields: Json
           tags: string[]
+          anki_guid: string | null
           created_at: string
           updated_at: string
         }
@@ -51,6 +58,7 @@ export type Database = {
           deck_id: string
           fields: Json
           tags?: string[]
+          anki_guid?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -60,6 +68,7 @@ export type Database = {
           deck_id?: string
           fields?: Json
           tags?: string[]
+          anki_guid?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -73,10 +82,12 @@ export type Database = {
           state: string
           stability: number
           difficulty: number
-          due_at: string
-          last_review_at: string | null
+          elapsed_days: number
+          scheduled_days: number
           reps: number
           lapses: number
+          last_review: string | null
+          due_at: string
           created_at: string
           updated_at: string
         }
@@ -88,10 +99,12 @@ export type Database = {
           state?: string
           stability?: number
           difficulty?: number
-          due_at?: string
-          last_review_at?: string | null
+          elapsed_days?: number
+          scheduled_days?: number
           reps?: number
           lapses?: number
+          last_review?: string | null
+          due_at?: string
           created_at?: string
           updated_at?: string
         }
@@ -103,10 +116,12 @@ export type Database = {
           state?: string
           stability?: number
           difficulty?: number
-          due_at?: string
-          last_review_at?: string | null
+          elapsed_days?: number
+          scheduled_days?: number
           reps?: number
           lapses?: number
+          last_review?: string | null
+          due_at?: string
           created_at?: string
           updated_at?: string
         }
@@ -114,61 +129,43 @@ export type Database = {
       reviews: {
         Row: {
           id: string
-          user_id: string
           card_id: string
+          user_id: string
           rating: number
-          state_before: string
-          state_after: string
-          stability_before: number
-          stability_after: number
-          difficulty_before: number
-          difficulty_after: number
+          state: string
           scheduled_days: number
           elapsed_days: number
           review_duration_ms: number | null
           reviewed_at: string
-          created_at: string
         }
         Insert: {
           id?: string
-          user_id: string
           card_id: string
+          user_id: string
           rating: number
-          state_before: string
-          state_after: string
-          stability_before: number
-          stability_after: number
-          difficulty_before: number
-          difficulty_after: number
+          state: string
           scheduled_days: number
           elapsed_days: number
           review_duration_ms?: number | null
           reviewed_at?: string
-          created_at?: string
         }
         Update: {
           id?: string
-          user_id?: string
           card_id?: string
+          user_id?: string
           rating?: number
-          state_before?: string
-          state_after?: string
-          stability_before?: number
-          stability_after?: number
-          difficulty_before?: number
-          difficulty_after?: number
+          state?: string
           scheduled_days?: number
           elapsed_days?: number
           review_duration_ms?: number | null
           reviewed_at?: string
-          created_at?: string
         }
       }
       audio_cache: {
         Row: {
           id: string
-          user_id: string
-          text: string
+          note_id: string
+          field_key: string
           language: string
           voice_id: string
           storage_path: string
@@ -176,8 +173,8 @@ export type Database = {
         }
         Insert: {
           id?: string
-          user_id: string
-          text: string
+          note_id: string
+          field_key: string
           language: string
           voice_id: string
           storage_path: string
@@ -185,8 +182,8 @@ export type Database = {
         }
         Update: {
           id?: string
-          user_id?: string
-          text?: string
+          note_id?: string
+          field_key?: string
           language?: string
           voice_id?: string
           storage_path?: string

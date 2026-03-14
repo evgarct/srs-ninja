@@ -10,8 +10,8 @@ export async function getDueCards(deckId: string, limit = 20) {
 
   const { data, error } = await supabase
     .from('cards')
-    .select('*, notes(fields, tags, deck_id)')
-    .eq('deck_id', deckId)
+    .select('*, notes!inner(fields, tags, deck_id)')
+    .eq('notes.deck_id', deckId)
     .lte('due_at', now)
     .order('due_at', { ascending: true })
     .limit(limit)
@@ -38,24 +38,17 @@ export async function submitReview(
   const now = new Date()
   const { updatedCard, scheduledDays, elapsedDays } = scheduleCard(card, rating, now)
 
-  // Update card
   const { error: updateError } = await supabase
     .from('cards')
     .update(updatedCard)
     .eq('id', cardId)
   if (updateError) throw updateError
 
-  // Record review
   const { error: reviewError } = await supabase.from('reviews').insert({
     card_id: cardId,
     user_id: user.id,
     rating,
-    state_before: card.state,
-    state_after: updatedCard.state,
-    stability_before: card.stability,
-    stability_after: updatedCard.stability,
-    difficulty_before: card.difficulty,
-    difficulty_after: updatedCard.difficulty,
+    state: updatedCard.state ?? card.state,
     scheduled_days: scheduledDays,
     elapsed_days: elapsedDays,
     review_duration_ms: durationMs,

@@ -9,7 +9,7 @@ export async function getReviewStats(days = 30) {
 
   const { data, error } = await supabase
     .from('reviews')
-    .select('reviewed_at, rating, state_before, state_after')
+    .select('reviewed_at, rating, state')
     .gte('reviewed_at', since.toISOString())
     .order('reviewed_at', { ascending: true })
   if (error) throw error
@@ -23,7 +23,7 @@ export async function getTodayStats() {
 
   const { data, error } = await supabase
     .from('reviews')
-    .select('rating, state_before, review_duration_ms')
+    .select('rating, review_duration_ms')
     .gte('reviewed_at', todayStart.toISOString())
   if (error) throw error
 

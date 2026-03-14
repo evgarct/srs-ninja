@@ -18,16 +18,30 @@ export async function getDeckWithStats(deckId: string) {
   const supabase = await createClient()
   const now = new Date().toISOString()
 
-  const [{ data: deck }, { count: totalCards }, { count: dueCards }, { count: totalNotes }] =
-    await Promise.all([
-      supabase.from('decks').select('*').eq('id', deckId).single(),
-      supabase.from('cards').select('*', { count: 'exact', head: true }).eq('deck_id', deckId),
-      supabase.from('cards').select('*', { count: 'exact', head: true })
-        .eq('deck_id', deckId).lte('due_at', now),
-      supabase.from('notes').select('*', { count: 'exact', head: true }).eq('deck_id', deckId),
-    ])
+  const { data: deck } = await supabase.from('decks').select('*').eq('id', deckId).single()
 
-  return { deck, totalCards: totalCards ?? 0, dueCards: dueCards ?? 0, totalNotes: totalNotes ?? 0 }
+  const { count: totalNotes } = await supabase
+    .from('notes')
+    .select('*', { count: 'exact', head: true })
+    .eq('deck_id', deckId)
+
+  const { count: totalCards } = await supabase
+    .from('cards')
+    .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
+    .eq('notes.deck_id', deckId)
+
+  const { count: dueCards } = await supabase
+    .from('cards')
+    .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
+    .eq('notes.deck_id', deckId)
+    .lte('due_at', now)
+
+  return {
+    deck,
+    totalCards: totalCards ?? 0,
+    dueCards: dueCards ?? 0,
+    totalNotes: totalNotes ?? 0,
+  }
 }
 
 export async function getDashboardStats() {
@@ -40,10 +54,15 @@ export async function getDashboardStats() {
   const stats = await Promise.all(
     decks.map(async (deck) => {
       const [{ count: due }, { count: total }] = await Promise.all([
-        supabase.from('cards').select('*', { count: 'exact', head: true })
-          .eq('deck_id', deck.id).lte('due_at', now),
-        supabase.from('cards').select('*', { count: 'exact', head: true })
-          .eq('deck_id', deck.id),
+        supabase
+          .from('cards')
+          .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
+          .eq('notes.deck_id', deck.id)
+          .lte('due_at', now),
+        supabase
+          .from('cards')
+          .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
+          .eq('notes.deck_id', deck.id),
       ])
       return { deck, due: due ?? 0, total: total ?? 0 }
     })

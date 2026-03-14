@@ -27,7 +27,7 @@ export function scheduleCard(card: Card, rating: AppRating, now = new Date()): {
       : card.state === 'learning' ? State.Learning
       : card.state === 'relearning' ? State.Relearning
       : State.Review,
-    last_review: card.last_review_at ? new Date(card.last_review_at) : undefined,
+    last_review: card.last_review ? new Date(card.last_review) : undefined,
   }
 
   const result: RecordLogItem = f.next(fsrsCard, now, rating as Grade)
@@ -43,7 +43,7 @@ export function scheduleCard(card: Card, rating: AppRating, now = new Date()): {
       stability: result.card.stability,
       difficulty: result.card.difficulty,
       due_at: result.card.due.toISOString(),
-      last_review_at: now.toISOString(),
+      last_review: now.toISOString(),
       reps: result.card.reps,
       lapses: result.card.lapses,
     },
@@ -66,7 +66,7 @@ export function getRetrievability(card: Card, now = new Date()): number {
       : card.state === 'learning' ? State.Learning
       : card.state === 'relearning' ? State.Relearning
       : State.Review,
-    last_review: card.last_review_at ? new Date(card.last_review_at) : undefined,
+    last_review: card.last_review ? new Date(card.last_review) : undefined,
   }
   return f.get_retrievability(fsrsCard, now, false) as number
 }

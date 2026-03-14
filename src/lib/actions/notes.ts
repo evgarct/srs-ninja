@@ -49,7 +49,6 @@ export async function createNote(
 
   const cards = ['recognition', 'production'].map((cardType) => ({
     note_id: note.id,
-    deck_id: deckId,
     user_id: user.id,
     card_type: cardType,
     state: 'new',
