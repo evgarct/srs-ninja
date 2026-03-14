@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { getDueCards } from '@/lib/actions/cards'
 import { ReviewSession } from '@/components/review-session'
 import Link from 'next/link'
-import { buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/lib/button-variants'
 
 export default async function ReviewPage({ params }: { params: Promise<{ deckId: string }> }) {
   const { deckId } = await params
