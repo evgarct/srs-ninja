@@ -22,7 +22,7 @@ async function parseApkg(file: File): Promise<ParsedNote[]> {
   // Load sql.js dynamically
   const initSqlJs = (await import('sql.js')).default
   const SQL = await initSqlJs({
-    locateFile: (file: string) => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`,
+    locateFile: () => '/sql-wasm.wasm',
   })
 
   const dbFile = zip.file('collection.anki2') ?? zip.file('collection.anki21')

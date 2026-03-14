@@ -29,6 +29,20 @@ const RATING_LABELS: Record<Rating, { label: string; color: string; key: string 
   4: { label: 'Легко', color: 'bg-blue-500 hover:bg-blue-600', key: '4' },
 }
 
+/**
+ * The main interactive component for studying flashcards (Spaced Repetition Review).
+ * 
+ * This component manages the state of a review session:
+ * - Iterating through the queue of due cards.
+ * - Handling keyboard shortcuts (Space to reveal, 1-4 to rate).
+ * - Recording the duration of each review.
+ * - Calling the `submitReview` server action to save the rating and progress to FSRS.
+ * - Showing a summary screen when the session is complete.
+ * 
+ * @param cards - An array of cards due for review.
+ * @param deckId - The UUID of the deck being reviewed.
+ * @param language - The language identifier for the deck to determine field layouts.
+ */
 export function ReviewSession({
   cards,
   deckId,

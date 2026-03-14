@@ -4,6 +4,15 @@ import { createClient } from '@/lib/supabase/server'
 import { scheduleCard } from '@/lib/fsrs'
 import type { Rating } from '@/lib/types'
 
+/**
+ * Retrieves a limited list of cards that are currently due for review within a given deck.
+ * 
+ * Cards are ordered by their due date (oldest first).
+ * 
+ * @param deckId - The UUID of the deck to fetch cards from.
+ * @param limit - The maximum number of due cards to return (default: 20).
+ * @returns A promise that resolves to an array of card objects with their associated notes.
+ */
 export async function getDueCards(deckId: string, limit = 20) {
   const supabase = await createClient()
   const now = new Date().toISOString()
@@ -19,6 +28,71 @@ export async function getDueCards(deckId: string, limit = 20) {
   return data
 }
 
+/**
+ * Adaptive extra study session card fetcher.
+ *
+ * Fills a session of up to `limit` cards using a two-tier strategy:
+ *   1. New cards (state = 'new') — sorted by creation date ASC (oldest first).
+ *   2. If fewer than `limit` new cards exist, the remaining slots are filled
+ *      with upcoming cards (state ≠ 'new', due_at > now) sorted by due_at ASC,
+ *      i.e. the soonest-to-be-due cards are studied early.
+ *
+ * When the user rates a card that is not yet due, ts-fsrs automatically computes
+ * a shorter elapsed_days (= days since last_review, not the scheduled interval),
+ * which the FSRS-6 algorithm accounts for correctly without any extra handling.
+ *
+ * @param deckId - The UUID of the deck to fetch cards from.
+ * @param limit  - Maximum cards to return (default 20).
+ * @returns A promise resolving to an array of card objects with their associated notes.
+ */
+export async function getExtraStudyCards(deckId: string, limit = 20) {
+  const supabase = await createClient()
+  const now = new Date().toISOString()
+
+  // 1. Fetch as many new cards as possible (up to limit)
+  const { data: newCards, error: newErr } = await supabase
+    .from('cards')
+    .select('*, notes!inner(fields, tags, deck_id)')
+    .eq('notes.deck_id', deckId)
+    .eq('state', 'new')
+    .order('created_at', { ascending: true })
+    .limit(limit)
+  if (newErr) throw newErr
+
+  // If we already have `limit` new cards, return them immediately
+  if (newCards.length >= limit) return newCards
+
+  // 2. Top up with upcoming cards (not yet due, any non-new state)
+  const remaining = limit - newCards.length
+  const { data: upcomingCards, error: upErr } = await supabase
+    .from('cards')
+    .select('*, notes!inner(fields, tags, deck_id)')
+    .eq('notes.deck_id', deckId)
+    .neq('state', 'new')
+    .gt('due_at', now)          // future only — already-due cards belong in the normal queue
+    .order('due_at', { ascending: true })
+    .limit(remaining)
+  if (upErr) throw upErr
+
+  return [...newCards, ...upcomingCards]
+}
+
+
+/**
+ * Submits a Spaced Repetition (FSRS) review for a specific card.
+ * 
+ * This action performs multiple steps in a single transaction-like sequence:
+ * 1. Fetches the card's current state.
+ * 2. Uses the FSRS algorithm to calculate the new scheduling parameters based on the user's rating.
+ * 3. Updates the card's state and due date in the database.
+ * 4. Logs the review event in the `reviews` table for analytics and history.
+ * 
+ * @param cardId - The UUID of the card being reviewed.
+ * @param rating - The user's self-assessed rating of the review (e.g. 'Again', 'Hard', 'Good', 'Easy').
+ * @param durationMs - The time taken by the user to answer the card, measured in milliseconds.
+ * @throws Error - Throws if the user is not authenticated or if any database operation fails.
+ * @returns An object containing the FSRS-updated card data and the number of scheduled days until the next review.
+ */
 export async function submitReview(
   cardId: string,
   rating: Rating,

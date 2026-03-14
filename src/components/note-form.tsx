@@ -18,6 +18,21 @@ interface NoteFormProps {
   initialTags?: string[]
 }
 
+/**
+ * A dynamic form component used for creating or editing flashcard notes.
+ * 
+ * The specific input fields displayed by this form are determined dynamically 
+ * based on the selected `language` (which fetches the schema from `note-fields.ts`).
+ * 
+ * When `noteId` is provided, the form operates in "edit" mode and calls `updateNote`.
+ * When `noteId` is omitted, the form operates in "create" mode and calls `createNote`.
+ * 
+ * @param deckId - The UUID of the deck this note belongs to.
+ * @param language - The language identifier determining the form fields.
+ * @param noteId - (Optional) The UUID of the note being edited.
+ * @param initialFields - (Optional) Existing field data for edit mode.
+ * @param initialTags - (Optional) Existing tags for edit mode.
+ */
 export function NoteForm({ deckId, language, noteId, initialFields = {}, initialTags = [] }: NoteFormProps) {
   const fields = getFields(language)
   const [values, setValues] = useState<Record<string, string>>(initialFields)

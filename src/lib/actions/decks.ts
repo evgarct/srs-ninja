@@ -4,6 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Deck, Language } from '@/lib/types'
 
+/**
+ * Retrieves all decks for the current user.
+ * 
+ * @returns A promise that resolves to an array of all available decks, ordered by creation date.
+ */
 export async function getDecks(): Promise<Deck[]> {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -14,6 +19,16 @@ export async function getDecks(): Promise<Deck[]> {
   return data
 }
 
+/**
+ * Retrieves a specific deck along with its aggregated statistics.
+ * 
+ * This fetches the deck details, the total number of notes, the total number 
+ * of cards generated from those notes, and how many cards are currently due 
+ * for review (due_at <= now).
+ * 
+ * @param deckId - The UUID of the deck to retrieve.
+ * @returns An object containing the deck data and its associated counts.
+ */
 export async function getDeckWithStats(deckId: string) {
   const supabase = await createClient()
   const now = new Date().toISOString()
@@ -44,6 +59,14 @@ export async function getDeckWithStats(deckId: string) {
   }
 }
 
+/**
+ * Retrieves statistics for all decks to be displayed on the main dashboard.
+ * 
+ * For each deck, queries the database to determine the total number of cards
+ * and the number of cards that are currently due for review.
+ * 
+ * @returns A promise that resolves to an array of deck statistics objects.
+ */
 export async function getDashboardStats() {
   const supabase = await createClient()
   const now = new Date().toISOString()
@@ -70,6 +93,14 @@ export async function getDashboardStats() {
   return stats
 }
 
+/**
+ * Creates a new flashcard deck for the currently authenticated user.
+ * 
+ * @param name - The human-readable name of the new deck.
+ * @param language - The language identifier for the deck context (e.g. 'english', 'czech').
+ * @throws Error - Throws if the user is not authenticated or if the insert operation fails.
+ * @returns A promise resolving to the newly created deck data.
+ */
 export async function createDeck(name: string, language: Language) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

@@ -5,6 +5,12 @@ import { revalidatePath } from 'next/cache'
 import { newFSRSCard } from '@/lib/fsrs'
 import type { Note } from '@/lib/types'
 
+/**
+ * Retrieves all notes for a specific deck, including their associated generated cards.
+ * 
+ * @param deckId - The UUID of the deck to retrieve notes for.
+ * @returns A promise resolving to an array of notes, ordered by creation date (newest first).
+ */
 export async function getNotesByDeck(deckId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -16,6 +22,12 @@ export async function getNotesByDeck(deckId: string) {
   return data
 }
 
+/**
+ * Retrieves a single note by its ID, including all its associated cards.
+ * 
+ * @param noteId - The UUID of the note to retrieve.
+ * @returns A promise resolving to the note data.
+ */
 export async function getNote(noteId: string) {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -27,6 +39,20 @@ export async function getNote(noteId: string) {
   return data
 }
 
+/**
+ * Creates a new note in a specific deck and automatically generates its associated flashcards.
+ * 
+ * This action performs two main tasks:
+ * 1. Inserts the root note with the provided fields (e.g., front/back content) and tags.
+ * 2. Automatically generates the corresponding 'recognition' and 'production' cards for the note,
+ *    assigning them default FSRS stability and difficulty parameters.
+ * 
+ * @param deckId - The UUID of the deck where the note belongs.
+ * @param fields - A key-value record of the note's content (e.g., { front: 'Hello', back: 'Ahoj' }).
+ * @param tags - An array of tag strings associated with the note.
+ * @throws Error - Throws if the user is not authenticated or if database insertion fails.
+ * @returns A promise resolving to the created note data.
+ */
 export async function createNote(
   deckId: string,
   fields: Record<string, string>,
@@ -66,6 +92,15 @@ export async function createNote(
   return note
 }
 
+/**
+ * Updates an existing note's fields and tags.
+ * 
+ * @param noteId - The UUID of the note to update.
+ * @param fields - The updated key-value record of the note's content.
+ * @param tags - The updated array of tag strings.
+ * @throws Error - Throws if the update operation fails.
+ * @returns A promise resolving to the updated note's partial data (deck_id).
+ */
 export async function updateNote(
   noteId: string,
   fields: Record<string, string>,
@@ -85,6 +120,16 @@ export async function updateNote(
   return data
 }
 
+/**
+ * Deletes a note from the database.
+ * 
+ * By database constraints, deleting a note should cascade and also delete
+ * all its associated generated cards and their review history.
+ * 
+ * @param noteId - The UUID of the note to delete.
+ * @param deckId - The UUID of the deck the note belongs to (used for revalidation).
+ * @throws Error - Throws if the deletion operation fails.
+ */
 export async function deleteNote(noteId: string, deckId: string) {
   const supabase = await createClient()
   const { error } = await supabase.from('notes').delete().eq('id', noteId)

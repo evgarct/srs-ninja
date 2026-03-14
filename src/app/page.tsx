@@ -7,6 +7,7 @@ import { buttonVariants } from '@/lib/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CreateDeckDialog } from '@/components/create-deck-dialog'
+import { ExtraStudyBox } from '@/components/extra-study-box'
 import { cn } from '@/lib/utils'
 
 const DECK_EMOJI: Record<string, string> = {
@@ -14,6 +15,16 @@ const DECK_EMOJI: Record<string, string> = {
   english: '🇬🇧',
 }
 
+/**
+ * The main application dashboard.
+ * 
+ * This server component requires authentication. It fetches and displays:
+ * 1. An aggregated summary of the user's review activity for today.
+ * 2. A grid of all the user's decks, indicating how many total cards there are
+ *    and how many are currently due for review.
+ * 
+ * @returns The rendered dashboard page.
+ */
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -85,19 +96,24 @@ export default async function Home() {
                 </div>
                 <p className="text-sm text-muted-foreground">{total} карточек всего</p>
               </CardHeader>
-              <CardContent className="flex gap-2">
+              <CardContent className="flex flex-col gap-2">
                 {due > 0 ? (
-                  <Link href={`/review/${deck.id}`} className={cn(buttonVariants(), 'flex-1 text-center')}>
-                    Учить ({due})
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link href={`/review/${deck.id}`} className={cn(buttonVariants(), 'flex-1 text-center')}>
+                      Учить ({due})
+                    </Link>
+                    <Link href={`/deck/${deck.id}`} className={buttonVariants({ variant: 'outline' })}>
+                      Колода
+                    </Link>
+                  </div>
                 ) : (
-                  <Link href={`/deck/${deck.id}`} className={cn(buttonVariants({ variant: 'outline' }), 'flex-1 text-center')}>
-                    Открыть
-                  </Link>
+                  <>
+                    <Link href={`/deck/${deck.id}`} className={cn(buttonVariants({ variant: 'outline' }), 'text-center')}>
+                      Открыть колоду
+                    </Link>
+                    <ExtraStudyBox deckId={deck.id} />
+                  </>
                 )}
-                <Link href={`/deck/${deck.id}`} className={buttonVariants({ variant: 'outline' })}>
-                  Колода
-                </Link>
               </CardContent>
             </Card>
           ))}
