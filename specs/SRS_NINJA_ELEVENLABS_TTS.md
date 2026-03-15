@@ -5,7 +5,7 @@
 Add text-to-speech audio to **English deck only** (for now) using ElevenLabs API. Free tier: 10,000 characters/month.
 The API key should already be in `.env.local` as `ELEVENLABS_API_KEY`.
 
-**Voice ID:** `wWWn96OtTHu1sn8SRGEr` (user's chosen voice from ElevenLabs library)
+**Voice ID:** `JBFqnCBsd6RMkjVDRZzb` (Free standard voice)
 **Language:** English only (`en`)
 **Model:** `eleven_flash_v2_5` (fast, 0.5 credits per character)
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   // Single voice for English deck
-  const voiceId = 'wWWn96OtTHu1sn8SRGEr'
+  const voiceId = 'JBFqnCBsd6RMkjVDRZzb'
 
   // Call ElevenLabs API
   const ttsResponse = await fetch(
