@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getDueCards, getExtraStudyCards } from '@/lib/actions/cards'
+import { orderCards } from '@/lib/card-ordering'
 import { ReviewSession } from '@/components/review-session'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
@@ -25,9 +26,13 @@ export default async function ReviewPage({
   const isExtra = mode === 'extra'
   const limit = Math.min(Math.max(parseInt(limitStr ?? '10', 10) || 10, 1), 50)
 
-  const cards = isExtra
+  const rawCards = isExtra
     ? await getExtraStudyCards(deckId, limit)
     : await getDueCards(deckId, 50)
+
+  // Apply smart ordering: priority tiers + sibling separation + shuffle.
+  // Extra study sessions are intentionally left unordered (new cards first by design).
+  const cards = isExtra ? rawCards : orderCards(rawCards)
 
   if (cards.length === 0) {
     return (
