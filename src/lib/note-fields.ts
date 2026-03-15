@@ -47,7 +47,7 @@ export function getFields(language: Language): FieldDef[] {
 }
 
 export function getNoteTitle(fields: Record<string, string>, language: Language): string {
-  const word = fields.word || ''
+  const word = fields.expression || fields.word || ''
   const translation = fields.translation || ''
   return translation ? `${word} — ${translation}` : word
 }

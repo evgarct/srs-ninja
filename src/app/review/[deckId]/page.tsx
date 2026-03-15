@@ -34,6 +34,19 @@ export default async function ReviewPage({
   // Extra study sessions are intentionally left unordered (new cards first by design).
   const cards = isExtra ? rawCards : orderCards(rawCards)
 
+  // Pre-fetch audio URLs for English decks
+  let audioMap: Record<string, string> = {}
+  if (deck.language === 'english' && cards.length > 0) {
+    const noteIds = [...new Set(cards.map((c) => c.note_id))]
+    const { data: audioRows } = await supabase
+      .from('audio_cache')
+      .select('note_id, storage_path')
+      .in('note_id', noteIds)
+    if (audioRows) {
+      audioMap = Object.fromEntries(audioRows.map((r) => [r.note_id, r.storage_path]))
+    }
+  }
+
   if (cards.length === 0) {
     return (
       <main className="max-w-xl mx-auto px-4 py-16 text-center">
@@ -63,7 +76,7 @@ export default async function ReviewPage({
           {isExtra ? '✨ Новые слова · ' : ''}{cards.length} карточек
         </span>
       </div>
-      <ReviewSession cards={cards} deckId={deckId} language={deck.language} />
+      <ReviewSession cards={cards} deckId={deckId} language={deck.language} audioMap={audioMap} />
     </main>
   )
 }
