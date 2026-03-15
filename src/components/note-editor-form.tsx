@@ -29,7 +29,10 @@ export function NoteEditorForm({
   onCancel,
 }: NoteEditorFormProps) {
   const fields = getFields(language)
-  const [values, setValues] = useState<Record<string, string>>(initialFields)
+  const [values, setValues] = useState<Record<string, string>>({
+    ...initialFields,
+    word: initialFields.word || initialFields.expression || initialFields.term || ''
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

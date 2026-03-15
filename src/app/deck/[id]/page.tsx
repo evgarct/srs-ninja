@@ -9,7 +9,7 @@ import { getNoteTitle } from '@/lib/note-fields'
 import type { Language } from '@/lib/types'
 import { DeleteNoteButton } from '@/components/delete-note-button'
 import { GenerateAudioButton } from '@/components/generate-audio-button'
-import { NoteEditDialog } from '@/components/note-edit-dialog'
+import { NoteEditSheet } from '@/components/note-edit-sheet'
 import { Button } from '@/components/ui/button'
 import { Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -158,7 +158,7 @@ export default async function DeckPage({
                       </div>
                     </div>
                     <div className="flex items-center gap-1 ml-3 shrink-0">
-                      <NoteEditDialog
+                      <NoteEditSheet
                         noteId={note.id}
                         deckId={id}
                         language={deck.language as Language}
