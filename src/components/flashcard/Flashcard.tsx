@@ -18,6 +18,8 @@ export interface FlashcardProps {
   frequency: number // 1-10
   style: string // e.g. '🎓 Neutrální'
   note?: string // Grammar note, Czech only
+  synonyms?: string[]
+  antonyms?: string[]
   audioUrl?: string
   imageUrl?: string
   language: "czech" | "english"
@@ -48,6 +50,8 @@ export function Flashcard({
   frequency,
   style,
   note,
+  synonyms,
+  antonyms,
   audioUrl,
   language,
   direction,
@@ -230,6 +234,24 @@ export function Flashcard({
               </p>
             </div>
           )}
+
+          {/* ── Synonyms & Antonyms (after reveal only) ── */}
+          {isRevealed && (synonyms?.length || antonyms?.length) ? (
+            <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+              {synonyms && synonyms.length > 0 && (
+                <p>
+                  <span className="font-medium text-foreground/60">Synonyms: </span>
+                  {synonyms.join(', ')}
+                </p>
+              )}
+              {antonyms && antonyms.length > 0 && (
+                <p>
+                  <span className="font-medium text-foreground/60">Antonyms: </span>
+                  {antonyms.join(', ')}
+                </p>
+              )}
+            </div>
+          ) : null}
 
           {/* ── Reveal hint (front only) ── */}
           {!isRevealed && (

@@ -100,11 +100,48 @@ export function getRetrievability(card: Card, now = new Date()): number {
 
 /**
  * Checks if a card is currently due for review.
- * 
+ *
  * @param card - The card to check.
  * @param now - The current timestamp.
  * @returns True if the card's due date is in the past or exactly now.
  */
 export function isDue(card: Card, now = new Date()): boolean {
   return new Date(card.due_at) <= now
+}
+
+/**
+ * Calculates the scheduled_days for all 4 rating buttons for a given card.
+ * Used to display interval labels (e.g. "1d", "5d") on rating buttons before the user clicks.
+ *
+ * @param card - The current card data from the database.
+ * @param now - The current timestamp.
+ * @returns An object with scheduled_days for Again, Hard, Good, Easy.
+ */
+export function getSchedulingIntervals(card: Card, now = new Date()): {
+  again: number
+  hard: number
+  good: number
+  easy: number
+} {
+  const fsrsCard: FSRSCard = {
+    due: new Date(card.due_at),
+    stability: card.stability,
+    difficulty: card.difficulty,
+    elapsed_days: card.elapsed_days,
+    scheduled_days: card.scheduled_days,
+    learning_steps: 0,
+    reps: card.reps,
+    lapses: card.lapses,
+    state: card.state === 'new' ? State.New
+      : card.state === 'learning' ? State.Learning
+      : card.state === 'relearning' ? State.Relearning
+      : State.Review,
+    last_review: card.last_review ? new Date(card.last_review) : undefined,
+  }
+  return {
+    again: f.next(fsrsCard, now, Rating.Again as Grade).card.scheduled_days,
+    hard: f.next(fsrsCard, now, Rating.Hard as Grade).card.scheduled_days,
+    good: f.next(fsrsCard, now, Rating.Good as Grade).card.scheduled_days,
+    easy: f.next(fsrsCard, now, Rating.Easy as Grade).card.scheduled_days,
+  }
 }

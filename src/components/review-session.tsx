@@ -3,70 +3,79 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitReview } from '@/lib/actions/cards'
+import { getSchedulingIntervals } from '@/lib/fsrs'
 import { Progress } from '@/components/ui/progress'
 import { buttonVariants } from '@/lib/button-variants'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Flashcard } from '@/components/flashcard'
-import { STYLE_EMOJI } from '@/lib/types'
-import type { Language, Rating, CEFRLevel } from '@/lib/types'
+import type { Language, Rating, CEFRLevel, Card } from '@/lib/types'
 
-interface ReviewCard {
-  id: string
-  card_type: string
-  state: string
+interface ReviewCard extends Pick<Card,
+  'id' | 'card_type' | 'state' | 'stability' | 'difficulty' |
+  'elapsed_days' | 'scheduled_days' | 'reps' | 'lapses' | 'due_at' | 'last_review'
+> {
   notes: {
-    fields: Record<string, string>
+    fields: Record<string, unknown>
     tags: string[]
     deck_id: string
   } | null
 }
 
 /**
+ * Formats a scheduled_days number into a short human-readable string.
+ * e.g. 0.007 → "<1m", 0.04 → "1h", 1.5 → "2d", 45 → "2mo", 400 → "1y"
+ */
+function formatInterval(days: number): string {
+  if (days < 1 / 24 / 60) return '<1m'
+  if (days < 1 / 24) return `${Math.round(days * 24 * 60)}m`
+  if (days < 1) return `${Math.round(days * 24)}h`
+  if (days < 30) return `${Math.round(days)}d`
+  if (days < 365) return `${Math.round(days / 30)}mo`
+  return `${Math.round(days / 365)}y`
+}
+
+/**
  * Maps raw note fields from the DB to props for the Flashcard component.
- * This handles field name differences, data type conversions, and
- * the construction of example sentences with <b> highlighting.
+ * Handles the JSONB field names as stored in Supabase (expression, translation,
+ * examples[], level, part_of_speech, frequency, style, note, synonyms[], antonyms[]).
  */
 function mapFieldsToFlashcard(
-  fields: Record<string, string>,
+  fields: Record<string, unknown>,
   language: Language
 ) {
-  const expression = fields.word || '—'
-  const translation = fields.translation || '—'
+  const expression = String(fields.expression ?? '—')
+  const translation = String(fields.translation ?? '—')
 
-  // Build example sentences — highlight the target word with <b> tags
-  const examples: string[] = []
-  if (fields.example_sentence) {
-    // Wrap occurrences of the target word in <b> tags (case-insensitive)
-    const highlighted = fields.example_sentence.replace(
-      new RegExp(`(${expression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
-      '<b>$1</b>'
-    )
-    examples.push(highlighted)
-  }
-  if (fields.example_translation) {
-    examples.push(fields.example_translation)
-  }
+  // examples is already a string[] with <b> tags from the DB
+  const examples: string[] = Array.isArray(fields.examples)
+    ? (fields.examples as unknown[]).map(String)
+    : []
 
   // Parse CEFR level — default to B1 if missing/invalid
   const validLevels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-  const level: CEFRLevel = validLevels.includes(fields.level as CEFRLevel)
-    ? (fields.level as CEFRLevel)
+  const rawLevel = String(fields.level ?? '')
+  const level: CEFRLevel = validLevels.includes(rawLevel as CEFRLevel)
+    ? (rawLevel as CEFRLevel)
     : 'B1'
 
-  // Frequency: DB stores 1-5, component expects 1-10
-  const rawFreq = parseInt(fields.frequency ?? '3', 10)
-  const frequency = Math.round(((rawFreq - 1) / 4) * 9) + 1 // map 1-5 → 1-10
+  // Frequency: DB stores 1-10 directly
+  const frequency = Math.min(10, Math.max(1, Math.round(Number(fields.frequency ?? 5))))
 
-  // Style: add emoji prefix
-  const styleKey = fields.style || 'neutral'
-  const emoji = STYLE_EMOJI[styleKey] ?? '🎓'
-  const style = `${emoji} ${styleKey.charAt(0).toUpperCase() + styleKey.slice(1)}`
+  // Style: DB stores the full string including emoji (e.g. "🧠 Formal / Common in...")
+  const style = String(fields.style ?? '')
 
-  const partOfSpeech = fields.part_of_speech || ''
-  const gender = language === 'czech' ? fields.gender || undefined : undefined
-  const note = language === 'czech' ? fields.notes || undefined : undefined
-  const imageUrl = fields.image_url || undefined
+  const partOfSpeech = String(fields.part_of_speech ?? '')
+  const gender = language === 'czech' ? (fields.gender ? String(fields.gender) : undefined) : undefined
+  const note = fields.note ? String(fields.note) : undefined
+  const imageUrl = fields.image_url ? String(fields.image_url) : undefined
+
+  const synonyms = Array.isArray(fields.synonyms)
+    ? (fields.synonyms as unknown[]).map(String)
+    : undefined
+  const antonyms = Array.isArray(fields.antonyms)
+    ? (fields.antonyms as unknown[]).map(String)
+    : undefined
 
   return {
     expression,
@@ -79,6 +88,8 @@ function mapFieldsToFlashcard(
     style,
     note,
     imageUrl,
+    synonyms,
+    antonyms,
   }
 }
 
@@ -107,7 +118,7 @@ export function ReviewSession({
 
   const total = cards.length
   const current = queue[index]
-  const progress = total > 0 ? Math.round(((index) / total) * 100) : 0
+  const progress = total > 0 ? Math.round((index / total) * 100) : 0
 
   async function handleRating(rating: Rating) {
     const durationMs = Date.now() - startTimeRef.current
@@ -137,16 +148,16 @@ export function ReviewSession({
     return (
       <div className="text-center py-12">
         <p className="text-4xl mb-4">🎉</p>
-        <h2 className="text-2xl font-bold mb-2">Сессия завершена!</h2>
+        <h2 className="text-2xl font-bold mb-2">Done for today!</h2>
         <p className="text-muted-foreground mb-6">
-          {sessionStats.total} карточек · {accuracy}% точность
+          {sessionStats.total} cards · {accuracy}% accuracy
         </p>
         <div className="flex gap-3 justify-center">
-          <Link href={`/deck/${deckId}`} className={buttonVariants()}>
-            ← К колоде
+          <Link href={`/decks/${deckId}/review`} className={buttonVariants({ variant: 'outline' })}>
+            Review again
           </Link>
-          <Button variant="outline" onClick={() => router.refresh()}>
-            Продолжить
+          <Button variant="outline" onClick={() => router.push('/')}>
+            ← Home
           </Button>
         </div>
       </div>
@@ -160,6 +171,15 @@ export function ReviewSession({
   const lang = language as Language
 
   const flashcardProps = mapFieldsToFlashcard(noteFields, lang)
+
+  // Calculate FSRS interval labels for the 4 rating buttons
+  const intervalDays = getSchedulingIntervals(current as unknown as import('@/lib/types').Card)
+  const intervals = {
+    again: formatInterval(intervalDays.again),
+    hard: formatInterval(intervalDays.hard),
+    good: formatInterval(intervalDays.good),
+    easy: formatInterval(intervalDays.easy),
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -177,6 +197,7 @@ export function ReviewSession({
         language={lang}
         direction={isRecognition ? 'recognition' : 'production'}
         isRevealed={revealed}
+        intervals={intervals}
         onReveal={() => {
           setRevealed(true)
           startTimeRef.current = Date.now()
