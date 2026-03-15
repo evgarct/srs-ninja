@@ -19,6 +19,7 @@
   - Панель закрывается.
   - Сессия продолжается.
   - Текущая карточка немедленно обновляется (новые значения полей) без перехода к следующей карточке.
+  - Все остальные карточки в текущей очереди с тем же `note_id` тоже немедленно обновляются, чтобы sibling recognition/production cards не показывали устаревшие поля.
 
 ## Functional Requirements
 - **Fields to Edit**: Редактор должен позволять менять все поля ноты в зависимости от языка (`word`, `translation`, `example_sentence`, `example_translation`, `frequency`, `style`, `gender`, `note`).
@@ -26,5 +27,6 @@
 - **Shared Read Path**: Все UI-места, которым нужен основной текст ноты, должны читать его через общий helper `getNotePrimaryText(fields)` с порядком `word -> expression -> term`.
 - **Normalization on Save**: При сохранении редактор должен вызывать `normalizeNoteFields(fields)`, чтобы обновленный `word` синхронно записывался и в `expression`/`term`, если эти ключи присутствуют. Это исключает расхождение между deck list, review и TTS.
 - **Audio Regeneration**: Если изменяется primary text ноты, необходимо иметь возможность (или сделать это автоматически) перегенерировать аудио через ElevenLabs TTS.
+- **Validation Parity**: Кнопка `Save & Regenerate Audio` должна проходить ту же обязательную browser validation, что и обычный submit. Путь forced save не должен позволять сохранить ноту с пустыми required-полями.
 - **UI Components**: Использовать shadcn/ui компоненты (Dialog/Sheet, Form, Input, Textarea, Button, Slider).
 - **State Management**: Осторожно работать со стейтом сессии, чтобы изменения в ноте корректно отражались в текущем компоненте `ReviewSession`.
