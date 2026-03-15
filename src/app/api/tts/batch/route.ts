@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { generateAndCacheAudio } from '@/lib/tts'
+import { getNotePrimaryText } from '@/lib/note-fields'
 
 // POST /api/tts/batch  { deckId }
 // Generates audio for all English notes in a deck that don't have audio yet.
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
 
   for (const note of pending) {
     const fields = note.fields as Record<string, unknown>
-    const expression = fields.expression ? String(fields.expression) : null
+    const expression = getNotePrimaryText(fields) || null
     if (!expression) {
       results.push({ noteId: note.id, status: 'skip' })
       continue

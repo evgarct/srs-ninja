@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
 import { Badge } from '@/components/ui/badge'
 import { getNoteTitle } from '@/lib/note-fields'
-import type { Language } from '@/lib/types'
 import { DeleteNoteButton } from '@/components/delete-note-button'
 import { GenerateAudioButton } from '@/components/generate-audio-button'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
@@ -124,7 +123,7 @@ export default async function DeckPage({
             ) : (
               visibleNotes.map((note) => {
                 const fields = note.fields as Record<string, string>
-                const title = getNoteTitle(fields, deck.language as Language)
+                const title = getNoteTitle(fields)
                 const cards = note.cards as Array<{ id: string; card_type: string; state: string }>
                 const hasAudio = audioNoteIds.has(note.id)
                 return (

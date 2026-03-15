@@ -12,6 +12,7 @@ import { Flashcard } from '@/components/flashcard'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
 import { Pencil } from 'lucide-react'
 import type { Language, Rating, CEFRLevel, Card } from '@/lib/types'
+import { getNotePrimaryText } from '@/lib/note-fields'
 
 interface ReviewCard extends Pick<Card,
   'id' | 'note_id' | 'card_type' | 'state' | 'stability' | 'difficulty' |
@@ -37,7 +38,7 @@ function mapFieldsToFlashcard(
   fields: Record<string, unknown>,
   language: Language
 ) {
-  const expression = String(fields.expression ?? '—')
+  const expression = getNotePrimaryText(fields) || '—'
   const translation = String(fields.translation ?? '—')
 
   const examples: string[] = Array.isArray(fields.examples)
@@ -98,8 +99,8 @@ export function ReviewSession({
   const [revealed, setRevealed] = useState(false)
   const [done, setDone] = useState(false)
   const [sessionStats, setSessionStats] = useState({ total: 0, correct: 0 })
-  const [hasAutoPlayed, setHasAutoPlayed] = useState(false)
-  const startTimeRef = useRef(Date.now())
+  const startTimeRef = useRef<number>(0)
+  const hasAutoPlayedRef = useRef(false)
   const router = useRouter()
 
   const total = cards.length
@@ -134,15 +135,19 @@ export function ReviewSession({
 
   // Reset autoplay flag when the card changes
   useEffect(() => {
-    setHasAutoPlayed(false)
+    hasAutoPlayedRef.current = false
   }, [current?.id])
+
+  useEffect(() => {
+    startTimeRef.current = Date.now()
+  }, [])
 
   // Autoplay logic:
   // - Recognition front: play when card first appears
   // - Production back: play when answer is revealed
   // - Production front (Russian): no autoplay
   useEffect(() => {
-    if (hasAutoPlayed || !audioUrl) return
+    if (hasAutoPlayedRef.current || !audioUrl) return
 
     const shouldAutoPlay =
       (isRecognition && !revealed) ||
@@ -151,9 +156,9 @@ export function ReviewSession({
     if (shouldAutoPlay) {
       const audioEl = new Audio(audioUrl)
       audioEl.play().catch(() => {}) // gracefully handle browser autoplay restrictions
-      setHasAutoPlayed(true)
+      hasAutoPlayedRef.current = true
     }
-  }, [isRecognition, revealed, audioUrl, hasAutoPlayed])
+  }, [isRecognition, revealed, audioUrl])
 
   function playAudio() {
     if (audioUrl) {

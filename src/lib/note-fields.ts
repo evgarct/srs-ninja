@@ -46,8 +46,32 @@ export function getFields(language: Language): FieldDef[] {
   return language === 'czech' ? CZECH_FIELDS : ENGLISH_FIELDS
 }
 
-export function getNoteTitle(fields: Record<string, string>, language: Language): string {
-  const word = fields.expression || fields.word || ''
+export function getNotePrimaryText(fields: Record<string, unknown>): string {
+  return [fields.word, fields.expression, fields.term]
+    .find((value) => typeof value === 'string' && value.trim().length > 0)?.toString() ?? ''
+}
+
+export function normalizeNoteFields(fields: Record<string, string>): Record<string, string> {
+  const normalized = { ...fields }
+  const primary = getNotePrimaryText(fields)
+
+  if (!primary) return normalized
+
+  normalized.word = primary
+
+  if ('expression' in normalized) {
+    normalized.expression = primary
+  }
+
+  if ('term' in normalized) {
+    normalized.term = primary
+  }
+
+  return normalized
+}
+
+export function getNoteTitle(fields: Record<string, string>): string {
+  const word = getNotePrimaryText(fields)
   const translation = fields.translation || ''
   return translation ? `${word} — ${translation}` : word
 }

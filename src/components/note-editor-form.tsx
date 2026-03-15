@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateNoteFields } from '@/lib/actions/notes'
-import { getFields } from '@/lib/note-fields'
+import { getFields, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -30,10 +30,12 @@ export function NoteEditorForm({
   onCancel,
 }: NoteEditorFormProps) {
   const fields = getFields(language)
-  const [values, setValues] = useState<Record<string, string>>({
-    ...initialFields,
-    word: initialFields.word || initialFields.expression || initialFields.term || ''
-  })
+  const [values, setValues] = useState<Record<string, string>>(
+    normalizeNoteFields({
+      ...initialFields,
+      word: getNotePrimaryText(initialFields),
+    })
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -48,13 +50,13 @@ export function NoteEditorForm({
     setError('')
 
     try {
-      // oldExpression logic: uses 'word' by default in SRS Ninja or 'expression'
-      const oldExpression = initialFields.word || initialFields.expression || initialFields.term || ''
-      
+      const normalizedValues = normalizeNoteFields(values)
+      const oldExpression = getNotePrimaryText(initialFields)
+
       const { success, audioUrl } = await updateNoteFields(
         noteId,
         deckId,
-        values,
+        normalizedValues,
         oldExpression,
         language,
         forceAudio
@@ -65,7 +67,7 @@ export function NoteEditorForm({
         if (audioUrl) {
           toast.success('Audio regenerated successfully!')
         }
-        onSuccess?.(values, audioUrl)
+        onSuccess?.(normalizedValues, audioUrl)
         router.refresh()
       }
     } catch (err) {

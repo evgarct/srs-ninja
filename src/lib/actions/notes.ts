@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { newFSRSCard } from '@/lib/fsrs'
-import type { Note } from '@/lib/types'
+import { getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
 
 /**
  * Retrieves all notes for a specific deck, including their associated generated cards.
@@ -58,13 +58,14 @@ export async function createNote(
   fields: Record<string, string>,
   tags: string[]
 ) {
+  const normalizedFields = normalizeNoteFields(fields)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const { data: note, error: noteError } = await supabase
     .from('notes')
-    .insert({ deck_id: deckId, user_id: user.id, fields, tags })
+    .insert({ deck_id: deckId, user_id: user.id, fields: normalizedFields, tags })
     .select()
     .single()
   if (noteError) throw noteError
@@ -106,10 +107,11 @@ export async function updateNote(
   fields: Record<string, string>,
   tags: string[]
 ) {
+  const normalizedFields = normalizeNoteFields(fields)
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('notes')
-    .update({ fields, tags })
+    .update({ fields: normalizedFields, tags })
     .eq('id', noteId)
     .select('deck_id')
     .single()
@@ -151,18 +153,19 @@ export async function deleteNote(noteId: string, deckId: string) {
 export async function updateNoteFields(
   noteId: string,
   deckId: string,
-  newFields: Record<string, any>,
+  newFields: Record<string, string>,
   oldExpression: string,
   language: string,
   forceAudio: boolean = false
 ) {
+  const normalizedFields = normalizeNoteFields(newFields)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const { error } = await supabase
     .from('notes')
-    .update({ fields: newFields })
+    .update({ fields: normalizedFields })
     .eq('id', noteId)
 
   if (error) throw error
@@ -170,7 +173,7 @@ export async function updateNoteFields(
   let audioUrl: string | undefined
 
   // Trigger TTS regeneration if the expression changed (or forced) and language is english
-  const newExpression = newFields.expression || newFields.term || newFields.word
+  const newExpression = getNotePrimaryText(normalizedFields)
   if (language === 'english' && newExpression && (forceAudio || newExpression !== oldExpression)) {
     const { generateAndCacheAudio } = await import('@/lib/tts')
     const result = await generateAndCacheAudio(supabase, user.id, noteId, newExpression, language)

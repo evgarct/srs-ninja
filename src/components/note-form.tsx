@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createNote, updateNote } from '@/lib/actions/notes'
-import { getFields } from '@/lib/note-fields'
+import { getFields, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,7 +35,7 @@ interface NoteFormProps {
  */
 export function NoteForm({ deckId, language, noteId, initialFields = {}, initialTags = [] }: NoteFormProps) {
   const fields = getFields(language)
-  const [values, setValues] = useState<Record<string, string>>(initialFields)
+  const [values, setValues] = useState<Record<string, string>>(normalizeNoteFields({ ...initialFields, word: getNotePrimaryText(initialFields) }))
   const [tagsInput, setTagsInput] = useState(initialTags.join(', '))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -54,10 +54,10 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
 
     try {
       if (noteId) {
-        await updateNote(noteId, values, tags)
+        await updateNote(noteId, normalizeNoteFields(values), tags)
         router.push(`/deck/${deckId}`)
       } else {
-        await createNote(deckId, values, tags)
+        await createNote(deckId, normalizeNoteFields(values), tags)
         // Clear form for next note
         setValues({})
         setTagsInput('')
