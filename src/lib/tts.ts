@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export const ELEVENLABS_VOICE_ID = 'wWWn96OtTHu1sn8SRGEr'
+export const ELEVENLABS_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'
 const ELEVENLABS_MODEL = 'eleven_flash_v2_5'
 
 /**
@@ -40,9 +40,19 @@ export async function generateAndCacheAudio(
   }
 
   const audioBuffer = await ttsResponse.arrayBuffer()
+  
+  // Ensure path variables are clean
+  const cleanUserId = userId.trim().replace(/^\/+/, '')
+  const cleanNoteId = noteId.trim()
 
   // Upload to Supabase Storage — path: {userId}/{noteId}.mp3
-  const storagePath = `${userId}/${noteId}.mp3`
+  const storagePath = `${cleanUserId}/${cleanNoteId}.mp3`
+  
+  console.log('--- TTS DEBUG ---')
+  console.log('Status 200 from API:', ttsResponse.status === 200)
+  console.log('Audio buffer size (bytes):', audioBuffer.byteLength)
+  console.log('Storage path to upload:', storagePath)
+
   const { error: uploadError } = await supabase.storage
     .from('audio')
     .upload(storagePath, audioBuffer, {
@@ -51,7 +61,8 @@ export async function generateAndCacheAudio(
     })
 
   if (uploadError) {
-    console.error('Storage upload error:', uploadError)
+    console.error('Storage upload error (FULL):', JSON.stringify(uploadError, null, 2))
+    console.error('Storage upload error stringified:', String(uploadError))
     return { error: 'Upload failed' }
   }
 
