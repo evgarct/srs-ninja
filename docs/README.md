@@ -9,6 +9,7 @@
 | Документ | Описание |
 |----------|----------|
 | [extra-study.md](./extra-study.md) | Фича Extra Study: адаптивный подбор карточек, URL-параметры, поведение FSRS при досрочном повторении |
+| [weekly-activity-widget.md](./weekly-activity-widget.md) | Weekly Activity Widget: 7-дневная активность, streak, masteredWords и tooltip-поведение |
 
 ---
 

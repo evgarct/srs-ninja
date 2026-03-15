@@ -2,6 +2,26 @@
 
 import { createClient } from '@/lib/supabase/server'
 
+export interface WeeklyActivityDay {
+  date: string
+  reviews: number
+  masteredWords: number
+}
+
+function toDateKey(date: Date, timeZone: string): string {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
+  const parts = formatter.formatToParts(date)
+  const year = parts.find((part) => part.type === 'year')?.value ?? '0000'
+  const month = parts.find((part) => part.type === 'month')?.value ?? '01'
+  const day = parts.find((part) => part.type === 'day')?.value ?? '01'
+  return `${year}-${month}-${day}`
+}
+
 /**
  * Retrieves the user's historical review data over a specified lookback period.
  * 
@@ -72,4 +92,56 @@ export async function getCardStateDistribution() {
     counts[card.state as keyof typeof counts] = (counts[card.state as keyof typeof counts] ?? 0) + 1
   }
   return counts
+}
+
+/**
+ * Retrieves review activity for the last 7 days and calculates current streak.
+ *
+ * A day is active when at least one review exists for that local calendar day.
+ * Streak is counted as consecutive active days ending today.
+ */
+export async function getWeeklyActivityStats(timeZone: string) {
+  const supabase = await createClient()
+  const now = new Date()
+  const since = new Date(now)
+  since.setUTCDate(since.getUTCDate() - 8)
+
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('reviewed_at, card_id, rating, state')
+    .gte('reviewed_at', since.toISOString())
+    .order('reviewed_at', { ascending: true })
+  if (error) throw error
+
+  const reviewCountByDay = new Map<string, number>()
+  const masteredCardIdsByDay = new Map<string, Set<string>>()
+  for (const review of data) {
+    const key = toDateKey(new Date(review.reviewed_at), timeZone)
+    reviewCountByDay.set(key, (reviewCountByDay.get(key) ?? 0) + 1)
+    if (review.rating >= 3 && review.state === 'review') {
+      const ids = masteredCardIdsByDay.get(key) ?? new Set<string>()
+      ids.add(review.card_id)
+      masteredCardIdsByDay.set(key, ids)
+    }
+  }
+
+  const days: WeeklyActivityDay[] = []
+  for (let offset = 6; offset >= 0; offset--) {
+    const date = new Date(now)
+    date.setUTCDate(date.getUTCDate() - offset)
+    const key = toDateKey(date, timeZone)
+    days.push({
+      date: key,
+      reviews: reviewCountByDay.get(key) ?? 0,
+      masteredWords: masteredCardIdsByDay.get(key)?.size ?? 0,
+    })
+  }
+
+  let streak = 0
+  for (let index = days.length - 1; index >= 0; index--) {
+    if (days[index].reviews < 1) break
+    streak++
+  }
+
+  return { days, streak }
 }
