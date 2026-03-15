@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitReview } from '@/lib/actions/cards'
-import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/lib/button-variants'
 import { Progress } from '@/components/ui/progress'
-import { Badge } from '@/components/ui/badge'
-import { getNoteTitle, getFields } from '@/lib/note-fields'
+import { buttonVariants } from '@/lib/button-variants'
 import Link from 'next/link'
-import type { Language, Rating } from '@/lib/types'
+import { Button } from '@/components/ui/button'
+import { Flashcard } from '@/components/flashcard'
+import { STYLE_EMOJI } from '@/lib/types'
+import type { Language, Rating, CEFRLevel } from '@/lib/types'
 
 interface ReviewCard {
   id: string
@@ -22,26 +22,71 @@ interface ReviewCard {
   } | null
 }
 
-const RATING_LABELS: Record<Rating, { label: string; color: string; key: string }> = {
-  1: { label: 'Снова', color: 'bg-red-500 hover:bg-red-600', key: '1' },
-  2: { label: 'Трудно', color: 'bg-orange-500 hover:bg-orange-600', key: '2' },
-  3: { label: 'Хорошо', color: 'bg-green-500 hover:bg-green-600', key: '3' },
-  4: { label: 'Легко', color: 'bg-blue-500 hover:bg-blue-600', key: '4' },
+/**
+ * Maps raw note fields from the DB to props for the Flashcard component.
+ * This handles field name differences, data type conversions, and
+ * the construction of example sentences with <b> highlighting.
+ */
+function mapFieldsToFlashcard(
+  fields: Record<string, string>,
+  language: Language
+) {
+  const expression = fields.word || '—'
+  const translation = fields.translation || '—'
+
+  // Build example sentences — highlight the target word with <b> tags
+  const examples: string[] = []
+  if (fields.example_sentence) {
+    // Wrap occurrences of the target word in <b> tags (case-insensitive)
+    const highlighted = fields.example_sentence.replace(
+      new RegExp(`(${expression.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi'),
+      '<b>$1</b>'
+    )
+    examples.push(highlighted)
+  }
+  if (fields.example_translation) {
+    examples.push(fields.example_translation)
+  }
+
+  // Parse CEFR level — default to B1 if missing/invalid
+  const validLevels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+  const level: CEFRLevel = validLevels.includes(fields.level as CEFRLevel)
+    ? (fields.level as CEFRLevel)
+    : 'B1'
+
+  // Frequency: DB stores 1-5, component expects 1-10
+  const rawFreq = parseInt(fields.frequency ?? '3', 10)
+  const frequency = Math.round(((rawFreq - 1) / 4) * 9) + 1 // map 1-5 → 1-10
+
+  // Style: add emoji prefix
+  const styleKey = fields.style || 'neutral'
+  const emoji = STYLE_EMOJI[styleKey] ?? '🎓'
+  const style = `${emoji} ${styleKey.charAt(0).toUpperCase() + styleKey.slice(1)}`
+
+  const partOfSpeech = fields.part_of_speech || ''
+  const gender = language === 'czech' ? fields.gender || undefined : undefined
+  const note = language === 'czech' ? fields.notes || undefined : undefined
+  const imageUrl = fields.image_url || undefined
+
+  return {
+    expression,
+    translation,
+    examples,
+    level,
+    partOfSpeech,
+    gender,
+    frequency,
+    style,
+    note,
+    imageUrl,
+  }
 }
 
 /**
  * The main interactive component for studying flashcards (Spaced Repetition Review).
- * 
- * This component manages the state of a review session:
- * - Iterating through the queue of due cards.
- * - Handling keyboard shortcuts (Space to reveal, 1-4 to rate).
- * - Recording the duration of each review.
- * - Calling the `submitReview` server action to save the rating and progress to FSRS.
- * - Showing a summary screen when the session is complete.
- * 
- * @param cards - An array of cards due for review.
- * @param deckId - The UUID of the deck being reviewed.
- * @param language - The language identifier for the deck to determine field layouts.
+ *
+ * Manages the review queue, calls submitReview server action on each rating,
+ * and shows a completion summary. Uses the Flashcard component for the UI.
  */
 export function ReviewSession({
   cards,
@@ -59,31 +104,10 @@ export function ReviewSession({
   const [sessionStats, setSessionStats] = useState({ total: 0, correct: 0 })
   const startTimeRef = useRef(Date.now())
   const router = useRouter()
-  const fields = getFields(language as Language)
 
   const total = cards.length
   const current = queue[index]
-  const progress = total > 0 ? Math.round(((total - (queue.length - index)) / total) * 100) : 0
-
-  useEffect(() => {
-    startTimeRef.current = Date.now()
-  }, [index, revealed])
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === ' ' && !revealed) {
-        setRevealed(true)
-        return
-      }
-      if (revealed) {
-        const ratingMap: Record<string, Rating> = { '1': 1, '2': 2, '3': 3, '4': 4 }
-        const rating = ratingMap[e.key]
-        if (rating) handleRating(rating)
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  })
+  const progress = total > 0 ? Math.round(((index) / total) * 100) : 0
 
   async function handleRating(rating: Rating) {
     const durationMs = Date.now() - startTimeRef.current
@@ -100,23 +124,30 @@ export function ReviewSession({
     } else {
       setIndex(nextIndex)
       setRevealed(false)
+      startTimeRef.current = Date.now()
     }
   }
 
+  // ── Session complete screen ──────────────────────────────────────────────
   if (done) {
-    const accuracy = sessionStats.total > 0
-      ? Math.round((sessionStats.correct / sessionStats.total) * 100)
-      : 0
+    const accuracy =
+      sessionStats.total > 0
+        ? Math.round((sessionStats.correct / sessionStats.total) * 100)
+        : 0
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-12">
         <p className="text-4xl mb-4">🎉</p>
         <h2 className="text-2xl font-bold mb-2">Сессия завершена!</h2>
         <p className="text-muted-foreground mb-6">
           {sessionStats.total} карточек · {accuracy}% точность
         </p>
         <div className="flex gap-3 justify-center">
-          <Link href={`/deck/${deckId}`} className={buttonVariants()}>← К колоде</Link>
-          <Button variant="outline" onClick={() => router.refresh()}>Продолжить</Button>
+          <Link href={`/deck/${deckId}`} className={buttonVariants()}>
+            ← К колоде
+          </Link>
+          <Button variant="outline" onClick={() => router.refresh()}>
+            Продолжить
+          </Button>
         </div>
       </div>
     )
@@ -125,85 +156,33 @@ export function ReviewSession({
   if (!current) return null
 
   const noteFields = current.notes?.fields ?? {}
-  const tags = current.notes?.tags ?? []
   const isRecognition = current.card_type === 'recognition'
+  const lang = language as Language
 
-  const frontFields = isRecognition ? ['word'] : ['translation']
-  const backFields = fields.map((f) => f.key).filter((k) => !frontFields.includes(k) && noteFields[k])
+  const flashcardProps = mapFieldsToFlashcard(noteFields, lang)
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <Progress value={progress} className="flex-1 mr-3" />
-        <span className="text-sm text-muted-foreground shrink-0">
-          {index + 1} / {queue.length}
+    <div className="flex flex-col gap-4">
+      {/* Progress bar */}
+      <div className="flex items-center gap-3">
+        <Progress value={progress} className="flex-1" />
+        <span className="text-sm text-muted-foreground shrink-0 tabular-nums">
+          {index + 1} / {total}
         </span>
       </div>
 
-      <div className="flex gap-2 mb-4">
-        <Badge variant="outline" className="text-xs">
-          {isRecognition ? '👁 Распознавание' : '✍️ Воспроизведение'}
-        </Badge>
-        <Badge variant={current.state === 'new' ? 'secondary' : 'outline'} className="text-xs">
-          {current.state}
-        </Badge>
-      </div>
-
-      {/* Card */}
-      <div className="rounded-xl border-2 p-6 mb-4 min-h-[180px] flex flex-col justify-center">
-        <p className="text-3xl font-bold text-center mb-2">
-          {noteFields[frontFields[0]] || '—'}
-        </p>
-        {noteFields.pronunciation && frontFields[0] === 'word' && (
-          <p className="text-center text-muted-foreground text-sm">{noteFields.pronunciation}</p>
-        )}
-
-        {revealed && (
-          <div className="mt-6 pt-6 border-t space-y-3">
-            {backFields.map((key) => {
-              const fieldDef = fields.find((f) => f.key === key)
-              const value = noteFields[key]
-              if (!value) return null
-              return (
-                <div key={key}>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide">{fieldDef?.label ?? key}</p>
-                  <p className={key === 'translation' ? 'text-xl font-semibold' : 'text-sm mt-0.5'}>{value}</p>
-                </div>
-              )
-            })}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 pt-2">
-                {tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      {!revealed ? (
-        <Button className="w-full" onClick={() => setRevealed(true)}>
-          Показать ответ <span className="ml-2 opacity-60 text-xs">[пробел]</span>
-        </Button>
-      ) : (
-        <div className="grid grid-cols-4 gap-2">
-          {([1, 2, 3, 4] as Rating[]).map((rating) => {
-            const { label, color, key } = RATING_LABELS[rating]
-            return (
-              <button
-                key={rating}
-                onClick={() => handleRating(rating)}
-                className={`${color} text-white rounded-lg py-3 text-sm font-medium transition-colors`}
-              >
-                {label}
-                <span className="block text-xs opacity-70">[{key}]</span>
-              </button>
-            )
-          })}
-        </div>
-      )}
+      {/* Flashcard */}
+      <Flashcard
+        {...flashcardProps}
+        language={lang}
+        direction={isRecognition ? 'recognition' : 'production'}
+        isRevealed={revealed}
+        onReveal={() => {
+          setRevealed(true)
+          startTimeRef.current = Date.now()
+        }}
+        onRate={handleRating}
+      />
     </div>
   )
 }
