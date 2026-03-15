@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { updateNoteFields } from '@/lib/actions/notes'
 import { getFields } from '@/lib/note-fields'
 import { Button } from '@/components/ui/button'
@@ -35,13 +36,14 @@ export function NoteEditorForm({
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const router = useRouter()
 
   function setValue(key: string, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function submitForm(e?: React.FormEvent, forceAudio: boolean = false) {
+    if (e) e.preventDefault()
     setLoading(true)
     setError('')
 
@@ -54,7 +56,8 @@ export function NoteEditorForm({
         deckId,
         values,
         oldExpression,
-        language
+        language,
+        forceAudio
       )
 
       if (success) {
@@ -63,6 +66,7 @@ export function NoteEditorForm({
           toast.success('Audio regenerated successfully!')
         }
         onSuccess?.(values, audioUrl)
+        router.refresh()
       }
     } catch (err) {
       console.error(err)
@@ -74,7 +78,7 @@ export function NoteEditorForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 py-4">
+    <form onSubmit={(e) => submitForm(e, false)} className="space-y-4 py-4 w-full">
       {fields.map((field) => (
         <div key={field.key} className="flex flex-col gap-1.5">
           <Label htmlFor={field.key}>
@@ -116,15 +120,28 @@ export function NoteEditorForm({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <div className="flex gap-2 pt-4">
-        <Button type="submit" disabled={loading} className="flex-1">
-          {loading ? 'Saving...' : 'Save Changes'}
-        </Button>
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel} disabled={loading} className="flex-1">
-            Cancel
+      <div className="flex flex-col gap-2 pt-4">
+        {language === 'english' && (
+          <Button 
+            type="button" 
+            variant="secondary" 
+            onClick={(e) => submitForm(e, true)} 
+            disabled={loading} 
+            className="w-full"
+          >
+            {loading ? 'Saving...' : 'Save & Regenerate Audio'}
           </Button>
         )}
+        <div className="flex gap-2 w-full">
+          <Button type="submit" disabled={loading} className="flex-1">
+            {loading ? 'Saving...' : 'Save Changes'}
+          </Button>
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel} disabled={loading} className="flex-1">
+              Cancel
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   )

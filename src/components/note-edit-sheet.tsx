@@ -41,17 +41,21 @@ export function NoteEditSheet({
             Make changes to your flashcard note. Changes apply immediately upon saving.
           </SheetDescription>
         </SheetHeader>
-        <NoteEditorForm
-          noteId={noteId}
-          deckId={deckId}
-          language={language}
-          initialFields={initialFields}
-          onSuccess={(fields, audio) => {
-            setOpen(false)
-            onSaveSuccess?.(fields, audio)
-          }}
-          onCancel={() => setOpen(false)}
-        />
+        {open && (
+          <div className="px-4 pb-4">
+            <NoteEditorForm
+              noteId={noteId}
+              deckId={deckId}
+              language={language}
+              initialFields={initialFields}
+              onSuccess={(fields, audio) => {
+                setOpen(false)
+                onSaveSuccess?.(fields, audio)
+              }}
+              onCancel={() => setOpen(false)}
+            />
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   )

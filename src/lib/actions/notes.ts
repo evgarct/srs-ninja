@@ -146,13 +146,15 @@ export async function deleteNote(noteId: string, deckId: string) {
  * @param newFields - The updated key-value record of the note's content.
  * @param oldExpression - The previous expression to check for changes.
  * @param language - The language of the deck (used for TTS decision).
+ * @param forceAudio - Explicitly force TTS regeneration even if expression didn't change.
  */
 export async function updateNoteFields(
   noteId: string,
   deckId: string,
   newFields: Record<string, any>,
   oldExpression: string,
-  language: string
+  language: string,
+  forceAudio: boolean = false
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -167,9 +169,9 @@ export async function updateNoteFields(
 
   let audioUrl: string | undefined
 
-  // Trigger TTS regeneration if the expression changed and language is english
-  const newExpression = newFields.expression || newFields.term
-  if (language === 'english' && newExpression && newExpression !== oldExpression) {
+  // Trigger TTS regeneration if the expression changed (or forced) and language is english
+  const newExpression = newFields.expression || newFields.term || newFields.word
+  if (language === 'english' && newExpression && (forceAudio || newExpression !== oldExpression)) {
     const { generateAndCacheAudio } = await import('@/lib/tts')
     const result = await generateAndCacheAudio(supabase, user.id, noteId, newExpression, language)
     if ('audioUrl' in result) {
