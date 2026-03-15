@@ -112,23 +112,28 @@ export function ReviewSession({
   const audioUrl = current ? (dynamicAudio[current.note_id] ?? audioMap[current.note_id] ?? undefined) : undefined
 
   function handleSaveSuccess(updatedFields: Record<string, string>, newAudioUrl?: string) {
+    const currentNoteId = current?.note_id
+
     setQueue((prev) => {
-      const newQueue = [...prev]
-      const currentCard = { ...newQueue[index] }
-      if (currentCard.notes) {
-        currentCard.notes = {
-          ...currentCard.notes,
-          fields: updatedFields
+      if (!currentNoteId) return prev
+
+      return prev.map((card) => {
+        if (card.note_id !== currentNoteId || !card.notes) return card
+
+        return {
+          ...card,
+          notes: {
+            ...card.notes,
+            fields: updatedFields,
+          },
         }
-      }
-      newQueue[index] = currentCard
-      return newQueue
+      })
     })
 
-    if (newAudioUrl && current) {
+    if (newAudioUrl && currentNoteId) {
       setDynamicAudio((prev) => ({
         ...prev,
-        [current.note_id]: newAudioUrl
+        [currentNoteId]: newAudioUrl,
       }))
     }
   }

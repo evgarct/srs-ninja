@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateNoteFields } from '@/lib/actions/notes'
 import { getFields, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
@@ -38,6 +38,7 @@ export function NoteEditorForm({
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
 
   function setValue(key: string, value: string) {
@@ -79,8 +80,15 @@ export function NoteEditorForm({
     }
   }
 
+  function handleForceAudioSave() {
+    const form = formRef.current
+    if (form && !form.reportValidity()) return
+
+    void submitForm(undefined, true)
+  }
+
   return (
-    <form onSubmit={(e) => submitForm(e, false)} className="space-y-4 py-4 w-full">
+    <form ref={formRef} onSubmit={(e) => submitForm(e, false)} className="space-y-4 py-4 w-full">
       {fields.map((field) => (
         <div key={field.key} className="flex flex-col gap-1.5">
           <Label htmlFor={field.key}>
@@ -127,7 +135,7 @@ export function NoteEditorForm({
           <Button 
             type="button" 
             variant="secondary" 
-            onClick={(e) => submitForm(e, true)} 
+            onClick={handleForceAudioSave}
             disabled={loading} 
             className="w-full"
           >
