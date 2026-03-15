@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { newFSRSCard } from '@/lib/fsrs'
-import type { Note } from '@/lib/types'
+import { getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
 
 /**
  * Retrieves all notes for a specific deck, including their associated generated cards.
@@ -58,13 +58,14 @@ export async function createNote(
   fields: Record<string, string>,
   tags: string[]
 ) {
+  const normalizedFields = normalizeNoteFields(fields)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const { data: note, error: noteError } = await supabase
     .from('notes')
-    .insert({ deck_id: deckId, user_id: user.id, fields, tags })
+    .insert({ deck_id: deckId, user_id: user.id, fields: normalizedFields, tags })
     .select()
     .single()
   if (noteError) throw noteError
@@ -106,10 +107,11 @@ export async function updateNote(
   fields: Record<string, string>,
   tags: string[]
 ) {
+  const normalizedFields = normalizeNoteFields(fields)
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('notes')
-    .update({ fields, tags })
+    .update({ fields: normalizedFields, tags })
     .eq('id', noteId)
     .select('deck_id')
     .single()
@@ -136,4 +138,51 @@ export async function deleteNote(noteId: string, deckId: string) {
   if (error) throw error
 
   revalidatePath(`/deck/${deckId}`)
+}
+
+/**
+ * Updates a note's fields (from the inline Note Editor) and regenerates TTS audio if needed.
+ * 
+ * @param noteId - The UUID of the note to update.
+ * @param deckId - The UUID of the deck the note belongs to.
+ * @param newFields - The updated key-value record of the note's content.
+ * @param oldExpression - The previous expression to check for changes.
+ * @param language - The language of the deck (used for TTS decision).
+ * @param forceAudio - Explicitly force TTS regeneration even if expression didn't change.
+ */
+export async function updateNoteFields(
+  noteId: string,
+  deckId: string,
+  newFields: Record<string, string>,
+  oldExpression: string,
+  language: string,
+  forceAudio: boolean = false
+) {
+  const normalizedFields = normalizeNoteFields(newFields)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('notes')
+    .update({ fields: normalizedFields })
+    .eq('id', noteId)
+
+  if (error) throw error
+
+  let audioUrl: string | undefined
+
+  // Trigger TTS regeneration if the expression changed (or forced) and language is english
+  const newExpression = getNotePrimaryText(normalizedFields)
+  if (language === 'english' && newExpression && (forceAudio || newExpression !== oldExpression)) {
+    const { generateAndCacheAudio } = await import('@/lib/tts')
+    const result = await generateAndCacheAudio(supabase, user.id, noteId, newExpression, language)
+    if ('audioUrl' in result) {
+      audioUrl = result.audioUrl
+    }
+  }
+
+  revalidatePath(`/deck/${deckId}`)
+  
+  return { success: true, audioUrl }
 }

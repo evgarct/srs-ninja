@@ -48,6 +48,8 @@ import { Flashcard } from "@/components/flashcard"
 />
 ```
 
+Примечание: `Flashcard` по-прежнему принимает проп `expression`, но на уровне данных ноты каноническим считается `fields.word`. Для обратной совместимости чтение идет в порядке `word -> expression -> term`.
+
 ## Props
 
 | Prop | Тип | Обязательный | Описание |
@@ -69,6 +71,12 @@ import { Flashcard } from "@/components/flashcard"
 | `onRate` | `(r: 1\|2\|3\|4) => void` | ✓ | Коллбэк при оценке |
 | `onPlayAudio` | `() => void` | — | Коллбэк при нажатии Play |
 | `intervals` | `{ again, hard, good, easy: string }` | — | Строки интервалов от FSRS (для кнопок) |
+
+### Источник данных
+
+- Для отображения и TTS первичный текст ноты должен читаться через общий helper `getNotePrimaryText(fields)`.
+- Helper использует порядок `word -> expression -> term`.
+- При сохранении формы `normalizeNoteFields(fields)` синхронизирует legacy-ключи `expression` и `term` с каноническим `word`, если эти ключи уже присутствуют в записи.
 
 ## Четыре визуальных состояния
 

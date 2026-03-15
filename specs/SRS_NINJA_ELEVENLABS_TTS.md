@@ -166,7 +166,10 @@ export async function POST(request: Request) {
   // Generate audio for each (with rate limiting)
   const results = []
   for (const note of notesWithoutAudio) {
-    const expression = note.fields?.expression || note.fields?.term
+    const expression =
+      note.fields?.word ||
+      note.fields?.expression ||
+      note.fields?.term
     if (!expression) continue
 
     try {
@@ -203,6 +206,14 @@ export async function POST(request: Request) {
 ```
 
 ### 4. PlayButton Integration & Autoplay
+
+### Canonical Note Text
+
+- Каноническим полем текста ноты считается `fields.word`.
+- Legacy-ключи `fields.expression` и `fields.term` читаются только как fallback для старых данных.
+- Для всех путей чтения primary text должен использоваться общий helper `getNotePrimaryText(fields)` с порядком `word -> expression -> term`.
+- При сохранении ноты нужно вызывать `normalizeNoteFields(fields)`, чтобы `word`, `expression` и `term` не расходились.
+- `audio_cache.field_key = 'expression'` остается историческим идентификатором записи аудио и не означает, что само содержимое ноты нужно читать из `fields.expression`.
 
 Update the Flashcard component to actually play audio:
 
@@ -250,11 +261,11 @@ The user's native language is Russian. So:
 
 ```typescript
 // In the review session page:
-const [hasAutoPlayed, setHasAutoPlayed] = useState(false)
+const hasAutoPlayedRef = useRef(false)
 
 // Auto-play when card appears (recognition) or when revealed (production)
 useEffect(() => {
-  if (hasAutoPlayed) return
+  if (hasAutoPlayedRef.current) return
   
   const shouldAutoPlay = 
     (direction === 'recognition' && !isRevealed && audioUrl) ||
@@ -263,13 +274,13 @@ useEffect(() => {
   if (shouldAutoPlay) {
     const audioEl = new Audio(audioUrl)
     audioEl.play().catch(() => {}) // catch browser autoplay restrictions
-    setHasAutoPlayed(true)
+    hasAutoPlayedRef.current = true
   }
-}, [direction, isRevealed, audioUrl, hasAutoPlayed])
+}, [direction, isRevealed, audioUrl])
 
 // Reset autoplay flag when moving to next card
 useEffect(() => {
-  setHasAutoPlayed(false)
+  hasAutoPlayedRef.current = false
 }, [currentCardId])
 ```
 
@@ -329,7 +340,7 @@ Czech TTS will be added in a future phase.
 - [ ] **Autoplay: recognition front — audio plays when card appears**
 - [ ] **Autoplay: production back — audio plays when answer is revealed**
 - [ ] **No autoplay: production front (Russian shown, no foreign audio)**
-- [ ] **Play button always visible when expression is shown (manual replay)**
+- [ ] **Play button always visible when primary text is shown (manual replay)**
 - [ ] **Autoplay resets when moving to next card**
 - [ ] Graceful handling of browser autoplay restrictions
 - [ ] Rate limiting between API calls (500ms delay)
@@ -338,3 +349,4 @@ Czech TTS will be added in a future phase.
 - [ ] Character usage awareness (don't burn free tier)
 - [ ] "Generate Audio" button accessible from deck/review page
 - [ ] English only for now (Czech TTS in future phase)
+- [ ] TTS input uses canonical primary text from `word -> expression -> term`

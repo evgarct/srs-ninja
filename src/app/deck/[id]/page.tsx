@@ -9,6 +9,9 @@ import { getNoteTitle } from '@/lib/note-fields'
 import type { Language } from '@/lib/types'
 import { DeleteNoteButton } from '@/components/delete-note-button'
 import { GenerateAudioButton } from '@/components/generate-audio-button'
+import { NoteEditSheet } from '@/components/note-edit-sheet'
+import { Button } from '@/components/ui/button'
+import { Pencil } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default async function DeckPage({
@@ -121,13 +124,13 @@ export default async function DeckPage({
             ) : (
               visibleNotes.map((note) => {
                 const fields = note.fields as Record<string, string>
-                const title = getNoteTitle(fields, deck.language as Language)
+                const title = getNoteTitle(fields)
                 const cards = note.cards as Array<{ id: string; card_type: string; state: string }>
                 const hasAudio = audioNoteIds.has(note.id)
                 return (
                   <div
                     key={note.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover:border-foreground/30 transition-colors"
+                    className="group flex items-center justify-between p-3 rounded-lg border hover:border-foreground/30 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
@@ -154,13 +157,23 @@ export default async function DeckPage({
                         ))}
                       </div>
                     </div>
-                    <div className="flex gap-1 ml-3 shrink-0">
-                      <Link
-                        href={`/notes/${note.id}/edit`}
-                        className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-                      >
-                        Изменить
-                      </Link>
+                    <div className="flex items-center gap-1 ml-3 shrink-0">
+                      <NoteEditSheet
+                        noteId={note.id}
+                        deckId={id}
+                        language={deck.language as Language}
+                        initialFields={fields}
+                        trigger={
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Edit Note"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        }
+                      />
                       <DeleteNoteButton noteId={note.id} deckId={id} />
                     </div>
                   </div>
