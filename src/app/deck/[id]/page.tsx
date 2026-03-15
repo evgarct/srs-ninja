@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { getNoteTitle } from '@/lib/note-fields'
 import type { Language } from '@/lib/types'
 import { DeleteNoteButton } from '@/components/delete-note-button'
+import { GenerateAudioButton } from '@/components/generate-audio-button'
 
 export default async function DeckPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -40,6 +41,7 @@ export default async function DeckPage({ params }: { params: Promise<{ id: strin
               Учить ({dueCards})
             </Link>
           )}
+          {deck.language === 'english' && <GenerateAudioButton deckId={id} />}
           <Link href={`/notes/new?deckId=${id}`} className={buttonVariants({ variant: 'outline' })}>
             + Нот
           </Link>
