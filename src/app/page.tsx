@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getDashboardStats } from '@/lib/actions/decks'
-import { getTodayStats } from '@/lib/actions/stats'
+import { getTodayStats, getWeeklyActivityStats } from '@/lib/actions/stats'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { CreateDeckDialog } from '@/components/create-deck-dialog'
 import { ExtraStudyBox } from '@/components/extra-study-box'
 import { cn } from '@/lib/utils'
+import { WeeklyActivity } from '@/components/activity'
+import { headers } from 'next/headers'
 
 const DECK_EMOJI: Record<string, string> = {
   czech: '🇨🇿',
@@ -29,10 +31,21 @@ export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  const requestHeaders = await headers()
+  const headerTimeZone = requestHeaders.get('x-vercel-ip-timezone') ?? 'UTC'
+  const timeZone = (() => {
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: headerTimeZone })
+      return headerTimeZone
+    } catch {
+      return 'UTC'
+    }
+  })()
 
-  const [deckStats, todayStats] = await Promise.all([
+  const [deckStats, todayStats, weeklyActivity] = await Promise.all([
     getDashboardStats(),
     getTodayStats(),
+    getWeeklyActivityStats(timeZone),
   ])
 
   return (
@@ -73,6 +86,10 @@ export default async function Home() {
             <p className="text-xs text-muted-foreground">на карточку</p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mb-8">
+        <WeeklyActivity days={weeklyActivity.days} streak={weeklyActivity.streak} />
       </div>
 
       {/* Decks */}
