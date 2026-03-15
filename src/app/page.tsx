@@ -99,7 +99,7 @@ export default async function Home() {
               <CardContent className="flex flex-col gap-2">
                 {due > 0 ? (
                   <div className="flex gap-2">
-                    <Link href={`/review/${deck.id}`} className={cn(buttonVariants(), 'flex-1 text-center')}>
+                    <Link href={`/decks/${deck.id}/review`} className={cn(buttonVariants(), 'flex-1 text-center')}>
                       Учить ({due})
                     </Link>
                     <Link href={`/deck/${deck.id}`} className={buttonVariants({ variant: 'outline' })}>
