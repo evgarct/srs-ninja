@@ -137,3 +137,47 @@ export async function deleteNote(noteId: string, deckId: string) {
 
   revalidatePath(`/deck/${deckId}`)
 }
+
+/**
+ * Updates a note's fields (from the inline Note Editor) and regenerates TTS audio if needed.
+ * 
+ * @param noteId - The UUID of the note to update.
+ * @param deckId - The UUID of the deck the note belongs to.
+ * @param newFields - The updated key-value record of the note's content.
+ * @param oldExpression - The previous expression to check for changes.
+ * @param language - The language of the deck (used for TTS decision).
+ */
+export async function updateNoteFields(
+  noteId: string,
+  deckId: string,
+  newFields: Record<string, any>,
+  oldExpression: string,
+  language: string
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('notes')
+    .update({ fields: newFields })
+    .eq('id', noteId)
+
+  if (error) throw error
+
+  let audioUrl: string | undefined
+
+  // Trigger TTS regeneration if the expression changed and language is english
+  const newExpression = newFields.expression || newFields.term
+  if (language === 'english' && newExpression && newExpression !== oldExpression) {
+    const { generateAndCacheAudio } = await import('@/lib/tts')
+    const result = await generateAndCacheAudio(supabase, user.id, noteId, newExpression, language)
+    if ('audioUrl' in result) {
+      audioUrl = result.audioUrl
+    }
+  }
+
+  revalidatePath(`/deck/${deckId}`)
+  
+  return { success: true, audioUrl }
+}

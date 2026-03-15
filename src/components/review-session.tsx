@@ -9,6 +9,8 @@ import { buttonVariants } from '@/lib/button-variants'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Flashcard } from '@/components/flashcard'
+import { NoteEditSheet } from '@/components/note-edit-sheet'
+import { Pencil } from 'lucide-react'
 import type { Language, Rating, CEFRLevel, Card } from '@/lib/types'
 
 interface ReviewCard extends Pick<Card,
@@ -90,7 +92,8 @@ export function ReviewSession({
   /** noteId → public audio URL, pre-fetched server-side */
   audioMap?: Record<string, string>
 }) {
-  const [queue] = useState(cards)
+  const [queue, setQueue] = useState(cards)
+  const [dynamicAudio, setDynamicAudio] = useState<Record<string, string>>({})
   const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [done, setDone] = useState(false)
@@ -105,7 +108,29 @@ export function ReviewSession({
 
   const isRecognition = current?.card_type === 'recognition'
   const lang = language as Language
-  const audioUrl = current ? (audioMap[current.note_id] ?? undefined) : undefined
+  const audioUrl = current ? (dynamicAudio[current.note_id] ?? audioMap[current.note_id] ?? undefined) : undefined
+
+  function handleSaveSuccess(updatedFields: Record<string, string>, newAudioUrl?: string) {
+    setQueue((prev) => {
+      const newQueue = [...prev]
+      const currentCard = { ...newQueue[index] }
+      if (currentCard.notes) {
+        currentCard.notes = {
+          ...currentCard.notes,
+          fields: updatedFields
+        }
+      }
+      newQueue[index] = currentCard
+      return newQueue
+    })
+
+    if (newAudioUrl && current) {
+      setDynamicAudio((prev) => ({
+        ...prev,
+        [current.note_id]: newAudioUrl
+      }))
+    }
+  }
 
   // Reset autoplay flag when the card changes
   useEffect(() => {
@@ -215,6 +240,20 @@ export function ReviewSession({
           startTimeRef.current = Date.now()
         }}
         onRate={handleRating}
+        headerAction={
+          <NoteEditSheet
+            noteId={current.note_id}
+            deckId={deckId}
+            language={lang}
+            initialFields={noteFields as Record<string, string>}
+            onSaveSuccess={handleSaveSuccess}
+            trigger={
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" title="Edit Note">
+                <Pencil className="w-4 h-4" />
+              </Button>
+            }
+          />
+        }
       />
     </div>
   )

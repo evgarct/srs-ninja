@@ -38,6 +38,9 @@ export interface FlashcardProps {
     good: string
     easy: string
   }
+
+  // Header action (e.g. Edit note button)
+  headerAction?: React.ReactNode
 }
 
 export function Flashcard({
@@ -60,6 +63,7 @@ export function Flashcard({
   onRate,
   onPlayAudio,
   intervals,
+  headerAction,
 }: FlashcardProps) {
   const isCzech = language === "czech"
 
@@ -100,7 +104,8 @@ export function Flashcard({
     function handleKeyDown(e: KeyboardEvent) {
       if (
         e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
+        e.target instanceof HTMLTextAreaElement ||
+        (e.target as HTMLElement).isContentEditable
       )
         return
 
@@ -149,7 +154,14 @@ export function Flashcard({
             : "cursor-default",
         ].join(" ")}
       >
-        <div className="flex flex-col gap-5 p-6">
+        <div className="flex flex-col gap-5 p-6 relative">
+          {/* Header action (e.g. NoteEditSheet trigger) */}
+          {headerAction && (
+            <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+              {headerAction}
+            </div>
+          )}
+
           {/* ── Headline area ── */}
           <div className="flex items-start gap-3">
             {/* Play button — left of headline, only when expression visible */}
