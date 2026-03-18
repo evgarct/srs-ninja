@@ -11,7 +11,7 @@ export interface DraftCandidateInput {
 }
 
 export interface DraftCandidate {
-  fields: Record<string, string>
+  fields: Record<string, unknown>
   tags: string[]
 }
 
@@ -41,6 +41,22 @@ function normalizeStringValue(value: unknown): string {
   if (typeof value === 'string') return value.trim()
   if (typeof value === 'number' || typeof value === 'boolean') return String(value).trim()
   return ''
+}
+
+function normalizeListValue(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => normalizeStringValue(entry))
+      .filter(Boolean)
+  }
+
+  const normalized = normalizeStringValue(value)
+  if (!normalized) return []
+
+  return normalized
+    .split(/\r?\n|,/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
 }
 
 function normalizeTags(tags: string[] | undefined): string[] {
@@ -85,7 +101,7 @@ export function validateDraftCandidate(
   const { fields, requiredKeys } = getDraftFieldContract(language)
   const errors: DraftValidationIssue[] = []
   const warnings: DraftValidationIssue[] = []
-  const normalizedFields: Record<string, string> = {}
+  const normalizedFields: Record<string, unknown> = {}
 
   const inputFields = input.fields ?? {}
 
@@ -100,6 +116,24 @@ export function validateDraftCandidate(
   }
 
   for (const field of fields) {
+    if (field.type === 'list') {
+      const rawList = normalizeListValue(inputFields[field.key])
+
+      if (rawList.length === 0) {
+        if (field.required) {
+          errors.push({
+            code: 'missing_required_field',
+            field: field.key,
+            message: `Field "${field.key}" is required.`,
+          })
+        }
+        continue
+      }
+
+      normalizedFields[field.key] = rawList
+      continue
+    }
+
     const rawValue = normalizeStringValue(inputFields[field.key])
 
     if (!rawValue) {
@@ -130,7 +164,7 @@ export function validateDraftCandidate(
     normalizedFields[field.key] = rawValue
   }
 
-  const normalizedCandidateFields = normalizeNoteFields(normalizedFields)
+  const normalizedCandidateFields = normalizeNoteFields(normalizedFields, language)
   const primaryText = getNotePrimaryText(normalizedCandidateFields)
 
   if (!primaryText) {
@@ -195,4 +229,8 @@ export function getImportBatchStatus(statuses: DraftNoteStatus[]): ImportBatchSt
   if (statuses.every((status) => status === 'approved')) return 'approved'
   if (statuses.some((status) => status === 'approved')) return 'partially_approved'
   return 'draft'
+}
+
+export function canDeleteDraftBatch(statuses: DraftNoteStatus[]): boolean {
+  return statuses.every((status) => status === 'draft')
 }

@@ -1,4 +1,9 @@
 import { getNotePrimaryText } from '@/lib/note-fields'
+import {
+  extractExamplesFromHtml,
+  formatEnglishStyleLabel,
+  getPopularityValue,
+} from '@/lib/english-note-schema'
 import type { CEFRLevel, Language } from '@/lib/types'
 
 export function mapFieldsToFlashcard(
@@ -7,11 +12,10 @@ export function mapFieldsToFlashcard(
 ) {
   const expression = getNotePrimaryText(fields) || '—'
   const translation = String(fields.translation ?? '—')
-
-  const examples = [
-    fields.example_sentence,
-    fields.example_translation,
-  ].filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+  const examples = language === 'english'
+    ? extractExamplesFromHtml(fields.examples_html ?? fields.collocations ?? '')
+    : [fields.example_sentence, fields.example_translation]
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
 
   const validLevels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
   const rawLevel = String(fields.level ?? '')
@@ -19,8 +23,12 @@ export function mapFieldsToFlashcard(
     ? (rawLevel as CEFRLevel)
     : 'B1'
 
-  const frequency = Math.min(10, Math.max(1, Math.round(Number(fields.frequency ?? 5))))
-  const style = String(fields.style ?? '')
+  const frequency = language === 'english'
+    ? getPopularityValue(fields)
+    : Math.min(10, Math.max(1, Math.round(Number(fields.frequency ?? 5))))
+  const style = language === 'english'
+    ? formatEnglishStyleLabel(fields.style)
+    : String(fields.style ?? '')
   const partOfSpeech = String(fields.part_of_speech ?? '')
   const gender = language === 'czech' ? (fields.gender ? String(fields.gender) : undefined) : undefined
   const note = fields.note ? String(fields.note) : undefined

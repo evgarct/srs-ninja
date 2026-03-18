@@ -16,11 +16,11 @@ interface NoteEditSheetProps {
   noteId: string
   deckId: string
   language: Language
-  initialFields: Record<string, string>
+  initialFields: Record<string, unknown>
   initialAudioUrl?: string
   allowAudioGeneration?: boolean
   trigger: React.ReactElement
-  onSaveSuccess?: (updatedFields: Record<string, string>, audioUrl?: string) => void
+  onSaveSuccess?: (updatedFields: Record<string, unknown>, audioUrl?: string) => void
 }
 
 export function NoteEditSheet({

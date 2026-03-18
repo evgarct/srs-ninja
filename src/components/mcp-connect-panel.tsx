@@ -40,6 +40,25 @@ const AGENTS: Array<{
   },
 ]
 
+const ENGLISH_IMPORT_PROMPT = `When importing into an English deck, always use the canonical English note schema.
+
+Required fields:
+- word
+- translation
+
+Optional fields:
+- level: A1 | A2 | B1 | B2 | C1 | C2
+- part_of_speech: noun | verb | adjective | adverb | pronoun | preposition | conjunction | phrasal verb | expression | idiom | collocation
+- popularity: integer 1..10
+- style: informal | neutral | formal | everyday | technical | academic | narrative | slang | poetic
+- synonyms: string[]
+- antonyms: string[]
+- examples_html: HTML <ul> with exactly 2 <li> examples and the studied word wrapped in <b>
+
+Do not use legacy English fields like term, expression, frequency, example_sentence, example_translation, or collocations for new notes.
+
+Before saving, call get_deck_contract and match the returned field contract exactly.`
+
 export function McpConnectPanel({
   appOrigin,
   endpointUrl,
@@ -194,10 +213,33 @@ export function McpConnectPanel({
                     </li>
                     <li className="flex items-start gap-2">
                       <Link2 className="mt-0.5 size-4 shrink-0" />
+                      Use the canonical English schema with `popularity`, `synonyms`, `antonyms`, and `examples_html`.
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Link2 className="mt-0.5 size-4 shrink-0" />
                       List draft batches and approve reviewed notes without bypassing app validation.
                     </li>
                   </ul>
                 </div>
+              </div>
+
+              <div className="rounded-xl border p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">ChatGPT English import prompt</p>
+                    <p className="text-xs text-muted-foreground">
+                      Paste this once after connecting ChatGPT to keep English imports on the canonical schema.
+                    </p>
+                  </div>
+                  <CopyButton
+                    value={ENGLISH_IMPORT_PROMPT}
+                    label="Prompt copied"
+                    className="shrink-0"
+                  />
+                </div>
+                <pre className="overflow-x-auto rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                  {ENGLISH_IMPORT_PROMPT}
+                </pre>
               </div>
 
               <div className="flex flex-wrap gap-2">

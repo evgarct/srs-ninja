@@ -2,9 +2,11 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { buildInitialNoteCards } from '@/lib/note-cards'
 import {
+  canDeleteDraftBatch,
   findDuplicateDraftCandidates,
   getImportBatchStatus,
   validateDraftCandidate,
+  type DraftNoteStatus,
   type DraftCandidateInput,
 } from '@/lib/draft-import'
 import type { Database } from '@/lib/supabase/database.types'
@@ -70,6 +72,27 @@ async function syncImportBatchStatus(
     .eq('id', batchId)
 
   if (updateError) throw updateError
+}
+
+async function deleteImportBatchIfEmpty(
+  supabase: SupabaseClient,
+  batchId: string
+) {
+  const { count, error: countError } = await supabase
+    .from('notes')
+    .select('id', { count: 'exact', head: true })
+    .eq('import_batch_id', batchId)
+
+  if (countError) throw countError
+  if ((count ?? 0) > 0) return false
+
+  const { error: deleteError } = await supabase
+    .from('import_batches')
+    .delete()
+    .eq('id', batchId)
+
+  if (deleteError) throw deleteError
+  return true
 }
 
 export async function saveDraftNotesForUser(
@@ -280,5 +303,100 @@ export async function approveDraftNoteForUser(
     noteId: updatedNote.id,
     deckId: updatedNote.deck_id,
     importBatchId: updatedNote.import_batch_id,
+  }
+}
+
+export async function deleteDraftNoteForUser(
+  supabase: SupabaseClient,
+  userId: string,
+  noteId: string
+) {
+  const { data: note, error: noteError } = await supabase
+    .from('notes')
+    .select('id, deck_id, import_batch_id, status')
+    .eq('id', noteId)
+    .eq('user_id', userId)
+    .single()
+
+  if (noteError || !note) throw noteError ?? new Error('Draft note not found')
+  if (note.status !== 'draft') throw new Error('Only draft notes can be deleted')
+
+  const { error: deleteError } = await supabase
+    .from('notes')
+    .delete()
+    .eq('id', noteId)
+    .eq('user_id', userId)
+    .eq('status', 'draft')
+
+  if (deleteError) throw deleteError
+
+  if (note.import_batch_id) {
+    const deletedBatch = await deleteImportBatchIfEmpty(supabase, note.import_batch_id)
+    if (!deletedBatch) {
+      await syncImportBatchStatus(supabase, note.import_batch_id)
+    }
+  }
+
+  revalidatePath(`/deck/${note.deck_id}`)
+  revalidatePath(`/deck/${note.deck_id}/drafts`)
+  revalidatePath('/import')
+
+  return {
+    noteId: note.id,
+    deckId: note.deck_id,
+    importBatchId: note.import_batch_id,
+  }
+}
+
+export async function deleteDraftBatchForUser(
+  supabase: SupabaseClient,
+  userId: string,
+  batchId: string
+) {
+  const { data: batch, error: batchError } = await supabase
+    .from('import_batches')
+    .select('id, deck_id')
+    .eq('id', batchId)
+    .eq('user_id', userId)
+    .single()
+
+  if (batchError || !batch) throw batchError ?? new Error('Draft batch not found')
+
+  const { data: notes, error: notesError } = await supabase
+    .from('notes')
+    .select('id, status')
+    .eq('import_batch_id', batchId)
+    .eq('user_id', userId)
+
+  if (notesError) throw notesError
+
+  const statuses = ((notes ?? []) as Array<{ status: DraftNoteStatus }>).map((note) => note.status)
+  if (!canDeleteDraftBatch(statuses)) {
+    throw new Error('Only batches with draft notes only can be deleted')
+  }
+
+  const { error: deleteNotesError } = await supabase
+    .from('notes')
+    .delete()
+    .eq('import_batch_id', batchId)
+    .eq('user_id', userId)
+
+  if (deleteNotesError) throw deleteNotesError
+
+  const { error: deleteBatchError } = await supabase
+    .from('import_batches')
+    .delete()
+    .eq('id', batchId)
+    .eq('user_id', userId)
+
+  if (deleteBatchError) throw deleteBatchError
+
+  revalidatePath(`/deck/${batch.deck_id}`)
+  revalidatePath(`/deck/${batch.deck_id}/drafts`)
+  revalidatePath('/import')
+
+  return {
+    batchId,
+    deckId: batch.deck_id,
   }
 }

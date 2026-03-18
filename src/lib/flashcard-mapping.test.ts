@@ -9,11 +9,10 @@ describe('mapFieldsToFlashcard', () => {
         {
           word: 'anchor',
           translation: 'якорь',
-          example_sentence: 'Drop the <b>anchor</b>.',
-          example_translation: 'Брось <b>якорь</b>.',
+          examples_html: '<ul><li>Drop the <b>anchor</b>.</li><li>The <b>anchor</b> held.</li></ul>',
           level: 'A2',
-          frequency: 7.2,
-          style: 'Neutral',
+          popularity: 7.2,
+          style: 'neutral',
           part_of_speech: 'noun',
           image_url: 'https://example.com/anchor.png',
           synonyms: ['hook'],
@@ -24,7 +23,7 @@ describe('mapFieldsToFlashcard', () => {
     ).toEqual({
       expression: 'anchor',
       translation: 'якорь',
-      examples: ['Drop the <b>anchor</b>.', 'Брось <b>якорь</b>.'],
+      examples: ['Drop the <b>anchor</b>.', 'The <b>anchor</b> held.'],
       level: 'A2',
       partOfSpeech: 'noun',
       gender: undefined,

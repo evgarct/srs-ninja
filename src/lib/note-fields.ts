@@ -1,18 +1,24 @@
 import {
   CEFR_LEVELS,
   PARTS_OF_SPEECH_CZECH,
-  PARTS_OF_SPEECH_ENGLISH,
   STYLE_REGISTERS,
   GENDERS_CZECH,
   type Language,
 } from './types'
+import {
+  ENGLISH_NOTE_FIELDS,
+  getEnglishNoteFormValues,
+  getEnglishPrimaryText,
+  normalizeEnglishNoteFields,
+} from './english-note-schema'
 
 export interface FieldDef {
   key: string
   label: string
-  type: 'text' | 'textarea' | 'select'
+  type: 'text' | 'textarea' | 'select' | 'list' | 'html'
   options?: readonly string[]
   required?: boolean
+  hint?: string
 }
 
 export const CZECH_FIELDS: FieldDef[] = [
@@ -30,28 +36,28 @@ export const CZECH_FIELDS: FieldDef[] = [
   { key: 'image_url', label: 'Картинка (URL)', type: 'text' },
 ]
 
-export const ENGLISH_FIELDS: FieldDef[] = [
-  { key: 'word', label: 'Word / Phrase', type: 'text', required: true },
-  { key: 'translation', label: 'Перевод (рус/чешский)', type: 'text', required: true },
-  { key: 'pronunciation', label: 'Произношение (IPA)', type: 'text' },
-  { key: 'part_of_speech', label: 'Part of speech', type: 'select', options: PARTS_OF_SPEECH_ENGLISH },
-  { key: 'level', label: 'Уровень (CEFR)', type: 'select', options: CEFR_LEVELS },
-  { key: 'style', label: 'Стиль', type: 'select', options: STYLE_REGISTERS },
-  { key: 'example_sentence', label: 'Example sentence', type: 'textarea' },
-  { key: 'example_translation', label: 'Перевод примера', type: 'textarea' },
-  { key: 'notes', label: 'Заметки', type: 'textarea' },
-]
+export const ENGLISH_FIELDS: FieldDef[] = ENGLISH_NOTE_FIELDS
 
 export function getFields(language: Language): FieldDef[] {
   return language === 'czech' ? CZECH_FIELDS : ENGLISH_FIELDS
 }
 
 export function getNotePrimaryText(fields: Record<string, unknown>): string {
+  const englishPrimary = getEnglishPrimaryText(fields)
+  if (englishPrimary) return englishPrimary
+
   return [fields.word, fields.expression, fields.term]
     .find((value) => typeof value === 'string' && value.trim().length > 0)?.toString() ?? ''
 }
 
-export function normalizeNoteFields(fields: Record<string, string>): Record<string, string> {
+export function normalizeNoteFields(
+  fields: Record<string, unknown>,
+  language?: Language
+): Record<string, unknown> {
+  if (language === 'english') {
+    return normalizeEnglishNoteFields(fields)
+  }
+
   const normalized = { ...fields }
   const primary = getNotePrimaryText(fields)
 
@@ -70,8 +76,21 @@ export function normalizeNoteFields(fields: Record<string, string>): Record<stri
   return normalized
 }
 
-export function getNoteTitle(fields: Record<string, string>): string {
+export function getNoteFormValues(
+  language: Language,
+  fields: Record<string, unknown>
+): Record<string, string> {
+  if (language === 'english') {
+    return getEnglishNoteFormValues(fields)
+  }
+
+  return Object.fromEntries(
+    Object.entries(normalizeNoteFields(fields, language)).map(([key, value]) => [key, String(value ?? '')])
+  )
+}
+
+export function getNoteTitle(fields: Record<string, unknown>): string {
   const word = getNotePrimaryText(fields)
-  const translation = fields.translation || ''
+  const translation = typeof fields.translation === 'string' ? fields.translation : ''
   return translation ? `${word} — ${translation}` : word
 }

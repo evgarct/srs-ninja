@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import Link from 'next/link'
 import { getDecks } from '@/lib/actions/decks'
 import { AnkiImporter } from '@/components/anki-importer'
+import { DeleteDraftBatchButton } from '@/components/delete-draft-batch-button'
 import { McpConnectPanel } from '@/components/mcp-connect-panel'
 import { DraftStatusBadge } from '@/components/draft-status-badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -115,6 +116,9 @@ export default async function ImportPage() {
                     >
                       Open Deck Drafts
                     </Link>
+                    {batch.status === 'draft' && (
+                      <DeleteDraftBatchButton batchId={batch.id} />
+                    )}
                   </div>
                 </CardContent>
               </Card>
