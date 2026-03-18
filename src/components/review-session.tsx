@@ -11,8 +11,8 @@ import { Button } from '@/components/ui/button'
 import { Flashcard } from '@/components/flashcard'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
 import { Pencil } from 'lucide-react'
-import type { Language, Rating, CEFRLevel, Card } from '@/lib/types'
-import { getNotePrimaryText } from '@/lib/note-fields'
+import type { Language, Rating, Card } from '@/lib/types'
+import { mapFieldsToFlashcard } from '@/lib/flashcard-mapping'
 
 interface ReviewCard extends Pick<Card,
   'id' | 'note_id' | 'card_type' | 'state' | 'stability' | 'difficulty' |
@@ -32,53 +32,6 @@ function formatInterval(days: number): string {
   if (days < 30) return `${Math.round(days)}d`
   if (days < 365) return `${Math.round(days / 30)}mo`
   return `${Math.round(days / 365)}y`
-}
-
-function mapFieldsToFlashcard(
-  fields: Record<string, unknown>,
-  language: Language
-) {
-  const expression = getNotePrimaryText(fields) || '—'
-  const translation = String(fields.translation ?? '—')
-
-  const examples: string[] = Array.isArray(fields.examples)
-    ? (fields.examples as unknown[]).map(String)
-    : []
-
-  const validLevels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
-  const rawLevel = String(fields.level ?? '')
-  const level: CEFRLevel = validLevels.includes(rawLevel as CEFRLevel)
-    ? (rawLevel as CEFRLevel)
-    : 'B1'
-
-  const frequency = Math.min(10, Math.max(1, Math.round(Number(fields.frequency ?? 5))))
-  const style = String(fields.style ?? '')
-  const partOfSpeech = String(fields.part_of_speech ?? '')
-  const gender = language === 'czech' ? (fields.gender ? String(fields.gender) : undefined) : undefined
-  const note = fields.note ? String(fields.note) : undefined
-  const imageUrl = fields.image_url ? String(fields.image_url) : undefined
-
-  const synonyms = Array.isArray(fields.synonyms)
-    ? (fields.synonyms as unknown[]).map(String)
-    : undefined
-  const antonyms = Array.isArray(fields.antonyms)
-    ? (fields.antonyms as unknown[]).map(String)
-    : undefined
-
-  return {
-    expression,
-    translation,
-    examples,
-    level,
-    partOfSpeech,
-    gender,
-    frequency,
-    style,
-    note,
-    imageUrl,
-    synonyms,
-    antonyms,
-  }
 }
 
 export function ReviewSession({

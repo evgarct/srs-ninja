@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server'
 import { generateAndCacheAudio } from '@/lib/tts'
 import { getNotePrimaryText } from '@/lib/note-fields'
 
-// POST /api/tts/batch  { deckId }
-// Generates audio for all English notes in a deck that don't have audio yet.
+// POST /api/tts/batch  { deckId, noteIds? }
+// Generates audio for filtered English notes in a deck that don't have audio yet.
 export async function POST(request: Request) {
   const supabase = await createClient()
   const {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { deckId } = (await request.json()) as { deckId?: string }
+  const { deckId, noteIds } = (await request.json()) as { deckId?: string; noteIds?: string[] }
   if (!deckId) return NextResponse.json({ error: 'Missing deckId' }, { status: 400 })
 
   // Guard: English decks only
@@ -29,14 +29,30 @@ export async function POST(request: Request) {
   }
 
   // Fetch all notes for the deck
-  const { data: notes, error: notesError } = await supabase
+  let notesQuery = supabase
     .from('notes')
     .select('id, fields')
     .eq('deck_id', deckId)
     .eq('user_id', user.id)
 
+  if (noteIds && noteIds.length > 0) {
+    notesQuery = notesQuery.in('id', noteIds)
+  }
+
+  const { data: notes, error: notesError } = await notesQuery
+
   if (notesError || !notes) {
     return NextResponse.json({ error: 'Failed to fetch notes' }, { status: 500 })
+  }
+
+  if (notes.length === 0) {
+    return NextResponse.json({
+      total: 0,
+      generated: 0,
+      skipped: 0,
+      errors: 0,
+      generatedAudio: [],
+    })
   }
 
   // Find which notes already have audio

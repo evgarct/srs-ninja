@@ -1,20 +1,21 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { getDueCards, getExtraStudyCards } from '@/lib/actions/cards'
+import { getDueCards, getExtraStudyCards, getManualStudyCards } from '@/lib/actions/cards'
 import { orderCards } from '@/lib/card-ordering'
 import { ReviewSession } from '@/components/review-session'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
+import { isFsrsState, type FsrsState } from '@/lib/deck-notes'
 
 export default async function ReviewPage({
   params,
   searchParams,
 }: {
   params: Promise<{ deckId: string }>
-  searchParams: Promise<{ mode?: string; limit?: string }>
+  searchParams: Promise<{ mode?: string; limit?: string; tags?: string; state?: string }>
 }) {
   const { deckId } = await params
-  const { mode, limit: limitStr } = await searchParams
+  const { mode, limit: limitStr, tags: tagsParam, state: stateParam } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -24,11 +25,22 @@ export default async function ReviewPage({
   if (!deck) redirect('/')
 
   const isExtra = mode === 'extra'
+  const isManual = mode === 'manual'
   const limit = Math.min(Math.max(parseInt(limitStr ?? '10', 10) || 10, 1), 50)
+  const manualTags = (tagsParam ?? '')
+    .split(',')
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+  const manualStates = (stateParam ?? '')
+    .split(',')
+    .map((state) => state.trim())
+    .filter(isFsrsState) as FsrsState[]
 
-  const rawCards = isExtra
-    ? await getExtraStudyCards(deckId, limit)
-    : await getDueCards(deckId, 50)
+  const rawCards = isManual
+    ? await getManualStudyCards(deckId, { tags: manualTags, states: manualStates })
+    : isExtra
+      ? await getExtraStudyCards(deckId, limit)
+      : await getDueCards(deckId, 50)
 
   // Apply smart ordering: priority tiers + sibling separation + shuffle.
   // Extra study sessions are intentionally left unordered (new cards first by design).
@@ -52,11 +64,13 @@ export default async function ReviewPage({
       <main className="max-w-xl mx-auto px-4 py-16 text-center">
         <p className="text-4xl mb-4">{isExtra ? '📭' : '🎉'}</p>
         <h1 className="text-2xl font-bold mb-2">
-          {isExtra ? 'Нет новых слов!' : 'Всё повторено!'}
+          {isExtra ? 'Нет новых слов!' : isManual ? 'Нет карточек по фильтру' : 'Всё повторено!'}
         </h1>
         <p className="text-muted-foreground mb-6">
           {isExtra
             ? `В колоде «${deck.name}» нет новых карточек для изучения.`
+            : isManual
+              ? `Фильтрованный набор в колоде «${deck.name}» сейчас пуст.`
             : `В колоде «${deck.name}» нет карточек для повторения.`}
         </p>
         <Link href={`/deck/${deckId}`} className={buttonVariants()}>
@@ -73,7 +87,7 @@ export default async function ReviewPage({
           ← {deck.name}
         </Link>
         <span className="text-sm text-muted-foreground">
-          {isExtra ? '✨ Новые слова · ' : ''}{cards.length} карточек
+          {isExtra ? '✨ Новые слова · ' : isManual ? '🧪 Ручная тренировка · ' : ''}{cards.length} карточек
         </span>
       </div>
       <ReviewSession cards={cards} deckId={deckId} language={deck.language} audioMap={audioMap} />
