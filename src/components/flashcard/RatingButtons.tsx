@@ -72,10 +72,11 @@ export function RatingButtons({ onRate, intervals, className }: RatingButtonsPro
           aria-label={`${label} (key ${key})${intervals ? `, ${intervals[intervalKey]}` : ""}`}
           className={`
             flex flex-col items-center justify-center gap-0.5
-            rounded-lg border py-2.5 px-2
+            min-h-16 rounded-lg border py-2.5 px-2
             text-center font-medium
-            transition-all duration-150
-            active:scale-95
+            touch-manipulation [webkit-tap-highlight-color:transparent]
+            transition-all duration-100
+            active:scale-95 active:brightness-95
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
             ${colorClass}
             ${hoverClass}

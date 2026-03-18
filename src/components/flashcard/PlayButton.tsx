@@ -25,10 +25,11 @@ export function PlayButton({ onPlay, className, disabled }: PlayButtonProps) {
         border border-foreground/15
         bg-background/60 backdrop-blur-sm
         text-foreground/70
-        transition-all duration-200
+        touch-manipulation [webkit-tap-highlight-color:transparent]
+        transition-all duration-150
         hover:border-foreground/30 hover:bg-foreground/8 hover:text-foreground
         hover:scale-105
-        active:scale-95
+        active:scale-95 active:bg-foreground/10
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
         disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100
         ${className ?? ""}

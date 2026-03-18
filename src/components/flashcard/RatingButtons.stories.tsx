@@ -36,3 +36,19 @@ export const LongIntervals: Story = {
     },
   },
 }
+
+export const MobileTouchTargets: Story = {
+  args: {
+    intervals: {
+      again: "<1m",
+      hard: "12m",
+      good: "3d",
+      easy: "8d",
+    },
+  },
+  render: (args) => (
+    <div className="w-[22rem] max-w-full p-3">
+      <RatingButtons {...args} />
+    </div>
+  ),
+}

@@ -162,7 +162,6 @@ export const EnglishProductionBack: Story = {
 // ── With audio ────────────────────────────────────────────────────────────────
 
 export const WithAudio: Story = {
-  name: "With Audio",
   render: (args) => <InteractiveFlashcard {...args} />,
   args: {
     ...CZECH_DATA,
@@ -176,7 +175,6 @@ export const WithAudio: Story = {
 // ── Themes ────────────────────────────────────────────────────────────────────
 
 export const LightTheme: Story = {
-  name: "Light Theme",
   render: (args) => (
     <div data-theme="light" className="bg-background min-h-screen">
       <InteractiveFlashcard {...args} />
@@ -191,7 +189,6 @@ export const LightTheme: Story = {
 }
 
 export const DarkTheme: Story = {
-  name: "Dark Theme",
   render: (args) => (
     <div data-theme="dark" className="dark bg-background min-h-screen">
       <InteractiveFlashcard {...args} />
@@ -210,7 +207,6 @@ export const DarkTheme: Story = {
 const ALL_LEVELS: CEFRLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"]
 
 export const AllCEFRLevels: Story = {
-  name: "All CEFR Levels",
   render: () => (
     <div className="flex flex-wrap gap-6 p-6">
       {ALL_LEVELS.map((level) => {
@@ -235,11 +231,25 @@ export const AllCEFRLevels: Story = {
 // ── Rating buttons visible ────────────────────────────────────────────────────
 
 export const RatingButtonsVisible: Story = {
-  name: "Rating Buttons Visible",
   render: (args) => <InteractiveFlashcard {...args} />,
   args: {
     ...CZECH_DATA,
     direction: "recognition",
     isRevealed: true,
+  },
+}
+
+export const MobileTouchReview: Story = {
+  render: (args) => (
+    <div className="mx-auto w-[22rem] max-w-full p-3">
+      <InteractiveFlashcard {...args} />
+    </div>
+  ),
+  args: {
+    ...ENGLISH_DATA,
+    direction: "recognition",
+    isRevealed: false,
+    audioUrl: "https://example.com/cauldron.mp3",
+    onPlayAudio: fn(),
   },
 }

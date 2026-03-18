@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { submitReview } from '@/lib/actions/cards'
-import { getSchedulingIntervals } from '@/lib/fsrs'
 import { Progress } from '@/components/ui/progress'
 import { buttonVariants } from '@/lib/button-variants'
 import Link from 'next/link'
@@ -11,28 +10,12 @@ import { Button } from '@/components/ui/button'
 import { Flashcard } from '@/components/flashcard'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
 import { Pencil } from 'lucide-react'
-import type { Language, Rating, Card } from '@/lib/types'
-import { mapFieldsToFlashcard } from '@/lib/flashcard-mapping'
-
-interface ReviewCard extends Pick<Card,
-  'id' | 'note_id' | 'card_type' | 'state' | 'stability' | 'difficulty' |
-  'elapsed_days' | 'scheduled_days' | 'reps' | 'lapses' | 'due_at' | 'last_review'
-> {
-  notes: {
-    fields: Record<string, unknown>
-    tags: string[]
-    deck_id: string
-  } | null
-}
-
-function formatInterval(days: number): string {
-  if (days < 1 / 24 / 60) return '<1m'
-  if (days < 1 / 24) return `${Math.round(days * 24 * 60)}m`
-  if (days < 1) return `${Math.round(days * 24)}h`
-  if (days < 30) return `${Math.round(days)}d`
-  if (days < 365) return `${Math.round(days / 30)}mo`
-  return `${Math.round(days / 365)}y`
-}
+import type { Language, Rating } from '@/lib/types'
+import {
+  getReviewPrefetchAudioUrls,
+  prepareReviewSessionCards,
+  type ReviewSessionCard,
+} from '@/lib/review-session'
 
 export function ReviewSession({
   cards,
@@ -40,7 +23,7 @@ export function ReviewSession({
   language,
   audioMap = {},
 }: {
-  cards: ReviewCard[]
+  cards: ReviewSessionCard[]
   deckId: string
   language: string
   /** noteId → public audio URL, pre-fetched server-side */
@@ -52,17 +35,29 @@ export function ReviewSession({
   const [revealed, setRevealed] = useState(false)
   const [done, setDone] = useState(false)
   const [sessionStats, setSessionStats] = useState({ total: 0, correct: 0 })
+  const [pendingReviewCount, setPendingReviewCount] = useState(0)
+  const [syncError, setSyncError] = useState<string | null>(null)
   const startTimeRef = useRef<number>(0)
   const hasAutoPlayedRef = useRef(false)
+  const warmedAudioRef = useRef(new Set<string>())
   const router = useRouter()
 
   const total = cards.length
+  const lang = language as Language
+  const resolvedAudioMap = useMemo(
+    () => ({ ...audioMap, ...dynamicAudio }),
+    [audioMap, dynamicAudio]
+  )
+  const preparedQueue = useMemo(
+    () => prepareReviewSessionCards(queue, lang, resolvedAudioMap),
+    [queue, lang, resolvedAudioMap]
+  )
   const current = queue[index]
+  const currentPrepared = preparedQueue[index]
   const progress = total > 0 ? Math.round((index / total) * 100) : 0
 
-  const isRecognition = current?.card_type === 'recognition'
-  const lang = language as Language
-  const audioUrl = current ? (dynamicAudio[current.note_id] ?? audioMap[current.note_id] ?? undefined) : undefined
+  const isRecognition = currentPrepared?.direction === 'recognition'
+  const audioUrl = currentPrepared?.audioUrl
 
   function handleSaveSuccess(updatedFields: Record<string, string>, newAudioUrl?: string) {
     const currentNoteId = current?.note_id
@@ -100,6 +95,22 @@ export function ReviewSession({
     startTimeRef.current = Date.now()
   }, [])
 
+  useEffect(() => {
+    if (typeof Audio === 'undefined') return
+
+    const prefetchUrls = getReviewPrefetchAudioUrls(preparedQueue, index, 2)
+
+    for (const url of prefetchUrls) {
+      if (warmedAudioRef.current.has(url)) continue
+
+      const audio = new Audio()
+      audio.preload = 'auto'
+      audio.src = url
+      audio.load()
+      warmedAudioRef.current.add(url)
+    }
+  }, [preparedQueue, index])
+
   // Autoplay logic:
   // - Recognition front: play when card first appears
   // - Production back: play when answer is revealed
@@ -124,9 +135,11 @@ export function ReviewSession({
     }
   }
 
-  async function handleRating(rating: Rating) {
+  function handleRating(rating: Rating) {
+    if (!current) return
+
+    const currentCardId = current.id
     const durationMs = Date.now() - startTimeRef.current
-    await submitReview(current.id, rating, durationMs)
 
     setSessionStats((s) => ({
       total: s.total + 1,
@@ -141,6 +154,15 @@ export function ReviewSession({
       setRevealed(false)
       startTimeRef.current = Date.now()
     }
+
+    setPendingReviewCount((count) => count + 1)
+    void submitReview(currentCardId, rating, durationMs)
+      .catch(() => {
+        setSyncError('Часть результатов не сохранилась. Лучше обновить страницу и проверить историю review.')
+      })
+      .finally(() => {
+        setPendingReviewCount((count) => Math.max(0, count - 1))
+      })
   }
 
   // ── Session complete ─────────────────────────────────────────────────────
@@ -156,11 +178,27 @@ export function ReviewSession({
         <p className="text-muted-foreground mb-6">
           {sessionStats.total} cards · {accuracy}% accuracy
         </p>
+        {pendingReviewCount > 0 && (
+          <p className="text-sm text-muted-foreground mb-3">
+            Сохраняем результаты… {pendingReviewCount}
+          </p>
+        )}
+        {syncError && (
+          <p className="text-sm text-destructive mb-3">
+            {syncError}
+          </p>
+        )}
         <div className="flex gap-3 justify-center">
-          <Link href={`/decks/${deckId}/review`} className={buttonVariants({ variant: 'outline' })}>
-            Review again
-          </Link>
-          <Button variant="outline" onClick={() => router.push('/')}>
+          {pendingReviewCount > 0 ? (
+            <Button variant="outline" disabled>
+              Сохраняем…
+            </Button>
+          ) : (
+            <Link href={`/decks/${deckId}/review`} className={buttonVariants({ variant: 'outline' })}>
+              Review again
+            </Link>
+          )}
+          <Button variant="outline" onClick={() => router.push('/')} disabled={pendingReviewCount > 0}>
             ← Home
           </Button>
         </div>
@@ -170,16 +208,11 @@ export function ReviewSession({
 
   if (!current) return null
 
-  const noteFields = current.notes?.fields ?? {}
-  const flashcardProps = mapFieldsToFlashcard(noteFields, lang)
+  const noteFields = currentPrepared?.noteFields ?? {}
+  const flashcardProps = currentPrepared?.flashcardProps
+  const intervals = currentPrepared?.intervals
 
-  const intervalDays = getSchedulingIntervals(current as unknown as Card)
-  const intervals = {
-    again: formatInterval(intervalDays.again),
-    hard: formatInterval(intervalDays.hard),
-    good: formatInterval(intervalDays.good),
-    easy: formatInterval(intervalDays.easy),
-  }
+  if (!flashcardProps || !intervals || !currentPrepared) return null
 
   return (
     <div className="flex flex-col gap-4">
@@ -193,7 +226,7 @@ export function ReviewSession({
       <Flashcard
         {...flashcardProps}
         language={lang}
-        direction={isRecognition ? 'recognition' : 'production'}
+        direction={currentPrepared.direction}
         isRevealed={revealed}
         intervals={intervals}
         audioUrl={audioUrl}
