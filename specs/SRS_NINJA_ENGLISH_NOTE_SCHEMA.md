@@ -97,6 +97,8 @@ The read layer must remain tolerant of existing historical keys:
 - popularity: `popularity -> frequency`
 - style: canonical enum should still be inferred from verbose strings like `🎓 Neutral / ...`
 
+If both canonical and legacy example fields are present, `examples_html` wins over `collocations`.
+
 ## Write Rules
 
 All write paths for English notes must save only canonical keys:
@@ -140,6 +142,12 @@ The MCP draft contract for English decks must accept:
 
 The import layer must normalize legacy aliases when helpful, but the final saved payload must be canonical.
 
+For Anki `.apkg` imports specifically:
+
+- imported `extra` HTML must not be trusted as safe render-ready HTML;
+- the importer must sanitize it to plain example text and rebuild canonical `examples_html`;
+- active markup such as scripts or arbitrary embedded tags must not survive into stored `examples_html`.
+
 ## Tags
 
 English tag taxonomy should remain hierarchical and explicit.
@@ -179,3 +187,5 @@ After reset:
 - [ ] MCP `save_draft_notes` accepts canonical English fields and stores canonical data.
 - [ ] ChatGPT instructions for English import mention canonical keys, enum values, and `examples_html`.
 - [ ] English deck can start from a clean state without old-format notes in the database.
+- [ ] If both `examples_html` and `collocations` exist, the canonical `examples_html` value is preserved.
+- [ ] Anki import sanitizes `extra` HTML before storing it as `examples_html`.

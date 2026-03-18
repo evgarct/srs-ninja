@@ -72,6 +72,9 @@ English examples resolve through:
 - fallback `collocations`
 - fallback legacy `example_sentence` / `example_translation`
 
+When English notes are imported from Anki, arbitrary `extra` HTML must not be stored as trusted `examples_html` verbatim.
+The importer sanitizes it into plain-text example items and then rebuilds canonical safe `<ul><li>...</li></ul>` markup.
+
 English popularity resolves through:
 
 - `popularity`
