@@ -43,7 +43,7 @@ export default async function Home() {
   })()
 
   const [deckStats, todayStats, weeklyActivity] = await Promise.all([
-    getDashboardStats(),
+    getDashboardStats(timeZone),
     getTodayStats(),
     getWeeklyActivityStats(timeZone),
   ])
