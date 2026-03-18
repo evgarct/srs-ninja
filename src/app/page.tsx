@@ -100,16 +100,19 @@ export default async function Home() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {deckStats.map(({ deck, due, total }) => (
+          {deckStats.map(({ deck, due, total, drafts }) => (
             <Card key={deck.id} className="hover:border-foreground/30 transition-colors">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl">
                     {DECK_EMOJI[deck.language] ?? '📚'} {deck.name}
                   </CardTitle>
-                  {due > 0 && (
-                    <Badge variant="destructive">{due} к повторению</Badge>
-                  )}
+                  <div className="flex gap-2">
+                    {drafts > 0 && <Badge variant="outline">{drafts} draft</Badge>}
+                    {due > 0 && (
+                      <Badge variant="destructive">{due} к повторению</Badge>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">{total} карточек всего</p>
               </CardHeader>
@@ -125,9 +128,16 @@ export default async function Home() {
                   </div>
                 ) : (
                   <>
-                    <Link href={`/deck/${deck.id}`} className={cn(buttonVariants({ variant: 'outline' }), 'text-center')}>
-                      Открыть колоду
-                    </Link>
+                    <div className="flex gap-2">
+                      <Link href={`/deck/${deck.id}`} className={cn(buttonVariants({ variant: 'outline' }), 'flex-1 text-center')}>
+                        Открыть колоду
+                      </Link>
+                      {drafts > 0 && (
+                        <Link href={`/deck/${deck.id}/drafts`} className={buttonVariants({ variant: 'outline' })}>
+                          Drafts
+                        </Link>
+                      )}
+                    </div>
                     <ExtraStudyBox deckId={deck.id} hasStudiedToday={todayStats.total > 0} />
                   </>
                 )}

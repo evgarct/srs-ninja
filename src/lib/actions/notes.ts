@@ -2,8 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { newFSRSCard } from '@/lib/fsrs'
 import { getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
+import { buildInitialNoteCards } from '@/lib/note-cards'
+import { shouldGenerateAudioForNote } from '@/lib/note-audio'
 
 /**
  * Retrieves all notes for a specific deck, including their associated generated cards.
@@ -17,6 +18,7 @@ export async function getNotesByDeck(deckId: string) {
     .from('notes')
     .select('*, cards(id, card_type, state, due_at, stability, difficulty)')
     .eq('deck_id', deckId)
+    .eq('status', 'approved')
     .order('created_at', { ascending: false })
   if (error) throw error
   return data
@@ -65,26 +67,19 @@ export async function createNote(
 
   const { data: note, error: noteError } = await supabase
     .from('notes')
-    .insert({ deck_id: deckId, user_id: user.id, fields: normalizedFields, tags })
+    .insert({
+      deck_id: deckId,
+      user_id: user.id,
+      fields: normalizedFields,
+      tags,
+      status: 'approved',
+      source: 'manual',
+    })
     .select()
     .single()
   if (noteError) throw noteError
 
-  // Create recognition and production cards
-  const fsrsCard = newFSRSCard()
-  const now = new Date().toISOString()
-
-  const cards = ['recognition', 'production'].map((cardType) => ({
-    note_id: note.id,
-    user_id: user.id,
-    card_type: cardType,
-    state: 'new',
-    stability: fsrsCard.stability,
-    difficulty: fsrsCard.difficulty,
-    due_at: now,
-    reps: 0,
-    lapses: 0,
-  }))
+  const cards = buildInitialNoteCards(note.id, user.id)
 
   const { error: cardsError } = await supabase.from('cards').insert(cards)
   if (cardsError) throw cardsError
@@ -172,9 +167,25 @@ export async function updateNoteFields(
 
   let audioUrl: string | undefined
 
-  // Trigger TTS regeneration if the expression changed (or forced) and language is english
+  const { data: noteStatusRow, error: noteStatusError } = await supabase
+    .from('notes')
+    .select('status')
+    .eq('id', noteId)
+    .single()
+
+  if (noteStatusError) throw noteStatusError
+
+  // Audio stays separate from draft import: only approved notes may regenerate TTS.
   const newExpression = getNotePrimaryText(normalizedFields)
-  if (language === 'english' && newExpression && (forceAudio || newExpression !== oldExpression)) {
+  if (
+    newExpression &&
+    shouldGenerateAudioForNote({
+      language,
+      status: noteStatusRow.status,
+      forceAudio,
+      expressionChanged: newExpression !== oldExpression,
+    })
+  ) {
     const { generateAndCacheAudio } = await import('@/lib/tts')
     const result = await generateAndCacheAudio(supabase, user.id, noteId, newExpression, language)
     if ('audioUrl' in result) {
@@ -183,6 +194,7 @@ export async function updateNoteFields(
   }
 
   revalidatePath(`/deck/${deckId}`)
+  revalidatePath(`/deck/${deckId}/drafts`)
   
   return { success: true, audioUrl }
 }

@@ -20,8 +20,9 @@ export async function getDueCards(deckId: string, limit = 20) {
 
   const { data, error } = await supabase
     .from('cards')
-    .select('*, notes!inner(fields, tags, deck_id)')
+    .select('*, notes!inner(fields, tags, deck_id, status)')
     .eq('notes.deck_id', deckId)
+    .eq('notes.status', 'approved')
     .lte('due_at', now)
     .order('due_at', { ascending: true })
     .limit(limit)
@@ -53,8 +54,9 @@ export async function getExtraStudyCards(deckId: string, limit = 20) {
   // 1. Fetch as many new cards as possible (up to limit)
   const { data: newCards, error: newErr } = await supabase
     .from('cards')
-    .select('*, notes!inner(fields, tags, deck_id)')
+    .select('*, notes!inner(fields, tags, deck_id, status)')
     .eq('notes.deck_id', deckId)
+    .eq('notes.status', 'approved')
     .eq('state', 'new')
     .order('created_at', { ascending: true })
     .limit(limit)
@@ -67,8 +69,9 @@ export async function getExtraStudyCards(deckId: string, limit = 20) {
   const remaining = limit - newCards.length
   const { data: upcomingCards, error: upErr } = await supabase
     .from('cards')
-    .select('*, notes!inner(fields, tags, deck_id)')
+    .select('*, notes!inner(fields, tags, deck_id, status)')
     .eq('notes.deck_id', deckId)
+    .eq('notes.status', 'approved')
     .neq('state', 'new')
     .gt('due_at', now)          // future only — already-due cards belong in the normal queue
     .order('due_at', { ascending: true })
@@ -94,6 +97,7 @@ export async function getManualStudyCards(
     .from('notes')
     .select('id, fields, tags, cards(id, card_type, state, due_at)')
     .eq('deck_id', deckId)
+    .eq('status', 'approved')
 
   if (notesError || !notes) throw notesError ?? new Error('Failed to fetch notes')
 
@@ -115,8 +119,9 @@ export async function getManualStudyCards(
   const visibleNoteIds = visibleNotes.map((note) => note.id)
   const { data: cards, error: cardsError } = await supabase
     .from('cards')
-    .select('*, notes!inner(fields, tags, deck_id)')
+    .select('*, notes!inner(fields, tags, deck_id, status)')
     .eq('notes.deck_id', deckId)
+    .eq('notes.status', 'approved')
     .in('note_id', visibleNoteIds)
     .order('due_at', { ascending: true })
 

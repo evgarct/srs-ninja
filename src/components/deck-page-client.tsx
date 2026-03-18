@@ -40,6 +40,7 @@ interface DeckPageClientProps {
   dueCards: number
   totalCards: number
   totalNotes: number
+  draftNotes: number
   initialNotes: DeckNoteRow[]
   initialAudioMap: Record<string, string>
   initialTagFilter?: string
@@ -55,6 +56,7 @@ export function DeckPageClient({
   dueCards,
   totalCards,
   totalNotes,
+  draftNotes,
   initialNotes,
   initialAudioMap,
   initialTagFilter,
@@ -217,10 +219,16 @@ export function DeckPageClient({
           <h1 className="text-3xl font-bold">{deckName}</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {totalNotes} нотов · {totalCards} карточек · {dueCards} к повторению
+            {draftNotes > 0 ? ` · ${draftNotes} draft` : ''}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
+          {draftNotes > 0 && (
+            <Link href={`/deck/${deckId}/drafts`} className={buttonVariants({ variant: 'outline' })}>
+              Drafts ({draftNotes})
+            </Link>
+          )}
           {dueCards > 0 && (
             <Link href={`/review/${deckId}`} className={buttonVariants()}>
               Учить ({dueCards})

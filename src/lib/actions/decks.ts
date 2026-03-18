@@ -35,27 +35,37 @@ export async function getDeckWithStats(deckId: string) {
 
   const { data: deck } = await supabase.from('decks').select('*').eq('id', deckId).single()
 
-  const { count: totalNotes } = await supabase
-    .from('notes')
-    .select('*', { count: 'exact', head: true })
-    .eq('deck_id', deckId)
-
-  const { count: totalCards } = await supabase
-    .from('cards')
-    .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
-    .eq('notes.deck_id', deckId)
-
-  const { count: dueCards } = await supabase
-    .from('cards')
-    .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
-    .eq('notes.deck_id', deckId)
-    .lte('due_at', now)
+  const [{ count: totalNotes }, { count: draftNotes }, { count: totalCards }, { count: dueCards }] =
+    await Promise.all([
+      supabase
+        .from('notes')
+        .select('*', { count: 'exact', head: true })
+        .eq('deck_id', deckId)
+        .eq('status', 'approved'),
+      supabase
+        .from('notes')
+        .select('*', { count: 'exact', head: true })
+        .eq('deck_id', deckId)
+        .eq('status', 'draft'),
+      supabase
+        .from('cards')
+        .select('*, notes!inner(deck_id, status)', { count: 'exact', head: true })
+        .eq('notes.deck_id', deckId)
+        .eq('notes.status', 'approved'),
+      supabase
+        .from('cards')
+        .select('*, notes!inner(deck_id, status)', { count: 'exact', head: true })
+        .eq('notes.deck_id', deckId)
+        .eq('notes.status', 'approved')
+        .lte('due_at', now),
+    ])
 
   return {
     deck,
     totalCards: totalCards ?? 0,
     dueCards: dueCards ?? 0,
     totalNotes: totalNotes ?? 0,
+    draftNotes: draftNotes ?? 0,
   }
 }
 
@@ -79,15 +89,23 @@ export async function getDashboardStats() {
       const [{ count: due }, { count: total }] = await Promise.all([
         supabase
           .from('cards')
-          .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
+          .select('*, notes!inner(deck_id, status)', { count: 'exact', head: true })
           .eq('notes.deck_id', deck.id)
+          .eq('notes.status', 'approved')
           .lte('due_at', now),
         supabase
           .from('cards')
-          .select('*, notes!inner(deck_id)', { count: 'exact', head: true })
-          .eq('notes.deck_id', deck.id),
+          .select('*, notes!inner(deck_id, status)', { count: 'exact', head: true })
+          .eq('notes.deck_id', deck.id)
+          .eq('notes.status', 'approved'),
       ])
-      return { deck, due: due ?? 0, total: total ?? 0 }
+      const { count: drafts } = await supabase
+        .from('notes')
+        .select('*', { count: 'exact', head: true })
+        .eq('deck_id', deck.id)
+        .eq('status', 'draft')
+
+      return { deck, due: due ?? 0, total: total ?? 0, drafts: drafts ?? 0 }
     })
   )
   return stats
