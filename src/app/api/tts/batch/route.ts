@@ -56,11 +56,11 @@ export async function POST(request: Request) {
   }
 
   // Find which notes already have audio
-  const noteIds = notes.map((n) => n.id)
+  const fetchedNoteIds = notes.map((n) => n.id)
   const { data: existingAudio } = await supabase
     .from('audio_cache')
     .select('note_id')
-    .in('note_id', noteIds)
+    .in('note_id', fetchedNoteIds)
 
   const cachedIds = new Set(existingAudio?.map((a) => a.note_id) ?? [])
   const pending = notes.filter((n) => !cachedIds.has(n.id))
