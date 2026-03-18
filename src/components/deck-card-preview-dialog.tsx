@@ -10,7 +10,7 @@ import { mapFieldsToFlashcard } from '@/lib/flashcard-mapping'
 import type { Language } from '@/lib/types'
 
 interface DeckCardPreviewDialogProps {
-  fields: Record<string, string>
+  fields: Record<string, unknown>
   audioUrl?: string
   language: Language
   triggerLabel: string

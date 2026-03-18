@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
 import { createNote } from '@/lib/actions/notes'
-import type { Deck } from '@/lib/types'
+import type { Deck, Language } from '@/lib/types'
 
 interface ParsedNote {
   word: string
@@ -59,6 +59,9 @@ export function AnkiImporter({ decks }: { decks: Deck[] }) {
 
   async function handleImport() {
     if (!file || !deckId) return
+    const targetDeck = decks.find((deck) => deck.id === deckId)
+    if (!targetDeck) return
+
     setStatus('parsing')
     setProgress(0)
 
@@ -69,11 +72,22 @@ export function AnkiImporter({ decks }: { decks: Deck[] }) {
       let count = 0
       for (const note of notes) {
         if (!note.word.trim()) continue
-        await createNote(deckId, {
-          word: note.word,
-          translation: note.translation,
-          notes: note.extra,
-        }, [])
+        await createNote(
+          deckId,
+          targetDeck.language as Language,
+          targetDeck.language === 'english'
+            ? {
+                word: note.word,
+                translation: note.translation,
+                examples_html: note.extra,
+              }
+            : {
+                word: note.word,
+                translation: note.translation,
+                notes: note.extra,
+              },
+          []
+        )
         count++
         setProgress(Math.round((count / notes.length) * 100))
         setImported(count)

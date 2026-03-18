@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateNoteFields } from '@/lib/actions/notes'
-import { getFields, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
+import { getFields, getNoteFormValues, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,10 +18,10 @@ interface NoteEditorFormProps {
   noteId: string
   deckId: string
   language: Language
-  initialFields: Record<string, string>
+  initialFields: Record<string, unknown>
   initialAudioUrl?: string
   allowAudioGeneration?: boolean
-  onSuccess?: (updatedFields: Record<string, string>, newAudioUrl?: string) => void
+  onSuccess?: (updatedFields: Record<string, unknown>, newAudioUrl?: string) => void
   onCancel?: () => void
 }
 
@@ -36,12 +36,7 @@ export function NoteEditorForm({
   onCancel,
 }: NoteEditorFormProps) {
   const fields = getFields(language)
-  const [values, setValues] = useState<Record<string, string>>(
-    normalizeNoteFields({
-      ...initialFields,
-      word: getNotePrimaryText(initialFields),
-    })
-  )
+  const [values, setValues] = useState<Record<string, string>>(getNoteFormValues(language, initialFields))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [currentAudioUrl, setCurrentAudioUrl] = useState(initialAudioUrl)
@@ -62,7 +57,7 @@ export function NoteEditorForm({
     setError('')
 
     try {
-      const normalizedValues = normalizeNoteFields(values)
+      const normalizedValues = normalizeNoteFields(values, language)
       const oldExpression = getNotePrimaryText(initialFields)
 
       const { success, audioUrl } = await updateNoteFields(
@@ -125,6 +120,9 @@ export function NoteEditorForm({
             {field.label}
             {field.required && <span className="text-destructive ml-1">*</span>}
           </Label>
+          {field.hint && (
+            <p className="text-xs text-muted-foreground">{field.hint}</p>
+          )}
           {field.type === 'select' && field.options ? (
             <Select
               value={values[field.key] ?? ''}
@@ -139,7 +137,7 @@ export function NoteEditorForm({
                 ))}
               </SelectContent>
             </Select>
-          ) : field.type === 'textarea' ? (
+          ) : field.type === 'textarea' || field.type === 'list' || field.type === 'html' ? (
             <Textarea
               id={field.key}
               value={values[field.key] ?? ''}

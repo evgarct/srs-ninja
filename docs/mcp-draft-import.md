@@ -228,15 +228,13 @@ Draft generator должен отдавать payload, совместимый с
 
 - `word`
 - `translation`
-- `pronunciation`
 - `part_of_speech`
 - `level`
+- `popularity`
 - `style`
-- `frequency`
-- `example_sentence`
-- `example_translation`
-- `notes`
-- `image_url`
+- `synonyms`
+- `antonyms`
+- `examples_html`
 - `tags`
 
 ## Current Field Schemas
@@ -249,13 +247,13 @@ Draft generator должен отдавать payload, совместимый с
 
 - `word`
 - `translation`
-- `pronunciation`
 - `part_of_speech`
 - `level`
+- `popularity`
 - `style`
-- `example_sentence`
-- `example_translation`
-- `notes`
+- `synonyms`
+- `antonyms`
+- `examples_html`
 
 Required:
 
@@ -293,6 +291,8 @@ Enum constraints:
   - `narrative`
   - `slang`
   - `poetic`
+- `popularity`
+  - integer `1..10`
 
 ### Czech Decks
 
@@ -484,6 +484,30 @@ Behavior:
 - создать review cards, если используется approve-time creation;
 - оставить существующие fields и tags без потери данных.
 
+## `deleteDraftNote`
+
+Input:
+
+- `noteId`
+
+Behavior:
+
+- удалить note, только если её статус всё ещё `draft`;
+- не трогать approved notes;
+- если это была последняя note в batch, автоматически удалить пустой batch.
+
+## `deleteDraftBatch`
+
+Input:
+
+- `batchId`
+
+Behavior:
+
+- удалить batch и все notes внутри него только если batch всё ещё состоит только из `draft` notes;
+- отклонять удаление partially approved / approved batch;
+- использовать как cleanup action для неудачных или больше не нужных импортов.
+
 ## Website UX Direction
 
 На сайте должен быть явный draft review flow.
@@ -495,20 +519,25 @@ Behavior:
 - draft badge;
 - single-note edit;
 - single-note approve;
+- single-note delete;
+- draft-only batch delete;
 - drafts не участвуют в обычном review до approve.
 
 Текущее MVP-решение:
 
 - отдельная страница `/deck/[id]/drafts`;
 - переход на неё с deck page и dashboard, если у колоды есть drafts;
-- локальное обновление draft list после approve без перезагрузки.
+- локальное обновление draft list после approve/delete без перезагрузки;
+- для English drafts structured rendering показывает `examples_html`, `synonyms`, `antonyms` и canonical metadata в человекочитаемом виде;
+- delete batch на `/import` и на draft review page для draft-only batch.
 
 Желательное follow-up развитие:
 
 - bulk approve;
 - batch summary;
 - conflict review;
-- archive / delete batch actions.
+- archive actions;
+- delete partially approved / approved batch.
 
 ## Audio Behavior
 
@@ -539,22 +568,22 @@ AI-import не запускает TTS автоматически.
       "fields": {
         "word": "anchor",
         "translation": "якорь",
-        "pronunciation": "/ˈæŋ.kər/",
         "part_of_speech": "noun",
         "level": "B1",
+        "popularity": 6,
         "style": "neutral",
-        "example_sentence": "Drop the anchor before the storm.",
-        "example_translation": "Брось якорь перед штормом.",
-        "notes": "Common nautical noun."
+        "synonyms": ["hook", "mooring"],
+        "antonyms": ["drift"],
+        "examples_html": "<ul><li>Drop the <b>anchor</b> before the storm.</li><li>The <b>anchor</b> held all night.</li></ul>"
       },
-      "tags": ["ENGLISH::travel", "ENGLISH::nautical"]
+      "tags": ["English::topic.travel", "English::style.neutral", "English::level.b1", "English::noun"]
     }
   ],
   "metadata": {
     "modelName": "gpt-5.4",
     "promptVersion": "draft-import-v1",
     "topic": "travel",
-    "requestedTags": ["ENGLISH::travel", "ENGLISH::nautical"]
+    "requestedTags": ["English::topic.travel", "English::style.neutral", "English::level.b1", "English::noun"]
   }
 }
 ```
@@ -680,6 +709,37 @@ AI-import не запускает TTS автоматически.
 2. Выбрать `ChatGPT`.
 3. Скопировать готовый connection URL.
 4. Добавить server в ChatGPT как custom MCP connection.
+5. Скопировать English import prompt из onboarding и один раз задать ChatGPT canonical schema.
+
+### English Prompt Guidance
+
+Для English deck onboarding должен явно толкать ChatGPT к canonical schema:
+
+- `word`
+- `translation`
+- `level`
+- `part_of_speech`
+- `popularity`
+- `style`
+- `synonyms`
+- `antonyms`
+- `examples_html`
+
+Prompt должен явно запрещать legacy English keys для новых notes:
+
+- `term`
+- `expression`
+- `frequency`
+- `example_sentence`
+- `example_translation`
+- `collocations`
+
+И должен требовать:
+
+- сначала вызвать `get_deck_contract`;
+- использовать exact enum values из contract;
+- передавать `examples_html` как HTML `<ul>` с двумя `<li>`;
+- выделять изучаемое слово через `<b>` в каждом примере.
 5. Использовать MCP tools для draft import.
 6. Вернуться в SRS Ninja и проверить drafts через website review flow.
 
@@ -733,6 +793,8 @@ AI-import не запускает TTS автоматически.
 - `src/components/mcp-connect-panel.tsx`
 - `src/components/draft-review-client.tsx`
 - `src/components/approve-draft-button.tsx`
+- `src/components/delete-draft-note-button.tsx`
+- `src/components/delete-draft-batch-button.tsx`
 - `src/components/draft-status-badge.tsx`
 - `src/components/draft-status-badge.stories.tsx`
 - `supabase/migrations/20260318145957_mcp_draft_import.sql`

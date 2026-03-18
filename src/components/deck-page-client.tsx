@@ -171,7 +171,7 @@ export function DeckPageClient({
 
   function handleNoteSaveSuccess(
     noteId: string,
-    updatedFields: Record<string, string>,
+    updatedFields: Record<string, unknown>,
     audioUrl?: string
   ) {
     setNotes((prev) =>
@@ -321,7 +321,9 @@ export function DeckPageClient({
                   ) : (
                     visibleNotes.map((note) => {
                       const word = getNotePrimaryText(note.fields) || '—'
-                      const translation = note.fields.translation || ''
+                      const translation = typeof note.fields.translation === 'string'
+                        ? note.fields.translation
+                        : ''
                       const audioUrl = audioMap[note.id]
                       const aggregateState = getNoteFsrsState(note.cards)
                       const memoryScore = getNoteMemoryScore(note.cards)

@@ -12,7 +12,7 @@ export type DeckNoteCard = {
 
 export type DeckNoteRow = {
   id: string
-  fields: Record<string, string>
+  fields: Record<string, unknown>
   tags: string[]
   cards: DeckNoteCard[]
 }

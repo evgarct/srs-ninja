@@ -30,11 +30,10 @@ export const EnglishNote: Story = {
     fields: {
       word: 'anchor',
       translation: 'якорь',
-      example_sentence: 'Drop the <b>anchor</b> before the storm.',
-      example_translation: 'Брось <b>якорь</b> перед штормом.',
+      examples_html: '<ul><li>Drop the <b>anchor</b> before the storm.</li><li>The <b>anchor</b> held through the night.</li></ul>',
       level: 'A2',
-      frequency: '6',
-      style: 'Neutral',
+      popularity: '6',
+      style: 'neutral',
       part_of_speech: 'noun',
     },
     trigger: (

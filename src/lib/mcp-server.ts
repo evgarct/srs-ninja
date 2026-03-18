@@ -106,6 +106,16 @@ export function createSrsNinjaMcpServer({
         contract: z.object({
           keys: z.array(z.string()),
           requiredKeys: z.array(z.string()),
+          fields: z.array(
+            z.object({
+              key: z.string(),
+              label: z.string(),
+              type: z.string(),
+              required: z.boolean().optional(),
+              options: z.array(z.string()).optional(),
+              hint: z.string().optional(),
+            })
+          ),
         }),
       },
     },
@@ -132,6 +142,14 @@ export function createSrsNinjaMcpServer({
           contract: {
             keys: contract.keys,
             requiredKeys: contract.requiredKeys,
+            fields: contract.fields.map((field) => ({
+              key: field.key,
+              label: field.label,
+              type: field.type,
+              required: field.required,
+              options: field.options ? [...field.options] : undefined,
+              hint: field.hint,
+            })),
           },
         }
       )
@@ -147,7 +165,7 @@ export function createSrsNinjaMcpServer({
         deckId: z.string(),
         items: z.array(
           z.object({
-            fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
+            fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])),
             tags: z.array(z.string()).optional(),
           })
         ),

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
 import { buildInitialNoteCards } from '@/lib/note-cards'
 import { shouldGenerateAudioForNote } from '@/lib/note-audio'
+import type { Language } from '@/lib/types'
 
 /**
  * Retrieves all notes for a specific deck, including their associated generated cards.
@@ -57,10 +58,11 @@ export async function getNote(noteId: string) {
  */
 export async function createNote(
   deckId: string,
-  fields: Record<string, string>,
+  language: Language,
+  fields: Record<string, unknown>,
   tags: string[]
 ) {
-  const normalizedFields = normalizeNoteFields(fields)
+  const normalizedFields = normalizeNoteFields(fields, language)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
@@ -99,10 +101,11 @@ export async function createNote(
  */
 export async function updateNote(
   noteId: string,
-  fields: Record<string, string>,
+  language: Language,
+  fields: Record<string, unknown>,
   tags: string[]
 ) {
-  const normalizedFields = normalizeNoteFields(fields)
+  const normalizedFields = normalizeNoteFields(fields, language)
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('notes')
@@ -148,12 +151,12 @@ export async function deleteNote(noteId: string, deckId: string) {
 export async function updateNoteFields(
   noteId: string,
   deckId: string,
-  newFields: Record<string, string>,
+  newFields: Record<string, unknown>,
   oldExpression: string,
   language: string,
   forceAudio: boolean = false
 ) {
-  const normalizedFields = normalizeNoteFields(newFields)
+  const normalizedFields = normalizeNoteFields(newFields, language as Language)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')

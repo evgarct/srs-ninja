@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  canDeleteDraftBatch,
   findDuplicateDraftCandidates,
   getDraftFieldContract,
   getImportBatchStatus,
@@ -12,6 +13,8 @@ describe('getDraftFieldContract', () => {
 
     expect(contract.keys).toContain('word')
     expect(contract.keys).toContain('translation')
+    expect(contract.keys).toContain('popularity')
+    expect(contract.keys).toContain('examples_html')
     expect(contract.keys).not.toContain('gender')
   })
 
@@ -33,7 +36,9 @@ describe('validateDraftCandidate', () => {
         part_of_speech: 'NOUN',
         level: 'b1',
         style: 'neutral',
-        example_sentence: 'Drop the anchor before the storm.',
+        popularity: 6,
+        synonyms: ['hook', 'Hook'],
+        examples_html: '<ul><li>Drop the <b>anchor</b> before the storm.</li></ul>',
       },
       tags: [' nautical ', 'Nautical', 'travel'],
     })
@@ -46,7 +51,9 @@ describe('validateDraftCandidate', () => {
         part_of_speech: 'noun',
         level: 'B1',
         style: 'neutral',
-        example_sentence: 'Drop the anchor before the storm.',
+        popularity: 6,
+        synonyms: ['hook'],
+        examples_html: '<ul><li>Drop the <b>anchor</b> before the storm.</li></ul>',
       },
       tags: ['nautical', 'travel'],
     })
@@ -87,7 +94,7 @@ describe('validateDraftCandidate', () => {
 
     expect(result.errors).toEqual([])
     expect(result.warnings.some((warning) => warning.code === 'unknown_field')).toBe(true)
-    expect(result.candidate?.fields.frequency).toBeUndefined()
+    expect(result.candidate?.fields.popularity).toBeUndefined()
   })
 })
 
@@ -153,5 +160,17 @@ describe('getImportBatchStatus', () => {
 
   it('returns approved when all notes are approved', () => {
     expect(getImportBatchStatus(['approved'])).toBe('approved')
+  })
+})
+
+describe('canDeleteDraftBatch', () => {
+  it('allows deleting batches that only contain draft notes', () => {
+    expect(canDeleteDraftBatch(['draft', 'draft'])).toBe(true)
+    expect(canDeleteDraftBatch([])).toBe(true)
+  })
+
+  it('blocks deleting batches once any note is approved', () => {
+    expect(canDeleteDraftBatch(['draft', 'approved'])).toBe(false)
+    expect(canDeleteDraftBatch(['approved'])).toBe(false)
   })
 })

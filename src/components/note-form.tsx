@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createNote, updateNote } from '@/lib/actions/notes'
-import { getFields, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
+import { getFields, getNoteFormValues, normalizeNoteFields } from '@/lib/note-fields'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +14,7 @@ interface NoteFormProps {
   deckId: string
   language: Language
   noteId?: string
-  initialFields?: Record<string, string>
+  initialFields?: Record<string, unknown>
   initialTags?: string[]
 }
 
@@ -35,7 +35,7 @@ interface NoteFormProps {
  */
 export function NoteForm({ deckId, language, noteId, initialFields = {}, initialTags = [] }: NoteFormProps) {
   const fields = getFields(language)
-  const [values, setValues] = useState<Record<string, string>>(normalizeNoteFields({ ...initialFields, word: getNotePrimaryText(initialFields) }))
+  const [values, setValues] = useState<Record<string, string>>(getNoteFormValues(language, initialFields))
   const [tagsInput, setTagsInput] = useState(initialTags.join(', '))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -54,10 +54,10 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
 
     try {
       if (noteId) {
-        await updateNote(noteId, normalizeNoteFields(values), tags)
+        await updateNote(noteId, language, normalizeNoteFields(values, language), tags)
         router.push(`/deck/${deckId}`)
       } else {
-        await createNote(deckId, normalizeNoteFields(values), tags)
+        await createNote(deckId, language, normalizeNoteFields(values, language), tags)
         // Clear form for next note
         setValues({})
         setTagsInput('')
@@ -78,6 +78,9 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
             {field.label}
             {field.required && <span className="text-destructive ml-1">*</span>}
           </Label>
+          {field.hint && (
+            <p className="text-xs text-muted-foreground">{field.hint}</p>
+          )}
           {field.type === 'select' && field.options ? (
             <Select
               value={values[field.key] ?? ''}
@@ -92,7 +95,7 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
                 ))}
               </SelectContent>
             </Select>
-          ) : field.type === 'textarea' ? (
+          ) : field.type === 'textarea' || field.type === 'list' || field.type === 'html' ? (
             <textarea
               id={field.key}
               value={values[field.key] ?? ''}

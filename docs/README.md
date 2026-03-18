@@ -10,6 +10,7 @@
 |----------|----------|
 | [deck-audio-playback.md](./deck-audio-playback.md) | Deck page audio playback: Play-кнопка в списке нотов и в edit mode, мгновенное появление после генерации/регенерации |
 | [deck-table-view.md](./deck-table-view.md) | Deck table view: full-width таблица колоды, dropdown multi-select filters, preview на реальном Flashcard и batch audio по текущему filtered subset |
+| [english-note-schema.md](./english-note-schema.md) | Canonical English note contract: shared field schema, legacy normalization, and alignment across forms, flashcards, and MCP |
 | [extra-study.md](./extra-study.md) | Фича Extra Study: адаптивный подбор карточек, URL-параметры, поведение FSRS при досрочном повторении |
 | [mcp-draft-import.md](./mcp-draft-import.md) | MCP draft import: AI-generated candidate notes, draft-first persistence, import batches и ручной approve flow |
 | [review-learning-loop.md](./review-learning-loop.md) | Review learning loop: `Again/Hard` возвращают карточку в текущую сессию, а same-day extra study становится менее навязчивым |

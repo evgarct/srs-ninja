@@ -63,7 +63,7 @@ export function ReviewSession({
   const isRecognition = currentPrepared?.direction === 'recognition'
   const audioUrl = currentPrepared?.audioUrl
 
-  function handleSaveSuccess(updatedFields: Record<string, string>, newAudioUrl?: string) {
+  function handleSaveSuccess(updatedFields: Record<string, unknown>, newAudioUrl?: string) {
     const currentNoteId = current?.note_id
 
     setQueue((prev) => {
