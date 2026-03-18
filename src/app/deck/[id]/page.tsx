@@ -18,7 +18,7 @@ export default async function DeckPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ deck, dueCards, totalCards, totalNotes }, notes] = await Promise.all([
+  const [{ deck, dueCards, totalCards, totalNotes, draftNotes }, notes] = await Promise.all([
     getDeckWithStats(id),
     getNotesByDeck(id),
   ])
@@ -43,6 +43,7 @@ export default async function DeckPage({
       dueCards={dueCards}
       totalCards={totalCards}
       totalNotes={totalNotes}
+      draftNotes={draftNotes}
       initialNotes={notes.map((note) => ({
         id: note.id,
         fields: note.fields as Record<string, string>,

@@ -20,6 +20,7 @@ interface NoteEditorFormProps {
   language: Language
   initialFields: Record<string, string>
   initialAudioUrl?: string
+  allowAudioGeneration?: boolean
   onSuccess?: (updatedFields: Record<string, string>, newAudioUrl?: string) => void
   onCancel?: () => void
 }
@@ -30,6 +31,7 @@ export function NoteEditorForm({
   language,
   initialFields,
   initialAudioUrl,
+  allowAudioGeneration = true,
   onSuccess,
   onCancel,
 }: NoteEditorFormProps) {
@@ -69,7 +71,7 @@ export function NoteEditorForm({
         normalizedValues,
         oldExpression,
         language,
-        forceAudio
+        forceAudio && allowAudioGeneration
       )
 
       if (success) {
@@ -100,7 +102,7 @@ export function NoteEditorForm({
 
   return (
     <form ref={formRef} onSubmit={(e) => submitForm(e, false)} className="space-y-4 py-4 w-full">
-      {currentAudioUrl && (
+      {allowAudioGeneration && currentAudioUrl && (
         <div className="flex items-center justify-between rounded-lg border px-3 py-2">
           <div>
             <p className="text-sm font-medium">Audio preview</p>
@@ -159,7 +161,7 @@ export function NoteEditorForm({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-col gap-2 pt-4">
-        {language === 'english' && (
+        {allowAudioGeneration && language === 'english' && (
           <Button 
             type="button" 
             variant="secondary" 
