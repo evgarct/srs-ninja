@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Deck, Language } from '@/lib/types'
+import { countVisibleDueCardsByDeck, getStartOfDayInTimeZone } from '@/lib/dashboard-review'
 
 /**
  * Retrieves all decks for the current user.
@@ -77,35 +78,63 @@ export async function getDeckWithStats(deckId: string) {
  * 
  * @returns A promise that resolves to an array of deck statistics objects.
  */
-export async function getDashboardStats() {
+export async function getDashboardStats(timeZone = 'UTC') {
   const supabase = await createClient()
   const now = new Date().toISOString()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
 
   const { data: decks } = await supabase.from('decks').select('*').order('created_at')
   if (!decks) return []
+  if (decks.length === 0) return []
+
+  const deckIds = decks.map((deck) => deck.id)
+  const todayStart = getStartOfDayInTimeZone(new Date(), timeZone).toISOString()
+
+  const [{ data: dueCards, error: dueError }, { data: reviewedToday, error: reviewedError }] = await Promise.all([
+    supabase
+      .from('cards')
+      .select('id, notes!inner(deck_id, status)')
+      .in('notes.deck_id', deckIds)
+      .eq('notes.status', 'approved')
+      .lte('due_at', now),
+    supabase
+      .from('reviews')
+      .select('card_id')
+      .eq('user_id', user.id)
+      .gte('reviewed_at', todayStart),
+  ])
+
+  if (dueError) throw dueError
+  if (reviewedError) throw reviewedError
+
+  const visibleDueByDeck = countVisibleDueCardsByDeck(
+    (dueCards ?? []).map((card) => {
+      const note = Array.isArray(card.notes) ? card.notes[0] : card.notes
+      return {
+        id: card.id,
+        deckId: note?.deck_id ?? '',
+      }
+    }).filter((card) => card.deckId),
+    (reviewedToday ?? []).map((review) => review.card_id)
+  )
 
   const stats = await Promise.all(
     decks.map(async (deck) => {
-      const [{ count: due }, { count: total }] = await Promise.all([
-        supabase
-          .from('cards')
-          .select('*, notes!inner(deck_id, status)', { count: 'exact', head: true })
-          .eq('notes.deck_id', deck.id)
-          .eq('notes.status', 'approved')
-          .lte('due_at', now),
+      const [{ count: total }, { count: drafts }] = await Promise.all([
         supabase
           .from('cards')
           .select('*, notes!inner(deck_id, status)', { count: 'exact', head: true })
           .eq('notes.deck_id', deck.id)
           .eq('notes.status', 'approved'),
+        supabase
+          .from('notes')
+          .select('*', { count: 'exact', head: true })
+          .eq('deck_id', deck.id)
+          .eq('status', 'draft'),
       ])
-      const { count: drafts } = await supabase
-        .from('notes')
-        .select('*', { count: 'exact', head: true })
-        .eq('deck_id', deck.id)
-        .eq('status', 'draft')
 
-      return { deck, due: due ?? 0, total: total ?? 0, drafts: drafts ?? 0 }
+      return { deck, due: visibleDueByDeck.get(deck.id) ?? 0, total: total ?? 0, drafts: drafts ?? 0 }
     })
   )
   return stats
