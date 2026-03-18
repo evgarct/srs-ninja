@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateNoteFields } from '@/lib/actions/notes'
 import { getFields, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
@@ -11,12 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import type { Language } from '@/lib/types'
+import { PlayButton } from '@/components/flashcard/PlayButton'
+import { playAudioUrl } from '@/lib/audio'
 
 interface NoteEditorFormProps {
   noteId: string
   deckId: string
   language: Language
   initialFields: Record<string, string>
+  initialAudioUrl?: string
   onSuccess?: (updatedFields: Record<string, string>, newAudioUrl?: string) => void
   onCancel?: () => void
 }
@@ -26,6 +29,7 @@ export function NoteEditorForm({
   deckId,
   language,
   initialFields,
+  initialAudioUrl,
   onSuccess,
   onCancel,
 }: NoteEditorFormProps) {
@@ -38,8 +42,13 @@ export function NoteEditorForm({
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [currentAudioUrl, setCurrentAudioUrl] = useState(initialAudioUrl)
   const formRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    setCurrentAudioUrl(initialAudioUrl)
+  }, [initialAudioUrl])
 
   function setValue(key: string, value: string) {
     setValues((prev) => ({ ...prev, [key]: value }))
@@ -66,7 +75,9 @@ export function NoteEditorForm({
       if (success) {
         toast.success('Fields updated successfully!')
         if (audioUrl) {
+          setCurrentAudioUrl(audioUrl)
           toast.success('Audio regenerated successfully!')
+          void playAudioUrl(audioUrl)
         }
         onSuccess?.(normalizedValues, audioUrl)
         router.refresh()
@@ -89,6 +100,23 @@ export function NoteEditorForm({
 
   return (
     <form ref={formRef} onSubmit={(e) => submitForm(e, false)} className="space-y-4 py-4 w-full">
+      {currentAudioUrl && (
+        <div className="flex items-center justify-between rounded-lg border px-3 py-2">
+          <div>
+            <p className="text-sm font-medium">Audio preview</p>
+            <p className="text-xs text-muted-foreground">
+              Проигрывает актуальное аудио для этой ноты
+            </p>
+          </div>
+          <PlayButton
+            onPlay={() => {
+              void playAudioUrl(currentAudioUrl)
+            }}
+            className="h-9 w-9"
+          />
+        </div>
+      )}
+
       {fields.map((field) => (
         <div key={field.key} className="flex flex-col gap-1.5">
           <Label htmlFor={field.key}>
