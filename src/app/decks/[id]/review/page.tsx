@@ -33,6 +33,7 @@ export default async function ReviewPage({
       .from('audio_cache')
       .select('note_id, storage_path')
       .in('note_id', noteIds)
+      .eq('field_key', 'expression')
 
     if (audioRows) {
       audioMap = Object.fromEntries(audioRows.map((r) => [r.note_id, r.storage_path]))

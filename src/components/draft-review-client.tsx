@@ -90,9 +90,15 @@ export function DraftReviewClient({
     )
   }
 
-  function handleSaved(noteId: string, updatedFields: Record<string, unknown>) {
+  function handleSaved(
+    noteId: string,
+    updatedFields: Record<string, unknown>,
+    updatedTags: string[]
+  ) {
     setNotes((prev) =>
-      prev.map((note) => (note.id === noteId ? { ...note, fields: updatedFields } : note))
+      prev.map((note) =>
+        note.id === noteId ? { ...note, fields: updatedFields, tags: updatedTags } : note
+      )
     )
   }
 
@@ -238,6 +244,7 @@ export function DraftReviewClient({
                         deckId={deckId}
                         language={language}
                         initialFields={note.fields}
+                        initialTags={note.tags}
                         allowAudioGeneration={false}
                         trigger={
                           <Button variant="outline" size="sm">
@@ -245,7 +252,9 @@ export function DraftReviewClient({
                             Edit
                           </Button>
                         }
-                        onSaveSuccess={(updatedFields) => handleSaved(note.id, updatedFields)}
+                        onSaveSuccess={(updatedFields, updatedTags) =>
+                          handleSaved(note.id, updatedFields, updatedTags)
+                        }
                       />
                       <DeleteDraftNoteButton
                         noteId={note.id}

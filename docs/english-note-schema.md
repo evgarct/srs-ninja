@@ -30,6 +30,9 @@ Outside `fields`:
 - `notes.tags` stores tags
 - audio stays in the audio/TTS subsystem and is surfaced in UI separately
 
+English tags are part of the normal editing contract, not draft-import-only metadata.
+Manual create, full-page edit, inline deck edit, draft review edit, and MCP draft import must all preserve and update `notes.tags`.
+
 ## Why Audio Stays Outside `fields`
 
 The app already treats audio as generated and cached note-adjacent data:
@@ -71,6 +74,9 @@ English examples resolve through:
 - `examples_html`
 - fallback `collocations`
 - fallback legacy `example_sentence` / `example_translation`
+
+When English notes are imported from Anki, arbitrary `extra` HTML must not be stored as trusted `examples_html` verbatim.
+The importer sanitizes it into plain-text example items and then rebuilds canonical safe `<ul><li>...</li></ul>` markup.
 
 English popularity resolves through:
 
@@ -136,12 +142,15 @@ Recommended AI-import payload:
 - `synonyms`
 - `antonyms`
 - `examples_html`
+- `tags` as a separate `string[]` payload outside `fields`
 
 Recommended prompt guidance:
 
 - `popularity` should be numeric `1..10`
 - `synonyms` / `antonyms` may be arrays
 - `examples_html` should be an HTML `<ul>` with two usage examples and `<b>` around the studied word
+- note-level tags should go into `item.tags`, not into `fields`
+- batch-level tag intent can go into `metadata.requestedTags`
 - ChatGPT should call `get_deck_contract` before saving drafts and follow the returned options exactly
 - ChatGPT should avoid legacy English keys for any newly created note
 

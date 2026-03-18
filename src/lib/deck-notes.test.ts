@@ -6,6 +6,8 @@ import {
   getNoteFsrsState,
   getNoteMemoryScore,
   isFsrsState,
+  normalizeAudioFilter,
+  type AudioFilter,
   type DeckNoteRow,
 } from './deck-notes'
 
@@ -75,6 +77,17 @@ describe('getAllDeckTags', () => {
   })
 })
 
+describe('normalizeAudioFilter', () => {
+  it('accepts supported audio filters and falls back to all', () => {
+    expect(normalizeAudioFilter('with_audio')).toBe('with_audio')
+    expect(normalizeAudioFilter('without_audio')).toBe('without_audio')
+    expect(normalizeAudioFilter('all')).toBe('all')
+    expect(normalizeAudioFilter('foo')).toBe('all')
+    expect(normalizeAudioFilter(undefined)).toBe('all')
+    expect(normalizeAudioFilter(null)).toBe('all')
+  })
+})
+
 describe('filterDeckNotes', () => {
   it('keeps notes that match all selected tags', () => {
     const result = filterDeckNotes(SAMPLE_NOTES, {
@@ -99,6 +112,22 @@ describe('filterDeckNotes', () => {
     })
 
     expect(result.map((note) => note.id)).toEqual(['note-2'])
+  })
+
+  it.each<[AudioFilter, string[]]>([
+    ['with_audio', ['note-1', 'note-3']],
+    ['without_audio', ['note-2']],
+  ])('filters notes by audio availability for %s', (audioFilter, expectedIds) => {
+    const result = filterDeckNotes(
+      SAMPLE_NOTES,
+      { audioFilter },
+      {
+        'note-1': 'https://cdn.test/anchor.mp3',
+        'note-3': 'https://cdn.test/storm.mp3',
+      }
+    )
+
+    expect(result.map((note) => note.id)).toEqual(expectedIds)
   })
 })
 

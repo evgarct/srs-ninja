@@ -133,12 +133,20 @@ function escapeHtml(value: string): string {
     .replaceAll("'", '&#39;')
 }
 
-function buildExamplesHtmlFromLegacy(fields: Record<string, unknown>) {
-  const directExamples = trimString(fields.collocations)
-  if (directExamples) return directExamples
+function stripHtmlTags(value: string): string {
+  return value.replace(/<[^>]+>/g, ' ')
+}
 
+function normalizePlainExample(value: string): string {
+  return stripHtmlTags(value).replace(/\s+/g, ' ').replace(/\s+([.,!?;:])/g, '$1').trim()
+}
+
+function buildExamplesHtmlFromLegacy(fields: Record<string, unknown>) {
   const first = trimString(fields.examples_html)
   if (first) return first
+
+  const directExamples = trimString(fields.collocations)
+  if (directExamples) return directExamples
 
   const legacyExamples = [trimString(fields.example_sentence), trimString(fields.example_translation)]
     .filter(Boolean)
@@ -234,4 +242,12 @@ export function buildExamplesHtmlFromPlainExamples(examples: string[]): string {
   if (normalized.length === 0) return ''
 
   return `<ul>${normalized.map((example) => `<li>${escapeHtml(example)}</li>`).join('')}</ul>`
+}
+
+export function buildSanitizedExamplesHtmlFromImportedHtml(value: string): string {
+  const extracted = extractExamplesFromHtml(value)
+    .map((example) => normalizePlainExample(example))
+    .filter(Boolean)
+
+  return buildExamplesHtmlFromPlainExamples(extracted)
 }

@@ -97,6 +97,8 @@ The read layer must remain tolerant of existing historical keys:
 - popularity: `popularity -> frequency`
 - style: canonical enum should still be inferred from verbose strings like `🎓 Neutral / ...`
 
+If both canonical and legacy example fields are present, `examples_html` wins over `collocations`.
+
 ## Write Rules
 
 All write paths for English notes must save only canonical keys:
@@ -129,6 +131,12 @@ The same English schema must drive:
 - MCP deck contract endpoint
 - ChatGPT onboarding instructions
 
+Tag editing must remain available anywhere note content is edited:
+
+- full note form
+- inline note edit sheet on the deck page
+- draft review edit sheet
+
 ## Draft Import Requirements
 
 The MCP draft contract for English decks must accept:
@@ -139,6 +147,12 @@ The MCP draft contract for English decks must accept:
 - HTML string for `examples_html`
 
 The import layer must normalize legacy aliases when helpful, but the final saved payload must be canonical.
+
+For Anki `.apkg` imports specifically:
+
+- imported `extra` HTML must not be trusted as safe render-ready HTML;
+- the importer must sanitize it to plain example text and rebuild canonical `examples_html`;
+- active markup such as scripts or arbitrary embedded tags must not survive into stored `examples_html`.
 
 ## Tags
 
@@ -174,8 +188,12 @@ After reset:
 
 - [ ] English create/edit forms save only canonical keys.
 - [ ] Draft review uses the same canonical fields as regular editing.
+- [ ] Manual edit flows preserve and update `notes.tags`, not only `fields`.
 - [ ] `mapFieldsToFlashcard()` renders canonical English fields without fallback-only behavior.
 - [ ] MCP `get_deck_contract` exposes the canonical English contract.
 - [ ] MCP `save_draft_notes` accepts canonical English fields and stores canonical data.
+- [ ] MCP / ChatGPT guidance explicitly keeps note tags in `item.tags` and batch-level tag intent in `metadata.requestedTags`.
 - [ ] ChatGPT instructions for English import mention canonical keys, enum values, and `examples_html`.
 - [ ] English deck can start from a clean state without old-format notes in the database.
+- [ ] If both `examples_html` and `collocations` exist, the canonical `examples_html` value is preserved.
+- [ ] Anki import sanitizes `extra` HTML before storing it as `examples_html`.

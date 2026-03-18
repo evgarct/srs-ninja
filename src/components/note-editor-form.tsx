@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { updateNoteFields } from '@/lib/actions/notes'
 import { getFields, getNoteFormValues, getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
+import { parseTagsInput } from '@/lib/note-tags'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,9 +20,15 @@ interface NoteEditorFormProps {
   deckId: string
   language: Language
   initialFields: Record<string, unknown>
+  initialTags?: string[]
   initialAudioUrl?: string
   allowAudioGeneration?: boolean
-  onSuccess?: (updatedFields: Record<string, unknown>, newAudioUrl?: string) => void
+  onSuccess?: (
+    updatedFields: Record<string, unknown>,
+    updatedTags: string[],
+    newAudioUrl?: string,
+    audioError?: string
+  ) => void
   onCancel?: () => void
 }
 
@@ -30,6 +37,7 @@ export function NoteEditorForm({
   deckId,
   language,
   initialFields,
+  initialTags = [],
   initialAudioUrl,
   allowAudioGeneration = true,
   onSuccess,
@@ -37,6 +45,7 @@ export function NoteEditorForm({
 }: NoteEditorFormProps) {
   const fields = getFields(language)
   const [values, setValues] = useState<Record<string, string>>(getNoteFormValues(language, initialFields))
+  const [tagsInput, setTagsInput] = useState(initialTags.join(', '))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [currentAudioUrl, setCurrentAudioUrl] = useState(initialAudioUrl)
@@ -58,12 +67,14 @@ export function NoteEditorForm({
 
     try {
       const normalizedValues = normalizeNoteFields(values, language)
+      const normalizedTags = parseTagsInput(tagsInput)
       const oldExpression = getNotePrimaryText(initialFields)
 
-      const { success, audioUrl } = await updateNoteFields(
+      const { success, audioUrl, audioError } = await updateNoteFields(
         noteId,
         deckId,
         normalizedValues,
+        normalizedTags,
         oldExpression,
         language,
         forceAudio && allowAudioGeneration
@@ -76,7 +87,10 @@ export function NoteEditorForm({
           toast.success('Audio regenerated successfully!')
           void playAudioUrl(audioUrl)
         }
-        onSuccess?.(normalizedValues, audioUrl)
+        if (audioError) {
+          toast.error(audioError)
+        }
+        onSuccess?.(normalizedValues, normalizedTags, audioUrl, audioError)
         router.refresh()
       }
     } catch (err) {
@@ -155,6 +169,16 @@ export function NoteEditorForm({
           )}
         </div>
       ))}
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="tags">Tags</Label>
+        <Input
+          id="tags"
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          placeholder="ENGLISH::topic.travel, ENGLISH::level.b1, ENGLISH::style.neutral"
+        />
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

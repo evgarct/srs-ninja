@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input'
 import {
   getFsrsStateLabel,
+  type AudioFilter,
   type FsrsState,
 } from '@/lib/deck-notes'
 import type { Language } from '@/lib/types'
@@ -24,6 +25,7 @@ interface DeckFiltersBarProps {
   tagQuery: string
   activeTags: string[]
   activeStates: FsrsState[]
+  activeAudioFilter: AudioFilter
   fsrsFilters: FsrsState[]
   isRefreshing?: boolean
   onTagQueryChange: (value: string) => void
@@ -32,6 +34,7 @@ interface DeckFiltersBarProps {
   onToggleTag: (tag: string) => void
   onResetStates: () => void
   onToggleState: (state: FsrsState) => void
+  onAudioFilterChange: (filter: AudioFilter) => void
 }
 
 export function formatTagLabelForLanguage(tag: string, deckLanguage: Language) {
@@ -48,6 +51,7 @@ export function DeckFiltersBar({
   tagQuery,
   activeTags,
   activeStates,
+  activeAudioFilter,
   fsrsFilters,
   isRefreshing = false,
   onTagQueryChange,
@@ -56,6 +60,7 @@ export function DeckFiltersBar({
   onToggleTag,
   onResetStates,
   onToggleState,
+  onAudioFilterChange,
 }: DeckFiltersBarProps) {
   const filteredAvailableTags = availableTags.filter((tag) =>
     formatTagLabelForLanguage(tag, deckLanguage)
@@ -76,6 +81,13 @@ export function DeckFiltersBar({
       : activeStates.length === 1
         ? getFsrsStateLabel(activeStates[0])
         : `${activeStates.length} levels`
+
+  const audioSummary =
+    activeAudioFilter === 'all'
+      ? 'All notes'
+      : activeAudioFilter === 'with_audio'
+        ? 'With audio'
+        : 'Without audio'
 
   return (
     <section className="rounded-2xl border bg-card px-4 py-4 shadow-sm">
@@ -177,6 +189,40 @@ export function DeckFiltersBar({
                   {getFsrsStateLabel(state)}
                 </DropdownMenuCheckboxItem>
               ))}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="outline" className="w-[220px] justify-between" title={audioSummary} />
+            }
+          >
+            <span className="min-w-0 truncate text-left">Audio: {audioSummary}</span>
+            <ChevronDown className="h-4 w-4 shrink-0" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="min-w-[220px]">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Audio</DropdownMenuLabel>
+              <DropdownMenuCheckboxItem
+                checked={activeAudioFilter === 'all'}
+                onCheckedChange={() => onAudioFilterChange('all')}
+              >
+                All notes
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={activeAudioFilter === 'with_audio'}
+                onCheckedChange={() => onAudioFilterChange('with_audio')}
+              >
+                With audio
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={activeAudioFilter === 'without_audio'}
+                onCheckedChange={() => onAudioFilterChange('without_audio')}
+              >
+                Without audio
+              </DropdownMenuCheckboxItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

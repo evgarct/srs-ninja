@@ -4,12 +4,15 @@ import { useState } from 'react'
 import { Loader2, RefreshCw, Volume2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { toast } from 'sonner'
 
 interface BatchResult {
   total: number
   generated: number
   skipped: number
   errors: number
+  error?: string
+  errorMessages?: string[]
   generatedAudio?: Array<{ noteId: string; audioUrl: string }>
 }
 
@@ -43,15 +46,22 @@ export function GenerateAudioButton({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ deckId, noteIds }),
       })
+      const data = (await res.json()) as BatchResult
       if (!res.ok) {
+        toast.error(data.error ?? data.errorMessages?.[0] ?? 'Audio generation failed')
         setState('error')
         return
       }
-      const data: BatchResult = await res.json()
       setResult(data)
       setState('done')
+      if (data.errors > 0) {
+        toast.error(data.errorMessages?.[0] ?? `Audio generated with ${data.errors} errors`)
+      } else if (data.generated > 0) {
+        toast.success(`Generated audio for ${data.generated} notes`)
+      }
       onComplete?.(data)
     } catch {
+      toast.error('Audio generation failed')
       setState('error')
     }
   }

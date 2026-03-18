@@ -3,16 +3,18 @@ import { redirect } from 'next/navigation'
 import { getDeckWithStats } from '@/lib/actions/decks'
 import { getNotesByDeck } from '@/lib/actions/notes'
 import { DeckPageClient } from '@/components/deck-page-client'
+import { normalizeAudioFilter } from '@/lib/deck-notes'
 
 export default async function DeckPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ tags?: string; state?: string }>
+  searchParams: Promise<{ tags?: string; state?: string; audio?: 'all' | 'with_audio' | 'without_audio' }>
 }) {
   const { id } = await params
-  const { tags, state } = await searchParams
+  const { tags, state, audio } = await searchParams
+  const audioFilter = normalizeAudioFilter(audio)
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -63,6 +65,7 @@ export default async function DeckPage({
       )}
       initialTagFilter={tags}
       initialStateFilter={state}
+      initialAudioFilter={audioFilter}
     />
   )
 }

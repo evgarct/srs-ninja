@@ -17,10 +17,16 @@ interface NoteEditSheetProps {
   deckId: string
   language: Language
   initialFields: Record<string, unknown>
+  initialTags?: string[]
   initialAudioUrl?: string
   allowAudioGeneration?: boolean
   trigger: React.ReactElement
-  onSaveSuccess?: (updatedFields: Record<string, unknown>, audioUrl?: string) => void
+  onSaveSuccess?: (
+    updatedFields: Record<string, unknown>,
+    updatedTags: string[],
+    audioUrl?: string,
+    audioError?: string
+  ) => void
 }
 
 export function NoteEditSheet({
@@ -28,6 +34,7 @@ export function NoteEditSheet({
   deckId,
   language,
   initialFields,
+  initialTags = [],
   initialAudioUrl,
   allowAudioGeneration = true,
   trigger,
@@ -52,11 +59,12 @@ export function NoteEditSheet({
               deckId={deckId}
               language={language}
               initialFields={initialFields}
+              initialTags={initialTags}
               initialAudioUrl={initialAudioUrl}
               allowAudioGeneration={allowAudioGeneration}
-              onSuccess={(fields, audio) => {
+              onSuccess={(fields, tags, audio, audioError) => {
                 setOpen(false)
-                onSaveSuccess?.(fields, audio)
+                onSaveSuccess?.(fields, tags, audio, audioError)
               }}
               onCancel={() => setOpen(false)}
             />

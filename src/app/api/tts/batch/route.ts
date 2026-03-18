@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { generateAndCacheAudio } from '@/lib/tts'
+import { summarizeBatchAudioResults, type BatchAudioResult } from '@/lib/tts-batch'
 import { getNotePrimaryText } from '@/lib/note-fields'
 
 // POST /api/tts/batch  { deckId, noteIds? }
@@ -61,11 +62,12 @@ export async function POST(request: Request) {
     .from('audio_cache')
     .select('note_id')
     .in('note_id', fetchedNoteIds)
+    .eq('field_key', 'expression')
 
   const cachedIds = new Set(existingAudio?.map((a) => a.note_id) ?? [])
   const pending = notes.filter((n) => !cachedIds.has(n.id))
 
-  const results: { noteId: string; status: 'ok' | 'skip' | 'error'; audioUrl?: string }[] = []
+  const results: BatchAudioResult[] = []
 
   for (const note of pending) {
     const fields = note.fields as Record<string, unknown>
@@ -87,19 +89,13 @@ export async function POST(request: Request) {
       noteId: note.id,
       status: 'error' in result ? 'error' : 'ok',
       audioUrl: 'audioUrl' in result ? result.audioUrl : undefined,
+      error: 'error' in result ? result.error : undefined,
     })
 
     // Rate limit: 500ms between ElevenLabs requests
     await new Promise((resolve) => setTimeout(resolve, 500))
   }
 
-  return NextResponse.json({
-    total: pending.length,
-    generated: results.filter((r) => r.status === 'ok').length,
-    skipped: results.filter((r) => r.status === 'skip').length,
-    errors: results.filter((r) => r.status === 'error').length,
-    generatedAudio: results
-      .filter((r) => r.status === 'ok' && r.audioUrl)
-      .map((r) => ({ noteId: r.noteId, audioUrl: r.audioUrl! })),
-  })
+  const summary = summarizeBatchAudioResults(results)
+  return NextResponse.json(summary.body, { status: summary.status })
 }

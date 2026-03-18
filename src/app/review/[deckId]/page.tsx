@@ -5,7 +5,7 @@ import { orderCards } from '@/lib/card-ordering'
 import { ReviewSession } from '@/components/review-session'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
-import { isFsrsState, type FsrsState } from '@/lib/deck-notes'
+import { isFsrsState, normalizeAudioFilter, type AudioFilter, type FsrsState } from '@/lib/deck-notes'
 import { selectReviewSessionCards } from '@/lib/review-card-selection'
 
 export default async function ReviewPage({
@@ -13,10 +13,11 @@ export default async function ReviewPage({
   searchParams,
 }: {
   params: Promise<{ deckId: string }>
-  searchParams: Promise<{ mode?: string; limit?: string; tags?: string; state?: string }>
+  searchParams: Promise<{ mode?: string; limit?: string; tags?: string; state?: string; audio?: string }>
 }) {
   const { deckId } = await params
-  const { mode, limit: limitStr, tags: tagsParam, state: stateParam } = await searchParams
+  const { mode, limit: limitStr, tags: tagsParam, state: stateParam, audio: audioParam } =
+    await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -36,9 +37,14 @@ export default async function ReviewPage({
     .split(',')
     .map((state) => state.trim())
     .filter(isFsrsState) as FsrsState[]
+  const manualAudioFilter: AudioFilter = normalizeAudioFilter(audioParam)
 
   const rawCards = isManual
-    ? await getManualStudyCards(deckId, { tags: manualTags, states: manualStates })
+    ? await getManualStudyCards(deckId, {
+        tags: manualTags,
+        states: manualStates,
+        audioFilter: manualAudioFilter,
+      })
     : isExtra
       ? await getExtraStudyCards(deckId, limit)
       : await getDueCards(deckId, 50)
@@ -59,6 +65,7 @@ export default async function ReviewPage({
       .from('audio_cache')
       .select('note_id, storage_path')
       .in('note_id', noteIds)
+      .eq('field_key', 'expression')
     if (audioRows) {
       audioMap = Object.fromEntries(audioRows.map((r) => [r.note_id, r.storage_path]))
     }

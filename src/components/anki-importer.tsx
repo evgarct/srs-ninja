@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Progress } from '@/components/ui/progress'
 import { createNote } from '@/lib/actions/notes'
+import { buildSanitizedExamplesHtmlFromImportedHtml } from '@/lib/english-note-schema'
 import type { Deck, Language } from '@/lib/types'
 
 interface ParsedNote {
@@ -79,7 +80,7 @@ export function AnkiImporter({ decks }: { decks: Deck[] }) {
             ? {
                 word: note.word,
                 translation: note.translation,
-                examples_html: note.extra,
+                examples_html: buildSanitizedExamplesHtmlFromImportedHtml(note.extra),
               }
             : {
                 word: note.word,
