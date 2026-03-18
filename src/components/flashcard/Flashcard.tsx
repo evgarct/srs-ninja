@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { cn } from "@/lib/utils"
 import { LevelBadge, type CEFRLevel } from "./LevelBadge"
 import { FrequencyBar } from "./FrequencyBar"
 import { PlayButton } from "./PlayButton"
@@ -41,6 +42,8 @@ export interface FlashcardProps {
 
   // Header action (e.g. Edit note button)
   headerAction?: React.ReactNode
+  previewMode?: boolean
+  className?: string
 }
 
 export function Flashcard({
@@ -64,6 +67,8 @@ export function Flashcard({
   onPlayAudio,
   intervals,
   headerAction,
+  previewMode = false,
+  className,
 }: FlashcardProps) {
   const isCzech = language === "czech"
 
@@ -101,6 +106,8 @@ export function Flashcard({
 
   // Keyboard shortcuts
   React.useEffect(() => {
+    if (previewMode) return
+
     function handleKeyDown(e: KeyboardEvent) {
       if (
         e.target instanceof HTMLInputElement ||
@@ -124,18 +131,24 @@ export function Flashcard({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [isRevealed, onReveal, onRate])
+  }, [isRevealed, onReveal, onRate, previewMode])
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-xl mx-auto select-none">
+    <div
+      className={cn(
+        "flex flex-col gap-4 w-full mx-auto select-none",
+        previewMode ? "max-w-none" : "max-w-xl",
+        className
+      )}
+    >
       {/* ── Card body ── */}
       <div
-        role={!isRevealed ? "button" : undefined}
-        tabIndex={!isRevealed ? 0 : undefined}
-        aria-label={!isRevealed ? "Reveal answer (Space)" : undefined}
-        onClick={!isRevealed ? onReveal : undefined}
+        role={!previewMode && !isRevealed ? "button" : undefined}
+        tabIndex={!previewMode && !isRevealed ? 0 : undefined}
+        aria-label={!previewMode && !isRevealed ? "Reveal answer (Space)" : undefined}
+        onClick={!previewMode && !isRevealed ? onReveal : undefined}
         onKeyDown={
-          !isRevealed
+          !previewMode && !isRevealed
             ? (e) => {
                 if (e.key === " " || e.key === "Enter") {
                   e.preventDefault()
@@ -149,7 +162,7 @@ export function Flashcard({
           "bg-card text-card-foreground",
           "shadow-sm ring-1 ring-foreground/5",
           "transition-all duration-200",
-          !isRevealed
+          !previewMode && !isRevealed
             ? "cursor-pointer hover:shadow-md hover:ring-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             : "cursor-default",
         ].join(" ")}
@@ -266,7 +279,7 @@ export function Flashcard({
           ) : null}
 
           {/* ── Reveal hint (front only) ── */}
-          {!isRevealed && (
+          {!previewMode && !isRevealed && (
             <div className="flex justify-center pt-1">
               <span className="text-xs text-muted-foreground/50 tracking-wide">
                 Press{" "}
@@ -281,16 +294,18 @@ export function Flashcard({
       </div>
 
       {/* ── Rating buttons — outside the card, animate in ── */}
-      <div
-        className="overflow-hidden transition-all duration-300 ease-out"
-        style={{
-          maxHeight: isRevealed ? "10rem" : "0",
-          opacity: isRevealed ? 1 : 0,
-          pointerEvents: isRevealed ? "auto" : "none",
-        }}
-      >
-        <RatingButtons onRate={onRate} intervals={intervals} />
-      </div>
+      {!previewMode && (
+        <div
+          className="overflow-hidden transition-all duration-300 ease-out"
+          style={{
+            maxHeight: isRevealed ? "10rem" : "0",
+            opacity: isRevealed ? 1 : 0,
+            pointerEvents: isRevealed ? "auto" : "none",
+          }}
+        >
+          <RatingButtons onRate={onRate} intervals={intervals} />
+        </div>
+      )}
     </div>
   )
 }

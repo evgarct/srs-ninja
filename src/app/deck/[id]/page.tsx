@@ -9,10 +9,10 @@ export default async function DeckPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ filter?: string }>
+  searchParams: Promise<{ tags?: string; state?: string }>
 }) {
   const { id } = await params
-  const { filter } = await searchParams
+  const { tags, state } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -46,12 +46,22 @@ export default async function DeckPage({
       initialNotes={notes.map((note) => ({
         id: note.id,
         fields: note.fields as Record<string, string>,
-        cards: (note.cards as Array<{ id: string; card_type: string; state: string }>) ?? [],
+        tags: note.tags ?? [],
+        cards: (note.cards as Array<{
+          id: string
+          card_type: string
+          state: string
+          stability?: number
+          difficulty?: number
+          reps?: number
+          due_at?: string
+        }>) ?? [],
       }))}
       initialAudioMap={Object.fromEntries(
         (audioRows ?? []).map((row) => [row.note_id, row.storage_path])
       )}
-      initialFilter={filter}
+      initialTagFilter={tags}
+      initialStateFilter={state}
     />
   )
 }

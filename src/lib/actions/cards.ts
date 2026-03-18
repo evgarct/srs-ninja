@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { scheduleCard } from '@/lib/fsrs'
 import type { Rating } from '@/lib/types'
+import { filterDeckNotes, type FsrsState } from '@/lib/deck-notes'
 
 /**
  * Retrieves a limited list of cards that are currently due for review within a given deck.
@@ -75,6 +76,52 @@ export async function getExtraStudyCards(deckId: string, limit = 20) {
   if (upErr) throw upErr
 
   return [...newCards, ...upcomingCards]
+}
+
+export async function getManualStudyCards(
+  deckId: string,
+  {
+    tags = [],
+    states = [],
+  }: {
+    tags?: string[]
+    states?: FsrsState[]
+  }
+) {
+  const supabase = await createClient()
+
+  const { data: notes, error: notesError } = await supabase
+    .from('notes')
+    .select('id, fields, tags, cards(id, card_type, state, due_at)')
+    .eq('deck_id', deckId)
+
+  if (notesError || !notes) throw notesError ?? new Error('Failed to fetch notes')
+
+  const visibleNotes = filterDeckNotes(
+    notes.map((note) => ({
+      id: note.id,
+      fields: note.fields as Record<string, string>,
+      tags: note.tags ?? [],
+      cards: (note.cards as Array<{ id: string; card_type: string; state: string; due_at: string }>) ?? [],
+    })),
+    {
+      tagFilters: tags,
+      stateFilters: states,
+    }
+  )
+
+  if (visibleNotes.length === 0) return []
+
+  const visibleNoteIds = visibleNotes.map((note) => note.id)
+  const { data: cards, error: cardsError } = await supabase
+    .from('cards')
+    .select('*, notes!inner(fields, tags, deck_id)')
+    .eq('notes.deck_id', deckId)
+    .in('note_id', visibleNoteIds)
+    .order('due_at', { ascending: true })
+
+  if (cardsError) throw cardsError
+  return cards
 }
 
 
