@@ -6,6 +6,7 @@ import { ReviewSession } from '@/components/review-session'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
 import { isFsrsState, type FsrsState } from '@/lib/deck-notes'
+import { selectReviewSessionCards } from '@/lib/review-card-selection'
 
 export default async function ReviewPage({
   params,
@@ -42,9 +43,13 @@ export default async function ReviewPage({
       ? await getExtraStudyCards(deckId, limit)
       : await getDueCards(deckId, 50)
 
-  // Apply smart ordering: priority tiers + sibling separation + shuffle.
-  // Extra study sessions are intentionally left unordered (new cards first by design).
-  const cards = isExtra ? rawCards : orderCards(rawCards)
+  // Apply due-review ordering only to the regular queue.
+  // Manual review must preserve the full shown subset, and extra study keeps its own order.
+  const cards = selectReviewSessionCards(rawCards, {
+    isExtra,
+    isManual,
+    orderCards,
+  })
 
   // Pre-fetch audio URLs for English decks
   let audioMap: Record<string, string> = {}

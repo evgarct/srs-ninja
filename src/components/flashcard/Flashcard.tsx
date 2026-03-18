@@ -71,6 +71,7 @@ export function Flashcard({
   className,
 }: FlashcardProps) {
   const isCzech = language === "czech"
+  const [isPressingReveal, setIsPressingReveal] = React.useState(false)
 
   /**
    * Visibility matrix:
@@ -83,12 +84,6 @@ export function Flashcard({
    */
   const isRecognition = direction === "recognition"
   const isProduction = direction === "production"
-
-  // What shows as the large headline
-  const primaryWord = isProduction && !isRevealed ? translation : expression
-
-  // Whether the primary word (expression) row exists
-  const showExpressionRow = isRecognition || (isProduction && isRevealed)
 
   // Secondary line (parenthesised translation) visible only after reveal
   const showSecondaryTranslation = isRevealed
@@ -147,11 +142,20 @@ export function Flashcard({
         tabIndex={!previewMode && !isRevealed ? 0 : undefined}
         aria-label={!previewMode && !isRevealed ? "Reveal answer (Space)" : undefined}
         onClick={!previewMode && !isRevealed ? onReveal : undefined}
+        onPointerDown={
+          !previewMode && !isRevealed
+            ? () => setIsPressingReveal(true)
+            : undefined
+        }
+        onPointerUp={!previewMode && !isRevealed ? () => setIsPressingReveal(false) : undefined}
+        onPointerCancel={!previewMode && !isRevealed ? () => setIsPressingReveal(false) : undefined}
+        onPointerLeave={!previewMode && !isRevealed ? () => setIsPressingReveal(false) : undefined}
         onKeyDown={
           !previewMode && !isRevealed
             ? (e) => {
                 if (e.key === " " || e.key === "Enter") {
                   e.preventDefault()
+                  setIsPressingReveal(false)
                   onReveal()
                 }
               }
@@ -161,10 +165,11 @@ export function Flashcard({
           "relative rounded-2xl border border-foreground/10",
           "bg-card text-card-foreground",
           "shadow-sm ring-1 ring-foreground/5",
-          "transition-all duration-200",
+          "touch-manipulation [webkit-tap-highlight-color:transparent] transition-all duration-150",
           !previewMode && !isRevealed
             ? "cursor-pointer hover:shadow-md hover:ring-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             : "cursor-default",
+          isPressingReveal ? "scale-[0.995] shadow-xs ring-foreground/10" : "",
         ].join(" ")}
       >
         <div className="flex flex-col gap-5 p-6 relative">
@@ -195,7 +200,7 @@ export function Flashcard({
                * Uses height transition via max-height trick.
                */}
               <div
-                className="overflow-hidden transition-all duration-300 ease-out"
+                className="overflow-hidden transition-all duration-150 ease-out"
                 style={{
                   maxHeight: showSecondaryTranslation ? "5rem" : "0",
                   opacity: showSecondaryTranslation ? 1 : 0,
@@ -296,7 +301,7 @@ export function Flashcard({
       {/* ── Rating buttons — outside the card, animate in ── */}
       {!previewMode && (
         <div
-          className="overflow-hidden transition-all duration-300 ease-out"
+          className="overflow-hidden transition-all duration-150 ease-out"
           style={{
             maxHeight: isRevealed ? "10rem" : "0",
             opacity: isRevealed ? 1 : 0,
