@@ -1,6 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+export function shouldBypassAuthRedirect(pathname: string) {
+  return pathname.startsWith('/login')
+    || pathname.startsWith('/auth')
+    || pathname === '/api/mcp'
+    || pathname.startsWith('/api/mcp/')
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -33,8 +40,7 @@ export async function updateSession(request: NextRequest) {
 
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
+    !shouldBypassAuthRedirect(request.nextUrl.pathname)
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'

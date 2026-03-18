@@ -251,28 +251,34 @@ export async function approveDraftNoteForUser(
 
   if (noteError || !note) throw noteError ?? new Error('Draft note not found')
   const typedNote = note as NoteRow
-  if (typedNote.status !== 'draft') throw new Error('Note is already approved')
 
-  const { error: updateError } = await supabase
+  const { data: updatedNote, error: updateError } = await supabase
     .from('notes')
     .update({ status: 'approved' })
+    .eq('user_id', userId)
     .eq('id', noteId)
-  if (updateError) throw updateError
+    .eq('status', 'draft')
+    .select('id, deck_id, import_batch_id')
+    .single()
+
+  if (updateError || !updatedNote) {
+    throw updateError ?? new Error('Note is already approved')
+  }
 
   const cards = buildInitialNoteCards(typedNote.id, userId)
   const { error: cardsError } = await supabase.from('cards').insert(cards)
   if (cardsError) throw cardsError
 
-  if (typedNote.import_batch_id) {
-    await syncImportBatchStatus(supabase, typedNote.import_batch_id)
+  if (updatedNote.import_batch_id) {
+    await syncImportBatchStatus(supabase, updatedNote.import_batch_id)
   }
 
-  revalidatePath(`/deck/${typedNote.deck_id}`)
-  revalidatePath(`/deck/${typedNote.deck_id}/drafts`)
+  revalidatePath(`/deck/${updatedNote.deck_id}`)
+  revalidatePath(`/deck/${updatedNote.deck_id}/drafts`)
 
   return {
-    noteId: typedNote.id,
-    deckId: typedNote.deck_id,
-    importBatchId: typedNote.import_batch_id,
+    noteId: updatedNote.id,
+    deckId: updatedNote.deck_id,
+    importBatchId: updatedNote.import_batch_id,
   }
 }
