@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState } from 'react'
 import { Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -13,22 +13,30 @@ export function ApproveDraftButton({
   noteId: string
   onApproved?: (noteId: string) => void
 }) {
-  const [isPending, startTransition] = useTransition()
+  const [isPending, setIsPending] = useState(false)
+
+  async function handleApprove() {
+    if (isPending) return
+
+    setIsPending(true)
+
+    try {
+      await approveDraftNote(noteId)
+      toast.success('Draft approved')
+      onApproved?.(noteId)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to approve draft')
+    } finally {
+      setIsPending(false)
+    }
+  }
 
   return (
     <Button
       size="sm"
-      onClick={() =>
-        startTransition(async () => {
-          try {
-            await approveDraftNote(noteId)
-            toast.success('Draft approved')
-            onApproved?.(noteId)
-          } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Failed to approve draft')
-          }
-        })
-      }
+      onClick={() => {
+        void handleApprove()
+      }}
       disabled={isPending}
     >
       <Check className="size-4" />
