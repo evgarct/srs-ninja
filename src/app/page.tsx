@@ -128,7 +128,7 @@ export default async function Home() {
                     <Link href={`/deck/${deck.id}`} className={cn(buttonVariants({ variant: 'outline' }), 'text-center')}>
                       Открыть колоду
                     </Link>
-                    <ExtraStudyBox deckId={deck.id} />
+                    <ExtraStudyBox deckId={deck.id} hasStudiedToday={todayStats.total > 0} />
                   </>
                 )}
               </CardContent>
