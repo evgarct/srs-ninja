@@ -49,7 +49,7 @@ export async function POST(request: Request) {
   const cachedIds = new Set(existingAudio?.map((a) => a.note_id) ?? [])
   const pending = notes.filter((n) => !cachedIds.has(n.id))
 
-  const results: { noteId: string; status: 'ok' | 'skip' | 'error' }[] = []
+  const results: { noteId: string; status: 'ok' | 'skip' | 'error'; audioUrl?: string }[] = []
 
   for (const note of pending) {
     const fields = note.fields as Record<string, unknown>
@@ -67,7 +67,11 @@ export async function POST(request: Request) {
       deck.language
     )
 
-    results.push({ noteId: note.id, status: 'error' in result ? 'error' : 'ok' })
+    results.push({
+      noteId: note.id,
+      status: 'error' in result ? 'error' : 'ok',
+      audioUrl: 'audioUrl' in result ? result.audioUrl : undefined,
+    })
 
     // Rate limit: 500ms between ElevenLabs requests
     await new Promise((resolve) => setTimeout(resolve, 500))
@@ -78,5 +82,8 @@ export async function POST(request: Request) {
     generated: results.filter((r) => r.status === 'ok').length,
     skipped: results.filter((r) => r.status === 'skip').length,
     errors: results.filter((r) => r.status === 'error').length,
+    generatedAudio: results
+      .filter((r) => r.status === 'ok' && r.audioUrl)
+      .map((r) => ({ noteId: r.noteId, audioUrl: r.audioUrl! })),
   })
 }

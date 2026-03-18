@@ -70,6 +70,9 @@ export async function generateAndCacheAudio(
     data: { publicUrl },
   } = supabase.storage.from('audio').getPublicUrl(storagePath)
 
+  // Cache-bust regenerated files so the UI immediately plays the fresh mp3.
+  const versionedAudioUrl = `${publicUrl}?v=${Date.now()}`
+
   // Save to audio_cache
   const { error: cacheError } = await supabase.from('audio_cache').upsert(
     {
@@ -77,7 +80,7 @@ export async function generateAndCacheAudio(
       field_key: 'expression',
       language,
       voice_id: ELEVENLABS_VOICE_ID,
-      storage_path: publicUrl,
+      storage_path: versionedAudioUrl,
     },
     { onConflict: 'note_id,field_key' }
   )
@@ -87,5 +90,5 @@ export async function generateAndCacheAudio(
     // Non-fatal — the file was uploaded, URL is valid
   }
 
-  return { audioUrl: publicUrl }
+  return { audioUrl: versionedAudioUrl }
 }

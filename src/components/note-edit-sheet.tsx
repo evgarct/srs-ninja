@@ -17,6 +17,7 @@ interface NoteEditSheetProps {
   deckId: string
   language: Language
   initialFields: Record<string, string>
+  initialAudioUrl?: string
   trigger: React.ReactElement
   onSaveSuccess?: (updatedFields: Record<string, string>, audioUrl?: string) => void
 }
@@ -26,6 +27,7 @@ export function NoteEditSheet({
   deckId,
   language,
   initialFields,
+  initialAudioUrl,
   trigger,
   onSaveSuccess,
 }: NoteEditSheetProps) {
@@ -48,6 +50,7 @@ export function NoteEditSheet({
               deckId={deckId}
               language={language}
               initialFields={initialFields}
+              initialAudioUrl={initialAudioUrl}
               onSuccess={(fields, audio) => {
                 setOpen(false)
                 onSaveSuccess?.(fields, audio)

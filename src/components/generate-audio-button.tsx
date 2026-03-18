@@ -8,9 +8,16 @@ interface BatchResult {
   generated: number
   skipped: number
   errors: number
+  generatedAudio?: Array<{ noteId: string; audioUrl: string }>
 }
 
-export function GenerateAudioButton({ deckId }: { deckId: string }) {
+export function GenerateAudioButton({
+  deckId,
+  onComplete,
+}: {
+  deckId: string
+  onComplete?: (result: BatchResult) => void
+}) {
   const [state, setState] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
   const [result, setResult] = useState<BatchResult | null>(null)
 
@@ -29,6 +36,7 @@ export function GenerateAudioButton({ deckId }: { deckId: string }) {
       const data: BatchResult = await res.json()
       setResult(data)
       setState('done')
+      onComplete?.(data)
     } catch {
       setState('error')
     }
