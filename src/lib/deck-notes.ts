@@ -31,6 +31,10 @@ export function isFsrsState(value: string): value is FsrsState {
   return FSRS_STATE_PRIORITY.includes(value as FsrsState)
 }
 
+export function normalizeAudioFilter(value: string | null | undefined): AudioFilter {
+  return value === 'with_audio' || value === 'without_audio' ? value : 'all'
+}
+
 export function getNoteFsrsState(cards: DeckNoteCard[]): FsrsState {
   const states = cards.map((card) => card.state).filter(isFsrsState)
 

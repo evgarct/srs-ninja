@@ -5,7 +5,7 @@ import { orderCards } from '@/lib/card-ordering'
 import { ReviewSession } from '@/components/review-session'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
-import { isFsrsState, type AudioFilter, type FsrsState } from '@/lib/deck-notes'
+import { isFsrsState, normalizeAudioFilter, type AudioFilter, type FsrsState } from '@/lib/deck-notes'
 import { selectReviewSessionCards } from '@/lib/review-card-selection'
 
 export default async function ReviewPage({
@@ -37,8 +37,7 @@ export default async function ReviewPage({
     .split(',')
     .map((state) => state.trim())
     .filter(isFsrsState) as FsrsState[]
-  const manualAudioFilter: AudioFilter =
-    audioParam === 'with_audio' || audioParam === 'without_audio' ? audioParam : 'all'
+  const manualAudioFilter: AudioFilter = normalizeAudioFilter(audioParam)
 
   const rawCards = isManual
     ? await getManualStudyCards(deckId, {

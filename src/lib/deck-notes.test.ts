@@ -6,6 +6,7 @@ import {
   getNoteFsrsState,
   getNoteMemoryScore,
   isFsrsState,
+  normalizeAudioFilter,
   type AudioFilter,
   type DeckNoteRow,
 } from './deck-notes'
@@ -73,6 +74,17 @@ describe('getAllDeckTags', () => {
       'ENGLISH::travel',
       'weather',
     ])
+  })
+})
+
+describe('normalizeAudioFilter', () => {
+  it('accepts supported audio filters and falls back to all', () => {
+    expect(normalizeAudioFilter('with_audio')).toBe('with_audio')
+    expect(normalizeAudioFilter('without_audio')).toBe('without_audio')
+    expect(normalizeAudioFilter('all')).toBe('all')
+    expect(normalizeAudioFilter('foo')).toBe('all')
+    expect(normalizeAudioFilter(undefined)).toBe('all')
+    expect(normalizeAudioFilter(null)).toBe('all')
   })
 })
 
