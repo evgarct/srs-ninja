@@ -131,6 +131,12 @@ The same English schema must drive:
 - MCP deck contract endpoint
 - ChatGPT onboarding instructions
 
+Tag editing must remain available anywhere note content is edited:
+
+- full note form
+- inline note edit sheet on the deck page
+- draft review edit sheet
+
 ## Draft Import Requirements
 
 The MCP draft contract for English decks must accept:
@@ -182,9 +188,11 @@ After reset:
 
 - [ ] English create/edit forms save only canonical keys.
 - [ ] Draft review uses the same canonical fields as regular editing.
+- [ ] Manual edit flows preserve and update `notes.tags`, not only `fields`.
 - [ ] `mapFieldsToFlashcard()` renders canonical English fields without fallback-only behavior.
 - [ ] MCP `get_deck_contract` exposes the canonical English contract.
 - [ ] MCP `save_draft_notes` accepts canonical English fields and stores canonical data.
+- [ ] MCP / ChatGPT guidance explicitly keeps note tags in `item.tags` and batch-level tag intent in `metadata.requestedTags`.
 - [ ] ChatGPT instructions for English import mention canonical keys, enum values, and `examples_html`.
 - [ ] English deck can start from a clean state without old-format notes in the database.
 - [ ] If both `examples_html` and `collocations` exist, the canonical `examples_html` value is preserved.

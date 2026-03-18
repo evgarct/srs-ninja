@@ -152,6 +152,7 @@ export async function updateNoteFields(
   noteId: string,
   deckId: string,
   newFields: Record<string, unknown>,
+  newTags: string[],
   oldExpression: string,
   language: string,
   forceAudio: boolean = false
@@ -163,7 +164,7 @@ export async function updateNoteFields(
 
   const { error } = await supabase
     .from('notes')
-    .update({ fields: normalizedFields })
+    .update({ fields: normalizedFields, tags: newTags })
     .eq('id', noteId)
 
   if (error) throw error

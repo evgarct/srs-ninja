@@ -63,7 +63,11 @@ export function ReviewSession({
   const isRecognition = currentPrepared?.direction === 'recognition'
   const audioUrl = currentPrepared?.audioUrl
 
-  function handleSaveSuccess(updatedFields: Record<string, unknown>, newAudioUrl?: string) {
+  function handleSaveSuccess(
+    updatedFields: Record<string, unknown>,
+    updatedTags: string[],
+    newAudioUrl?: string
+  ) {
     const currentNoteId = current?.note_id
 
     setQueue((prev) => {
@@ -77,6 +81,7 @@ export function ReviewSession({
           notes: {
             ...card.notes,
             fields: updatedFields,
+            tags: updatedTags,
           },
         }
       })
@@ -247,6 +252,7 @@ export function ReviewSession({
             deckId={deckId}
             language={lang}
             initialFields={noteFields as Record<string, string>}
+            initialTags={current.notes?.tags ?? []}
             onSaveSuccess={handleSaveSuccess}
             trigger={
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" title="Edit Note">

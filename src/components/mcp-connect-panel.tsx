@@ -54,8 +54,21 @@ Optional fields:
 - synonyms: string[]
 - antonyms: string[]
 - examples_html: HTML <ul> with exactly 2 <li> examples and the studied word wrapped in <b>
+- tags: string[] stored separately from fields
 
 Do not use legacy English fields like term, expression, frequency, example_sentence, example_translation, or collocations for new notes.
+
+Use the English tag system consistently. Recommended tag families:
+- ENGLISH::topic.*
+- ENGLISH::style.*
+- ENGLISH::level.*
+- ENGLISH::grammar.*
+- ENGLISH::source.*
+- ENGLISH::set.*
+
+When calling save_draft_notes:
+- put note tags into item.tags
+- put batch-level requested tags into metadata.requestedTags
 
 Before saving, call get_deck_contract and match the returned field contract exactly.`
 
@@ -214,6 +227,10 @@ export function McpConnectPanel({
                     <li className="flex items-start gap-2">
                       <Link2 className="mt-0.5 size-4 shrink-0" />
                       Use the canonical English schema with `popularity`, `synonyms`, `antonyms`, and `examples_html`.
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Link2 className="mt-0.5 size-4 shrink-0" />
+                      Keep note tags in `item.tags` and follow the `ENGLISH::topic/style/level/...` taxonomy.
                     </li>
                     <li className="flex items-start gap-2">
                       <Link2 className="mt-0.5 size-4 shrink-0" />

@@ -191,10 +191,13 @@ export function DeckPageClient({
   function handleNoteSaveSuccess(
     noteId: string,
     updatedFields: Record<string, unknown>,
+    updatedTags: string[],
     audioUrl?: string
   ) {
     setNotes((prev) =>
-      prev.map((note) => (note.id === noteId ? { ...note, fields: updatedFields } : note))
+      prev.map((note) =>
+        note.id === noteId ? { ...note, fields: updatedFields, tags: updatedTags } : note
+      )
     )
 
     if (audioUrl) {
@@ -386,13 +389,19 @@ export function DeckPageClient({
                                   }
                                 />
                                 <NoteEditSheet
-                                  noteId={note.id}
-                                  deckId={deckId}
-                                  language={deckLanguage}
-                                  initialFields={note.fields}
-                                  initialAudioUrl={audioUrl}
-                                  onSaveSuccess={(updatedFields, nextAudioUrl) => {
-                                    handleNoteSaveSuccess(note.id, updatedFields, nextAudioUrl)
+                                noteId={note.id}
+                                deckId={deckId}
+                                language={deckLanguage}
+                                initialFields={note.fields}
+                                initialTags={note.tags}
+                                initialAudioUrl={audioUrl}
+                                onSaveSuccess={(updatedFields, updatedTags, nextAudioUrl) => {
+                                    handleNoteSaveSuccess(
+                                      note.id,
+                                      updatedFields,
+                                      updatedTags,
+                                      nextAudioUrl
+                                    )
                                   }}
                                   trigger={
                                     <Button variant="ghost" size="icon" title="Редактировать" aria-label="Редактировать">

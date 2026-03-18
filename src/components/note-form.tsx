@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createNote, updateNote } from '@/lib/actions/notes'
 import { getFields, getNoteFormValues, normalizeNoteFields } from '@/lib/note-fields'
+import { parseTagsInput } from '@/lib/note-tags'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -50,7 +51,7 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
     setLoading(true)
     setError('')
 
-    const tags = tagsInput.split(',').map((t) => t.trim()).filter(Boolean)
+    const tags = parseTagsInput(tagsInput)
 
     try {
       if (noteId) {
