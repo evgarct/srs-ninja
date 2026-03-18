@@ -20,7 +20,10 @@ export type DeckNoteRow = {
 export interface DeckNoteFilters {
   tagFilters?: string[]
   stateFilters?: FsrsState[]
+  audioFilter?: AudioFilter
 }
+
+export type AudioFilter = 'all' | 'with_audio' | 'without_audio'
 
 const FSRS_STATE_PRIORITY: FsrsState[] = ['relearning', 'learning', 'new', 'review']
 
@@ -44,9 +47,14 @@ export function getAllDeckTags(notes: DeckNoteRow[]) {
   )
 }
 
-export function filterDeckNotes(notes: DeckNoteRow[], filters: DeckNoteFilters) {
+export function filterDeckNotes(
+  notes: DeckNoteRow[],
+  filters: DeckNoteFilters,
+  audioMap: Record<string, string> = {}
+) {
   const activeTags = new Set(filters.tagFilters ?? [])
   const activeStates = new Set(filters.stateFilters ?? [])
+  const audioFilter = filters.audioFilter ?? 'all'
 
   return notes.filter((note) => {
     const matchesTags =
@@ -55,7 +63,15 @@ export function filterDeckNotes(notes: DeckNoteRow[], filters: DeckNoteFilters) 
     const matchesState =
       activeStates.size === 0 || activeStates.has(getNoteFsrsState(note.cards))
 
-    return matchesTags && matchesState
+    const hasAudio = Boolean(audioMap[note.id])
+    const matchesAudio =
+      audioFilter === 'all'
+        ? true
+        : audioFilter === 'with_audio'
+          ? hasAudio
+          : !hasAudio
+
+    return matchesTags && matchesState && matchesAudio
   })
 }
 

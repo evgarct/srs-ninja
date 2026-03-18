@@ -6,6 +6,7 @@ import {
   getNoteFsrsState,
   getNoteMemoryScore,
   isFsrsState,
+  type AudioFilter,
   type DeckNoteRow,
 } from './deck-notes'
 
@@ -99,6 +100,22 @@ describe('filterDeckNotes', () => {
     })
 
     expect(result.map((note) => note.id)).toEqual(['note-2'])
+  })
+
+  it.each<[AudioFilter, string[]]>([
+    ['with_audio', ['note-1', 'note-3']],
+    ['without_audio', ['note-2']],
+  ])('filters notes by audio availability for %s', (audioFilter, expectedIds) => {
+    const result = filterDeckNotes(
+      SAMPLE_NOTES,
+      { audioFilter },
+      {
+        'note-1': 'https://cdn.test/anchor.mp3',
+        'note-3': 'https://cdn.test/storm.mp3',
+      }
+    )
+
+    expect(result.map((note) => note.id)).toEqual(expectedIds)
   })
 })
 

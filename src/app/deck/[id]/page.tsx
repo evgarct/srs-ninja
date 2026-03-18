@@ -9,10 +9,10 @@ export default async function DeckPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ tags?: string; state?: string }>
+  searchParams: Promise<{ tags?: string; state?: string; audio?: 'all' | 'with_audio' | 'without_audio' }>
 }) {
   const { id } = await params
-  const { tags, state } = await searchParams
+  const { tags, state, audio } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -63,6 +63,7 @@ export default async function DeckPage({
       )}
       initialTagFilter={tags}
       initialStateFilter={state}
+      initialAudioFilter={audio ?? 'all'}
     />
   )
 }

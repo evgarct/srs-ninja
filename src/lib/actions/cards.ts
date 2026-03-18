@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { scheduleCard } from '@/lib/fsrs'
 import type { Rating } from '@/lib/types'
-import { filterDeckNotes, type FsrsState } from '@/lib/deck-notes'
+import { filterDeckNotes, type AudioFilter, type FsrsState } from '@/lib/deck-notes'
 
 /**
  * Retrieves a limited list of cards that are currently due for review within a given deck.
@@ -86,9 +86,11 @@ export async function getManualStudyCards(
   {
     tags = [],
     states = [],
+    audioFilter = 'all',
   }: {
     tags?: string[]
     states?: FsrsState[]
+    audioFilter?: AudioFilter
   }
 ) {
   const supabase = await createClient()
@@ -101,17 +103,32 @@ export async function getManualStudyCards(
 
   if (notesError || !notes) throw notesError ?? new Error('Failed to fetch notes')
 
+  const noteIds = notes.map((note) => note.id)
+  const { data: audioRows, error: audioError } = noteIds.length
+    ? await supabase
+        .from('audio_cache')
+        .select('note_id, storage_path')
+        .in('note_id', noteIds)
+        .eq('field_key', 'expression')
+    : { data: [], error: null }
+
+  if (audioError) throw audioError
+
+  const audioMap = Object.fromEntries((audioRows ?? []).map((row) => [row.note_id, row.storage_path]))
+
   const visibleNotes = filterDeckNotes(
     notes.map((note) => ({
       id: note.id,
-      fields: note.fields as Record<string, string>,
+      fields: note.fields as Record<string, unknown>,
       tags: note.tags ?? [],
       cards: (note.cards as Array<{ id: string; card_type: string; state: string; due_at: string }>) ?? [],
     })),
     {
       tagFilters: tags,
       stateFilters: states,
-    }
+      audioFilter,
+    },
+    audioMap
   )
 
   if (visibleNotes.length === 0) return []

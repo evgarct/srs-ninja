@@ -20,6 +20,7 @@ import {
   getNoteMemoryScore,
   getNoteFsrsState,
   isFsrsState,
+  type AudioFilter,
   type DeckNoteRow,
   type FsrsState,
 } from '@/lib/deck-notes'
@@ -45,6 +46,7 @@ interface DeckPageClientProps {
   initialAudioMap: Record<string, string>
   initialTagFilter?: string
   initialStateFilter?: string
+  initialAudioFilter?: AudioFilter
 }
 
 const FSRS_FILTERS: FsrsState[] = ['new', 'learning', 'relearning', 'review']
@@ -61,6 +63,7 @@ export function DeckPageClient({
   initialAudioMap,
   initialTagFilter,
   initialStateFilter,
+  initialAudioFilter = 'all',
 }: DeckPageClientProps) {
   const router = useRouter()
   const pathname = usePathname()
@@ -81,6 +84,7 @@ export function DeckPageClient({
       .map((state) => state.trim())
       .filter(isFsrsState) as FsrsState[]
   )
+  const [activeAudioFilter, setActiveAudioFilter] = useState<AudioFilter>(initialAudioFilter)
 
   const availableTags = useMemo(() => getAllDeckTags(notes), [notes])
   const visibleNotes = useMemo(
@@ -88,8 +92,9 @@ export function DeckPageClient({
       filterDeckNotes(notes, {
         tagFilters: activeTags,
         stateFilters: activeStates,
-      }),
-    [notes, activeTags, activeStates]
+        audioFilter: activeAudioFilter,
+      }, audioMap),
+    [notes, activeTags, activeStates, activeAudioFilter, audioMap]
   )
 
   const visibleCardCount = useMemo(
@@ -114,10 +119,13 @@ export function DeckPageClient({
     if (activeStates.length > 0) {
       params.set('state', activeStates.join(','))
     }
+    if (activeAudioFilter !== 'all') {
+      params.set('audio', activeAudioFilter)
+    }
     return `/review/${deckId}?${params.toString()}`
-  }, [deckId, activeTags, activeStates])
+  }, [deckId, activeTags, activeStates, activeAudioFilter])
 
-  function syncUrl(nextTags: string[], nextStates: FsrsState[]) {
+  function syncUrl(nextTags: string[], nextStates: FsrsState[], nextAudioFilter: AudioFilter) {
     const params = new URLSearchParams(searchParams.toString())
 
     if (nextTags.length > 0) {
@@ -132,16 +140,27 @@ export function DeckPageClient({
       params.delete('state')
     }
 
+    if (nextAudioFilter !== 'all') {
+      params.set('audio', nextAudioFilter)
+    } else {
+      params.delete('audio')
+    }
+
     params.delete('filter')
 
     const query = params.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }
 
-  function updateFilters(nextTags: string[], nextStates: FsrsState[]) {
+  function updateFilters(
+    nextTags: string[],
+    nextStates: FsrsState[],
+    nextAudioFilter: AudioFilter = activeAudioFilter
+  ) {
     setActiveTags(nextTags)
     setActiveStates(nextStates)
-    syncUrl(nextTags, nextStates)
+    setActiveAudioFilter(nextAudioFilter)
+    syncUrl(nextTags, nextStates, nextAudioFilter)
   }
 
   function toggleTag(tag: string) {
@@ -281,6 +300,7 @@ export function DeckPageClient({
             tagQuery={tagQuery}
             activeTags={activeTags}
             activeStates={activeStates}
+            activeAudioFilter={activeAudioFilter}
             fsrsFilters={FSRS_FILTERS}
             isRefreshing={isRefreshing}
             onTagQueryChange={setTagQuery}
@@ -289,6 +309,7 @@ export function DeckPageClient({
             onToggleTag={toggleTag}
             onResetStates={() => updateFilters(activeTags, [])}
             onToggleState={toggleState}
+            onAudioFilterChange={(filter) => updateFilters(activeTags, activeStates, filter)}
           />
 
           <section className="rounded-2xl border bg-card shadow-sm overflow-hidden">

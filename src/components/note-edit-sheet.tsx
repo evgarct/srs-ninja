@@ -20,7 +20,11 @@ interface NoteEditSheetProps {
   initialAudioUrl?: string
   allowAudioGeneration?: boolean
   trigger: React.ReactElement
-  onSaveSuccess?: (updatedFields: Record<string, unknown>, audioUrl?: string) => void
+  onSaveSuccess?: (
+    updatedFields: Record<string, unknown>,
+    audioUrl?: string,
+    audioError?: string
+  ) => void
 }
 
 export function NoteEditSheet({
@@ -54,9 +58,9 @@ export function NoteEditSheet({
               initialFields={initialFields}
               initialAudioUrl={initialAudioUrl}
               allowAudioGeneration={allowAudioGeneration}
-              onSuccess={(fields, audio) => {
+              onSuccess={(fields, audio, audioError) => {
                 setOpen(false)
-                onSaveSuccess?.(fields, audio)
+                onSaveSuccess?.(fields, audio, audioError)
               }}
               onCancel={() => setOpen(false)}
             />

@@ -169,6 +169,7 @@ export async function updateNoteFields(
   if (error) throw error
 
   let audioUrl: string | undefined
+  let audioError: string | undefined
 
   const { data: noteStatusRow, error: noteStatusError } = await supabase
     .from('notes')
@@ -193,11 +194,13 @@ export async function updateNoteFields(
     const result = await generateAndCacheAudio(supabase, user.id, noteId, newExpression, language)
     if ('audioUrl' in result) {
       audioUrl = result.audioUrl
+    } else {
+      audioError = result.error
     }
   }
 
   revalidatePath(`/deck/${deckId}`)
   revalidatePath(`/deck/${deckId}/drafts`)
   
-  return { success: true, audioUrl }
+  return { success: true, audioUrl, audioError }
 }

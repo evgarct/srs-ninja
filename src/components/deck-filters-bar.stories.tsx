@@ -2,12 +2,13 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { useState } from 'react'
 
 import { DeckFiltersBar } from './deck-filters-bar'
-import type { FsrsState } from '@/lib/deck-notes'
+import type { AudioFilter, FsrsState } from '@/lib/deck-notes'
 
 function InteractiveDeckFiltersBar() {
   const [tagQuery, setTagQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>(['ENGLISH::travel'])
   const [activeStates, setActiveStates] = useState<FsrsState[]>(['learning'])
+  const [activeAudioFilter, setActiveAudioFilter] = useState<AudioFilter>('without_audio')
 
   function toggleTag(tag: string) {
     setActiveTags((current) =>
@@ -39,6 +40,7 @@ function InteractiveDeckFiltersBar() {
         tagQuery={tagQuery}
         activeTags={activeTags}
         activeStates={activeStates}
+        activeAudioFilter={activeAudioFilter}
         fsrsFilters={['new', 'learning', 'relearning', 'review']}
         onTagQueryChange={setTagQuery}
         onClearTagSearchAndFilter={() => {
@@ -49,6 +51,7 @@ function InteractiveDeckFiltersBar() {
         onToggleTag={toggleTag}
         onResetStates={() => setActiveStates([])}
         onToggleState={toggleState}
+        onAudioFilterChange={setActiveAudioFilter}
       />
     </div>
   )

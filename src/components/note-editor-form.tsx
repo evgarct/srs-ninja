@@ -21,7 +21,11 @@ interface NoteEditorFormProps {
   initialFields: Record<string, unknown>
   initialAudioUrl?: string
   allowAudioGeneration?: boolean
-  onSuccess?: (updatedFields: Record<string, unknown>, newAudioUrl?: string) => void
+  onSuccess?: (
+    updatedFields: Record<string, unknown>,
+    newAudioUrl?: string,
+    audioError?: string
+  ) => void
   onCancel?: () => void
 }
 
@@ -60,7 +64,7 @@ export function NoteEditorForm({
       const normalizedValues = normalizeNoteFields(values, language)
       const oldExpression = getNotePrimaryText(initialFields)
 
-      const { success, audioUrl } = await updateNoteFields(
+      const { success, audioUrl, audioError } = await updateNoteFields(
         noteId,
         deckId,
         normalizedValues,
@@ -76,7 +80,10 @@ export function NoteEditorForm({
           toast.success('Audio regenerated successfully!')
           void playAudioUrl(audioUrl)
         }
-        onSuccess?.(normalizedValues, audioUrl)
+        if (audioError) {
+          toast.error(audioError)
+        }
+        onSuccess?.(normalizedValues, audioUrl, audioError)
         router.refresh()
       }
     } catch (err) {

@@ -52,14 +52,15 @@
 
 ## Filters
 
-Есть два клиентских фильтра в одной строке:
+Есть три клиентских фильтра в одной строке:
 
 - `tags` — dropdown multi-select по реально существующим тегам колоды;
 - `state` — dropdown multi-select по агрегированным FSRS-состояниям ноты.
+- `audio` — single-select `all / with audio / without audio`.
 
 Tag filter использует встроенный поиск и кнопку быстрого сброса. Search input специально останавливает menu-level event propagation, иначе Base UI menu перехватывает фокус и клавиатуру.
 
-Те же параметры сериализуются в URL и используются повторно для ручной тренировки.
+Те же параметры сериализуются в URL и используются повторно для ручной тренировки, поэтому `Train shown cards` остаётся консистентным с видимой таблицей даже для набора `Without audio`.
 
 Для English deck display label тега очищается от технического префикса `ENGLISH::`.
 
@@ -100,6 +101,12 @@ Preview не заменяет review-session и не пишет review history.
 - локальный `audioMap` обновляется сразу после ответа, поэтому Play-кнопки появляются без reload.
 
 Кнопка также показывает счётчик и tooltip по текущему отфильтрованному набору и остаётся видимой в disabled-состоянии, если для генерации ничего не осталось.
+
+Если backend generation падает, UI больше не молчит:
+
+- batch route возвращает явный `error` / `errorMessages`;
+- deck page показывает toast с причиной;
+- inline regenerate через note editor тоже возвращает `audioError`, чтобы пользователь видел, почему Play-кнопка не обновилась.
 
 ## Storybook
 
