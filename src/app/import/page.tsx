@@ -7,7 +7,7 @@ import { AnkiImporter } from '@/components/anki-importer'
 import { McpConnectPanel } from '@/components/mcp-connect-panel'
 import { DraftStatusBadge } from '@/components/draft-status-badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/lib/button-variants'
 import { buildMcpConnectionConfig, resolveAppOrigin } from '@/lib/mcp-connection'
 import type { Database } from '@/lib/supabase/database.types'
 
