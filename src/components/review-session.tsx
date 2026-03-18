@@ -16,6 +16,7 @@ import {
   prepareReviewSessionCards,
   type ReviewSessionCard,
 } from '@/lib/review-session'
+import { applyReviewQueueOutcome } from '@/lib/review-loop'
 
 export function ReviewSession({
   cards,
@@ -31,7 +32,6 @@ export function ReviewSession({
 }) {
   const [queue, setQueue] = useState(cards)
   const [dynamicAudio, setDynamicAudio] = useState<Record<string, string>>({})
-  const [index, setIndex] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const [done, setDone] = useState(false)
   const [sessionStats, setSessionStats] = useState({ total: 0, correct: 0 })
@@ -52,9 +52,13 @@ export function ReviewSession({
     () => prepareReviewSessionCards(queue, lang, resolvedAudioMap),
     [queue, lang, resolvedAudioMap]
   )
-  const current = queue[index]
-  const currentPrepared = preparedQueue[index]
-  const progress = total > 0 ? Math.round((index / total) * 100) : 0
+  const current = queue[0]
+  const currentPrepared = preparedQueue[0]
+  const completedReviews = sessionStats.total
+  const projectedTotal = completedReviews + queue.length
+  const progress = projectedTotal > 0
+    ? Math.round((completedReviews / projectedTotal) * 100)
+    : 0
 
   const isRecognition = currentPrepared?.direction === 'recognition'
   const audioUrl = currentPrepared?.audioUrl
@@ -98,7 +102,7 @@ export function ReviewSession({
   useEffect(() => {
     if (typeof Audio === 'undefined') return
 
-    const prefetchUrls = getReviewPrefetchAudioUrls(preparedQueue, index, 2)
+    const prefetchUrls = getReviewPrefetchAudioUrls(preparedQueue, 0, 2)
 
     for (const url of prefetchUrls) {
       if (warmedAudioRef.current.has(url)) continue
@@ -109,7 +113,7 @@ export function ReviewSession({
       audio.load()
       warmedAudioRef.current.add(url)
     }
-  }, [preparedQueue, index])
+  }, [preparedQueue])
 
   // Autoplay logic:
   // - Recognition front: play when card first appears
@@ -146,11 +150,12 @@ export function ReviewSession({
       correct: s.correct + (rating >= 3 ? 1 : 0),
     }))
 
-    const nextIndex = index + 1
-    if (nextIndex >= queue.length) {
+    const nextQueue = applyReviewQueueOutcome(queue, rating)
+
+    if (nextQueue.length === 0) {
       setDone(true)
     } else {
-      setIndex(nextIndex)
+      setQueue(nextQueue)
       setRevealed(false)
       startTimeRef.current = Date.now()
     }
@@ -219,7 +224,7 @@ export function ReviewSession({
       <div className="flex items-center gap-3">
         <Progress value={progress} className="flex-1" />
         <span className="text-sm text-muted-foreground shrink-0 tabular-nums">
-          {index + 1} / {total}
+          {Math.min(completedReviews + 1, projectedTotal || total)} / {projectedTotal || total}
         </span>
       </div>
 
