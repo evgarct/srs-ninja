@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
-import { useState } from "react"
 import { LevelBadge } from "./LevelBadge"
 import type { CEFRLevel } from "./LevelBadge"
 
