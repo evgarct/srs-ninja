@@ -11,6 +11,7 @@ This branch keeps local development and verification predictable across WSL and 
 - ESLint ignores generated Storybook build output in `storybook-static/`.
 - The Next.js request interception entrypoint now uses `src/proxy.ts` instead of the deprecated `src/middleware.ts` convention.
 - Storybook example files were cleaned up so default verification commands pass without noise.
+- Storybook's Vite build filters known non-actionable `"use client"` bundling warnings and raises the chunk warning threshold for static docs bundles.
 
 ## Verification
 
@@ -20,3 +21,4 @@ After these changes, the standard local verification flow succeeds:
 - `npx next typegen`
 - `npx tsc --noEmit`
 - `npm run build`
+- `npm run build-storybook`
