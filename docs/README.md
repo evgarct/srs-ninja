@@ -18,6 +18,7 @@
 | [card-ordering.md](./card-ordering.md) | Smart card ordering: tier-based queue, sibling separation, new-card cap и bypass для manual/extra modes |
 | [review-learning-loop.md](./review-learning-loop.md) | Review learning loop: `Again/Hard` возвращают карточку в текущую сессию, а same-day extra study становится менее навязчивым |
 | [review-flow-dashboard.md](./review-flow-dashboard.md) | Review flow and dashboard due counts: review entry points, optimistic queue UX и home page due inventory |
+| [review-heatmap.md](./review-heatmap.md) | Review Heatmap: Monday-first historical activity grid on `/stats`, mobile/desktop windows и stable layout behavior |
 | [review-session-prefetch.md](./review-session-prefetch.md) | Review session prefetch: prepared queue, instant next-card progression и lookahead audio warmup |
 | [tooling-hygiene.md](./tooling-hygiene.md) | Runtime and tooling hygiene: WSL-first CLI resolution, lint ignores for generated assets, and Next.js `proxy.ts` entrypoint |
 | [weekly-activity-widget.md](./weekly-activity-widget.md) | Weekly Activity Widget: 7-дневная активность, streak, masteredWords и tooltip-поведение |
