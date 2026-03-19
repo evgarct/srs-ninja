@@ -1,25 +1,17 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import {
+  toDateKeyInTimeZone,
+  type ActivityDaySummary,
+} from '@/lib/activity'
 
-export interface WeeklyActivityDay {
-  date: string
-  reviews: number
-  masteredWords: number
-}
-
-function toDateKey(date: Date, timeZone: string): string {
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
-  const parts = formatter.formatToParts(date)
-  const year = parts.find((part) => part.type === 'year')?.value ?? '0000'
-  const month = parts.find((part) => part.type === 'month')?.value ?? '01'
-  const day = parts.find((part) => part.type === 'day')?.value ?? '01'
-  return `${year}-${month}-${day}`
+export interface WeeklyActivityStats {
+  days: ActivityDaySummary[]
+  streak: number
+  activeDays: number
+  weekStartKey: string
+  todayKey: string
 }
 
 /**
@@ -115,9 +107,11 @@ export async function getWeeklyActivityStats(timeZone: string) {
 
   const reviewCountByDay = new Map<string, number>()
   const masteredCardIdsByDay = new Map<string, Set<string>>()
+
   for (const review of data) {
-    const key = toDateKey(new Date(review.reviewed_at), timeZone)
+    const key = toDateKeyInTimeZone(new Date(review.reviewed_at), timeZone)
     reviewCountByDay.set(key, (reviewCountByDay.get(key) ?? 0) + 1)
+
     if (review.rating >= 3 && review.state === 'review') {
       const ids = masteredCardIdsByDay.get(key) ?? new Set<string>()
       ids.add(review.card_id)
@@ -125,15 +119,18 @@ export async function getWeeklyActivityStats(timeZone: string) {
     }
   }
 
-  const days: WeeklyActivityDay[] = []
+  const days: ActivityDaySummary[] = []
   for (let offset = 6; offset >= 0; offset--) {
     const date = new Date(now)
     date.setUTCDate(date.getUTCDate() - offset)
-    const key = toDateKey(date, timeZone)
+    const key = toDateKeyInTimeZone(date, timeZone)
+
     days.push({
       date: key,
       reviews: reviewCountByDay.get(key) ?? 0,
       masteredWords: masteredCardIdsByDay.get(key)?.size ?? 0,
+      isToday: offset === 0,
+      isFuture: false,
     })
   }
 
@@ -143,5 +140,11 @@ export async function getWeeklyActivityStats(timeZone: string) {
     streak++
   }
 
-  return { days, streak }
+  return {
+    days,
+    streak,
+    activeDays: days.filter((day) => day.reviews > 0).length,
+    weekStartKey: days[0]?.date ?? '',
+    todayKey: days.at(-1)?.date ?? '',
+  }
 }

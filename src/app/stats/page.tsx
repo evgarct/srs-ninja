@@ -2,36 +2,37 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getReviewStats, getTodayStats, getCardStateDistribution } from '@/lib/actions/stats'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
-function groupByDay(reviews: Array<{ reviewed_at: string; rating: number }>) {
-  const map = new Map<string, { total: number; correct: number }>()
-  for (const r of reviews) {
-    const day = r.reviewed_at.slice(0, 10)
-    const entry = map.get(day) ?? { total: 0, correct: 0 }
-    entry.total++
-    if (r.rating >= 3) entry.correct++
-    map.set(day, entry)
-  }
-  return map
-}
+import { headers } from 'next/headers'
+import { ReviewHeatmap } from '@/components/activity'
+import { buildReviewHeatmapWeeks } from '@/lib/activity'
 
 export default async function StatsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+  const requestHeaders = await headers()
+  const headerTimeZone = requestHeaders.get('x-vercel-ip-timezone') ?? 'UTC'
+  const timeZone = (() => {
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: headerTimeZone })
+      return headerTimeZone
+    } catch {
+      return 'UTC'
+    }
+  })()
 
   const [reviews, todayStats, distribution] = await Promise.all([
-    getReviewStats(30),
+    getReviewStats(280),
     getTodayStats(),
     getCardStateDistribution(),
   ])
 
-  const byDay = groupByDay(reviews)
   const totalReviews = reviews.length
   const totalCorrect = reviews.filter((r) => r.rating >= 3).length
   const overallAccuracy = totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0
 
   const totalCards = Object.values(distribution).reduce((a, b) => a + b, 0)
+  const heatmap = buildReviewHeatmapWeeks(reviews, timeZone, { weeks: 39 })
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8">
@@ -58,8 +59,7 @@ export default async function StatsPage() {
         </Card>
       </div>
 
-      {/* 30 days */}
-      <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">30 дней</h2>
+      <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">История активности</h2>
       <div className="grid grid-cols-2 gap-4 mb-8">
         <Card>
           <CardHeader className="pb-1"><CardTitle className="text-sm text-muted-foreground">Всего повторений</CardTitle></CardHeader>
@@ -71,32 +71,10 @@ export default async function StatsPage() {
         </Card>
       </div>
 
-      {/* Calendar heatmap (simple) */}
-      {byDay.size > 0 && (
-        <div className="mb-8">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-            Активность (последние 30 дней)
-          </h2>
-          <div className="flex flex-wrap gap-1">
-            {Array.from(byDay.entries()).map(([day, { total }]) => (
-              <div
-                key={day}
-                className="w-8 h-8 rounded text-xs flex items-center justify-center font-medium"
-                style={{
-                  backgroundColor: total === 0 ? undefined
-                    : total < 10 ? 'hsl(142 50% 80%)'
-                    : total < 30 ? 'hsl(142 50% 60%)'
-                    : 'hsl(142 50% 40%)',
-                  color: total >= 30 ? 'white' : undefined,
-                }}
-                title={`${day}: ${total} повторений`}
-              >
-                {total}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">Review Heatmap</h2>
+      <div className="mb-8">
+        <ReviewHeatmap weeks={heatmap.weeks} />
+      </div>
 
       {/* Card state distribution */}
       <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
