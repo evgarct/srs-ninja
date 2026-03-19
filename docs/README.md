@@ -9,11 +9,15 @@
 | Документ | Описание |
 |----------|----------|
 | [deck-audio-playback.md](./deck-audio-playback.md) | Deck page audio playback: Play-кнопка в списке нотов и в edit mode, мгновенное появление после генерации/регенерации |
+| [elevenlabs-tts.md](./elevenlabs-tts.md) | ElevenLabs TTS pipeline: single-note и batch generation, Storage upload, `audio_cache` и English-only guards |
 | [deck-table-view.md](./deck-table-view.md) | Deck table view: full-width таблица колоды, dropdown multi-select filters, preview на реальном Flashcard и batch audio по текущему filtered subset |
 | [english-note-schema.md](./english-note-schema.md) | Canonical English note contract: shared field schema, legacy normalization, and alignment across forms, flashcards, and MCP |
 | [extra-study.md](./extra-study.md) | Фича Extra Study: адаптивный подбор карточек, URL-параметры, поведение FSRS при досрочном повторении |
 | [mcp-draft-import.md](./mcp-draft-import.md) | MCP draft import: AI-generated candidate notes, draft-first persistence, import batches и ручной approve flow |
+| [note-editor.md](./note-editor.md) | Note editor: редактирование ноты из deck page и review session, shared field helpers и audio regeneration |
+| [card-ordering.md](./card-ordering.md) | Smart card ordering: tier-based queue, sibling separation, new-card cap и bypass для manual/extra modes |
 | [review-learning-loop.md](./review-learning-loop.md) | Review learning loop: `Again/Hard` возвращают карточку в текущую сессию, а same-day extra study становится менее навязчивым |
+| [review-flow-dashboard.md](./review-flow-dashboard.md) | Review flow and dashboard due counts: review entry points, optimistic queue UX и home page due inventory |
 | [review-session-prefetch.md](./review-session-prefetch.md) | Review session prefetch: prepared queue, instant next-card progression и lookahead audio warmup |
 | [weekly-activity-widget.md](./weekly-activity-widget.md) | Weekly Activity Widget: 7-дневная активность, streak, masteredWords и tooltip-поведение |
 
@@ -21,7 +25,7 @@
 
 ## Стек
 
-- **Next.js 14** App Router (Server Components + Server Actions)
+- **Next.js 16** App Router (Server Components + Server Actions)
 - **Supabase** — БД PostgreSQL, аутентификация, клиент
 - **ts-fsrs** — алгоритм FSRS-6 для интервального повторения
 - **shadcn/ui** — компоненты (Button, Card, Badge, Progress…)
