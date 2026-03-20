@@ -22,3 +22,22 @@
 - When UI behavior changes in a reusable or user-visible way, reflect it in Storybook when practical.
 - Before finalizing a branch, run the relevant verification commands for the touched area: targeted `eslint`, tests, `tsc`, and Storybook build when stories were changed.
 - After creating a PR, call the `$product-manager` skill to update the related Linear issue(s), sync the current implementation status, and add the PR link/reference in Linear.
+
+## UI / Storybook Execution Order
+
+- For user-visible UI work, first update the real app flow, then update Storybook, then manually sanity-check both before considering the task complete.
+- When a component uses `next/navigation`, App Router hooks, app-level fonts, or global Tailwind/shadcn styling, make Storybook mirror the app shell before debugging the component itself.
+- Storybook setup must include the app global CSS, Next App Router mode, and the same font setup used by the app whenever visual parity matters.
+- If a Storybook-rendered component throws a context error, first check missing providers, missing App Router setup, and missing environment assumptions before changing product code.
+- After changing shared or reusable UI, verify Storybook for the exact states touched by the task, not just a successful build.
+- When using dropdown/menu primitives, follow the component contract exactly; do not use label/group-specific subcomponents outside their required parent wrappers.
+- When the same action row appears in multiple states, keep button hierarchy, sizing, alignment, and secondary-action styling consistent unless the product requirement explicitly calls for a difference.
+
+## PR / Delivery Order
+
+- Before creating a PR, make sure `docs/` and `specs/` already describe the shipped behavior in the branch.
+- Create the branch PR only after verification passes locally for the touched area.
+- PRs must start with the final title and a complete description; immediately verify the created PR title/body instead of assuming the CLI request succeeded.
+- If GitHub CLI PR editing fails, patch the PR via `gh api` and then re-check the live PR fields.
+- After the PR is created, move related Linear issues to the correct review state, add the PR link/reference, and leave a short implementation status comment.
+- Do not leave temporary PR notes or helper files untracked in the branch after the PR is created.
