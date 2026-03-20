@@ -6,6 +6,7 @@ export type Note = Database['public']['Tables']['notes']['Row']
 export type Card = Database['public']['Tables']['cards']['Row']
 export type Review = Database['public']['Tables']['reviews']['Row']
 export type AudioCache = Database['public']['Tables']['audio_cache']['Row']
+export type ReviewSessionCompletion = Database['public']['Tables']['review_session_completions']['Row']
 
 // Card states (FSRS)
 export type CardState = 'new' | 'learning' | 'review' | 'relearning'

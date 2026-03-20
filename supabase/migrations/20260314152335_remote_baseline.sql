@@ -1,0 +1,3 @@
+-- Remote baseline migration already applied on Supabase before this repository
+-- snapshot was reconstructed locally. This placeholder keeps local migration
+-- history aligned with the remote project without mutating the live schema.

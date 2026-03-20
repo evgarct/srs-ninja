@@ -2,20 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { getDashboardStats } from '@/lib/actions/decks'
 import { getTodayStats, getWeeklyActivityStats } from '@/lib/actions/stats'
-import Link from 'next/link'
-import { buttonVariants } from '@/lib/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { CreateDeckDialog } from '@/components/create-deck-dialog'
-import { ExtraStudyBox } from '@/components/extra-study-box'
-import { cn } from '@/lib/utils'
 import { WeeklyActivity } from '@/components/activity'
 import { headers } from 'next/headers'
-
-const DECK_EMOJI: Record<string, string> = {
-  czech: '🇨🇿',
-  english: '🇬🇧',
-}
+import { HomeDeckCard } from '@/components/home-deck-card'
 
 /**
  * The main application dashboard.
@@ -100,49 +91,15 @@ export default async function Home() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {deckStats.map(({ deck, due, total, drafts }) => (
-            <Card key={deck.id} className="hover:border-foreground/30 transition-colors">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl">
-                    {DECK_EMOJI[deck.language] ?? '📚'} {deck.name}
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    {drafts > 0 && <Badge variant="outline">{drafts} draft</Badge>}
-                    {due > 0 && (
-                      <Badge variant="destructive">{due} к повторению</Badge>
-                    )}
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">{total} карточек всего</p>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2">
-                {due > 0 ? (
-                  <div className="flex gap-2">
-                    <Link href={`/decks/${deck.id}/review`} className={cn(buttonVariants(), 'flex-1 text-center')}>
-                      Учить ({due})
-                    </Link>
-                    <Link href={`/deck/${deck.id}`} className={buttonVariants({ variant: 'outline' })}>
-                      Колода
-                    </Link>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex gap-2">
-                      <Link href={`/deck/${deck.id}`} className={cn(buttonVariants({ variant: 'outline' }), 'flex-1 text-center')}>
-                        Открыть колоду
-                      </Link>
-                      {drafts > 0 && (
-                        <Link href={`/deck/${deck.id}/drafts`} className={buttonVariants({ variant: 'outline' })}>
-                          Drafts
-                        </Link>
-                      )}
-                    </div>
-                    <ExtraStudyBox deckId={deck.id} hasStudiedToday={todayStats.total > 0} />
-                  </>
-                )}
-              </CardContent>
-            </Card>
+          {deckStats.map(({ deck, due, total, drafts, completedToday }) => (
+            <HomeDeckCard
+              key={deck.id}
+              deck={deck}
+              due={due}
+              total={total}
+              drafts={drafts}
+              completedToday={completedToday}
+            />
           ))}
         </div>
       )}

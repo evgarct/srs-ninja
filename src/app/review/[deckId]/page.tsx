@@ -3,20 +3,22 @@ import { redirect } from 'next/navigation'
 import { getDueCards, getExtraStudyCards, getManualStudyCards } from '@/lib/actions/cards'
 import { orderCards } from '@/lib/card-ordering'
 import { ReviewSession } from '@/components/review-session'
+import { ReviewSessionCompleteRestore } from '@/components/review-session-complete-restore'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
 import { isFsrsState, normalizeAudioFilter, type AudioFilter, type FsrsState } from '@/lib/deck-notes'
 import { selectReviewSessionCards } from '@/lib/review-card-selection'
+import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
 
 export default async function ReviewPage({
   params,
   searchParams,
 }: {
   params: Promise<{ deckId: string }>
-  searchParams: Promise<{ mode?: string; limit?: string; tags?: string; state?: string; audio?: string }>
+  searchParams: Promise<{ mode?: string; limit?: string; tags?: string; state?: string; audio?: string; completed?: string }>
 }) {
   const { deckId } = await params
-  const { mode, limit: limitStr, tags: tagsParam, state: stateParam, audio: audioParam } =
+  const { mode, limit: limitStr, tags: tagsParam, state: stateParam, audio: audioParam, completed } =
     await searchParams
 
   const supabase = await createClient()
@@ -28,6 +30,7 @@ export default async function ReviewPage({
 
   const isExtra = mode === 'extra'
   const isManual = mode === 'manual'
+  const isCompleted = completed === '1'
   const limit = Math.min(Math.max(parseInt(limitStr ?? '10', 10) || 10, 1), 50)
   const manualTags = (tagsParam ?? '')
     .split(',')
@@ -47,7 +50,7 @@ export default async function ReviewPage({
       })
     : isExtra
       ? await getExtraStudyCards(deckId, limit)
-      : await getDueCards(deckId, 50)
+      : await getDueCards(deckId, REGULAR_DUE_REVIEW_LIMIT)
 
   // Apply due-review ordering only to the regular queue.
   // Manual review must preserve the full shown subset, and extra study keeps its own order.
@@ -72,6 +75,17 @@ export default async function ReviewPage({
   }
 
   if (cards.length === 0) {
+    if (isCompleted) {
+      return (
+        <main className="max-w-xl mx-auto px-4 py-8">
+          <ReviewSessionCompleteRestore
+            deckId={deckId}
+            sessionMode={isExtra ? 'extra' : isManual ? 'manual' : 'due'}
+          />
+        </main>
+      )
+    }
+
     return (
       <main className="max-w-xl mx-auto px-4 py-16 text-center">
         <p className="text-4xl mb-4">{isExtra ? '📭' : '🎉'}</p>
@@ -102,7 +116,13 @@ export default async function ReviewPage({
           {isExtra ? '✨ Новые слова · ' : isManual ? '🧪 Ручная тренировка · ' : ''}{cards.length} карточек
         </span>
       </div>
-      <ReviewSession cards={cards} deckId={deckId} language={deck.language} audioMap={audioMap} />
+      <ReviewSession
+        cards={cards}
+        deckId={deckId}
+        language={deck.language}
+        audioMap={audioMap}
+        sessionMode={isExtra ? 'extra' : isManual ? 'manual' : 'due'}
+      />
     </main>
   )
 }

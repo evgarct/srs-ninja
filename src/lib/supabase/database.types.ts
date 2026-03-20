@@ -302,6 +302,41 @@ export type Database = {
           },
         ]
       }
+      review_session_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          deck_id: string
+          id: string
+          session_type: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          deck_id: string
+          id?: string
+          session_type: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          deck_id?: string
+          id?: string
+          session_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'review_session_completions_deck_id_fkey'
+            columns: ['deck_id']
+            isOneToOne: false
+            referencedRelation: 'decks'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

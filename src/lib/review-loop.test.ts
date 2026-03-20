@@ -1,32 +1,50 @@
 import { describe, expect, it } from 'vitest'
 
-import { applyReviewQueueOutcome, getReviewRequeueOffset } from './review-loop'
+import { applyReviewQueueOutcome, getReviewRequeueWindow } from './review-loop'
 
-describe('getReviewRequeueOffset', () => {
+describe('getReviewRequeueWindow', () => {
   it('requeues Again sooner than Hard and releases Good/Easy', () => {
-    expect(getReviewRequeueOffset(1)).toBe(1)
-    expect(getReviewRequeueOffset(2)).toBe(3)
-    expect(getReviewRequeueOffset(3)).toBeNull()
-    expect(getReviewRequeueOffset(4)).toBeNull()
+    expect(getReviewRequeueWindow(10, 1)).toEqual({ min: 2, max: 4 })
+    expect(getReviewRequeueWindow(10, 2)).toEqual({ min: 5, max: 8 })
+    expect(getReviewRequeueWindow(10, 3)).toBeNull()
+    expect(getReviewRequeueWindow(10, 4)).toBeNull()
+  })
+
+  it('collapses gracefully for short queues', () => {
+    expect(getReviewRequeueWindow(1, 1)).toEqual({ min: 1, max: 1 })
+    expect(getReviewRequeueWindow(2, 2)).toEqual({ min: 2, max: 2 })
   })
 })
 
 describe('applyReviewQueueOutcome', () => {
-  it('moves Again cards back near the front of the remaining queue', () => {
-    expect(applyReviewQueueOutcome(['a', 'b', 'c', 'd'], 1)).toEqual([
+  it('moves Again cards into an earlier delayed window', () => {
+    expect(applyReviewQueueOutcome(['a', 'b', 'c', 'd', 'e', 'f'], 1, { random: () => 0 })).toEqual([
       'b',
       'a',
       'c',
       'd',
+      'e',
+      'f',
     ])
   })
 
   it('moves Hard cards later than Again', () => {
-    expect(applyReviewQueueOutcome(['a', 'b', 'c', 'd', 'e', 'f'], 2)).toEqual([
+    expect(applyReviewQueueOutcome(['a', 'b', 'c', 'd', 'e', 'f'], 2, { random: () => 0 })).toEqual([
       'b',
       'c',
       'd',
       'a',
+      'e',
+      'f',
+    ])
+  })
+
+  it('can place difficult cards later within their bounded requeue window', () => {
+    expect(applyReviewQueueOutcome(['a', 'b', 'c', 'd', 'e', 'f'], 1, { random: () => 0.99 })).toEqual([
+      'b',
+      'c',
+      'a',
+      'd',
       'e',
       'f',
     ])

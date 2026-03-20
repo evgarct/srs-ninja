@@ -16,10 +16,14 @@
 | [mcp-draft-import.md](./mcp-draft-import.md) | MCP draft import: AI-generated candidate notes, draft-first persistence, import batches и ручной approve flow |
 | [note-editor.md](./note-editor.md) | Note editor: редактирование ноты из deck page и review session, shared field helpers и audio regeneration |
 | [card-ordering.md](./card-ordering.md) | Smart card ordering: tier-based queue, sibling separation, new-card cap и bypass для manual/extra modes |
+| [completed-today-deck-state.md](./completed-today-deck-state.md) | Completed-today deck state: persisted due-session completion markers and calm success state on home deck cards |
 | [review-learning-loop.md](./review-learning-loop.md) | Review learning loop: `Again/Hard` возвращают карточку в текущую сессию, а same-day extra study становится менее навязчивым |
 | [review-flow-dashboard.md](./review-flow-dashboard.md) | Review flow and dashboard due counts: review entry points, optimistic queue UX и home page due inventory |
+| [review-completion-summary.md](./review-completion-summary.md) | Review completion summary: richer done state, answer distribution, time spent and restrained completion animation |
 | [review-heatmap.md](./review-heatmap.md) | Review Heatmap: Monday-first historical activity grid on `/stats`, mobile/desktop windows и stable layout behavior |
+| [review-session-polish.md](./review-session-polish.md) | Review session polish: stronger progress chrome, stack depth cues and smooth card transitions |
 | [review-session-prefetch.md](./review-session-prefetch.md) | Review session prefetch: prepared queue, instant next-card progression и lookahead audio warmup |
+| [review-queue-pacing.md](./review-queue-pacing.md) | Review queue pacing: 200-card due-session limit, separate new-card cap и delayed requeue windows for difficult cards |
 | [tooling-hygiene.md](./tooling-hygiene.md) | Runtime and tooling hygiene: WSL-first CLI resolution, lint ignores for generated assets, and Next.js `proxy.ts` entrypoint |
 | [weekly-activity-widget.md](./weekly-activity-widget.md) | Weekly Activity Widget: 7-дневная активность, streak, masteredWords и tooltip-поведение |
 
