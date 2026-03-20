@@ -3,15 +3,20 @@ import { redirect } from 'next/navigation'
 import { getDueCards } from '@/lib/actions/cards'
 import { orderCards } from '@/lib/card-ordering'
 import { ReviewSession } from '@/components/review-session'
+import { ReviewSessionCompleteRestore } from '@/components/review-session-complete-restore'
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
+import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
 
 export default async function ReviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ completed?: string }>
 }) {
   const { id: deckId } = await params
+  const { completed } = await searchParams
 
   const supabase = await createClient()
   const {
@@ -22,7 +27,7 @@ export default async function ReviewPage({
   const { data: deck } = await supabase.from('decks').select('*').eq('id', deckId).single()
   if (!deck) redirect('/')
 
-  const rawCards = await getDueCards(deckId, 50)
+  const rawCards = await getDueCards(deckId, REGULAR_DUE_REVIEW_LIMIT)
   const cards = orderCards(rawCards)
 
   // Pre-fetch audio URLs for all cards (English deck only)
@@ -41,6 +46,14 @@ export default async function ReviewPage({
   }
 
   if (cards.length === 0) {
+    if (completed === '1') {
+      return (
+        <main className="max-w-xl mx-auto px-4 py-8">
+          <ReviewSessionCompleteRestore deckId={deckId} sessionMode="due" />
+        </main>
+      )
+    }
+
     return (
       <main className="max-w-xl mx-auto px-4 py-16 text-center">
         <p className="text-4xl mb-4">🎉</p>
@@ -63,7 +76,7 @@ export default async function ReviewPage({
           {deck.name} · {cards.length} cards
         </span>
       </div>
-      <ReviewSession cards={cards} deckId={deckId} language={deck.language} audioMap={audioMap} />
+      <ReviewSession cards={cards} deckId={deckId} language={deck.language} audioMap={audioMap} sessionMode="due" />
     </main>
   )
 }

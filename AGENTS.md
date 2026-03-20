@@ -7,6 +7,12 @@
 - Treat `docs/` as technical documentation: how the feature works and is implemented.
 - Follow the existing design system and component patterns already used in the repository; do not introduce a parallel visual language for new UI work.
 - Prefer extending or composing the current shared UI primitives and established styling patterns instead of inventing one-off controls.
+- For product UI, optimize for focus first and delight second; improve clarity, hierarchy, and motivation without adding decorative noise.
+- Prefer improving spacing, emphasis, feedback, and perceived responsiveness before adding new visual treatment.
+- Use motion only when it improves comprehension or feedback, such as hover and tap states, layout transitions, progress updates, answer reveal, and card transitions.
+- Keep motion subtle, fast, and low-amplitude; avoid slow transitions, looping decorative animation, excessive glow, and landing-page-style effects.
+- Make primary actions visually obvious and avoid giving equal visual weight to every element on the screen.
+- Keep review surfaces minimal, readable, and distraction-free; never trade readability for visual flair.
 - Mobile support is required: new UI and changed UI flows must work on phones as well as desktop.
 - When changing interactive flows, check both desktop and mobile behavior, including spacing, touch targets, wrapping, and perceived responsiveness.
 - For each new feature branch, start from a fresh `main`.

@@ -1,3 +1,5 @@
+import { REGULAR_DUE_NEW_CARD_LIMIT } from '@/lib/review-config'
+
 /**
  * Smart card ordering for review sessions.
  *
@@ -8,7 +10,6 @@
  *   within 5 positions of each other
  */
 
-const NEW_CARD_LIMIT = 20
 const SIBLING_MIN_GAP = 5
 const SMALL_DECK_THRESHOLD = 10
 
@@ -74,7 +75,7 @@ export function orderCards<
   const review = shuffle(dueCards.filter((c) => c.state === 'review'))
   const newCards = shuffle(dueCards.filter((c) => c.state === 'new')).slice(
     0,
-    NEW_CARD_LIMIT
+    REGULAR_DUE_NEW_CARD_LIMIT
   )
 
   const ordered = [...relearning, ...learning, ...newCards, ...review]

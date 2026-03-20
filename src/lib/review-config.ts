@@ -1,0 +1,2 @@
+export const REGULAR_DUE_REVIEW_LIMIT = 200
+export const REGULAR_DUE_NEW_CARD_LIMIT = 20

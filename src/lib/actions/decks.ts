@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import type { Deck, Language } from '@/lib/types'
 import { countVisibleDueCardsByDeck, getStartOfDayInTimeZone } from '@/lib/dashboard-review'
+import {
+  getCompletedTodayDeckIds,
+  isMissingCompletionTableError,
+} from '@/lib/review-session-completions'
 
 /**
  * Retrieves all decks for the current user.
@@ -91,7 +95,11 @@ export async function getDashboardStats(timeZone = 'UTC') {
   const deckIds = decks.map((deck) => deck.id)
   const todayStart = getStartOfDayInTimeZone(new Date(), timeZone).toISOString()
 
-  const [{ data: dueCards, error: dueError }, { data: reviewedToday, error: reviewedError }] = await Promise.all([
+  const [
+    { data: dueCards, error: dueError },
+    { data: reviewedToday, error: reviewedError },
+    { data: completedTodayRows, error: completionsError },
+  ] = await Promise.all([
     supabase
       .from('cards')
       .select('id, notes!inner(deck_id, status)')
@@ -103,10 +111,19 @@ export async function getDashboardStats(timeZone = 'UTC') {
       .select('card_id')
       .eq('user_id', user.id)
       .gte('reviewed_at', todayStart),
+    supabase
+      .from('review_session_completions')
+      .select('deck_id')
+      .eq('user_id', user.id)
+      .eq('session_type', 'due')
+      .gte('completed_at', todayStart),
   ])
 
   if (dueError) throw dueError
   if (reviewedError) throw reviewedError
+  if (completionsError && !isMissingCompletionTableError(completionsError)) {
+    throw completionsError
+  }
 
   const visibleDueByDeck = countVisibleDueCardsByDeck(
     (dueCards ?? []).map((card) => {
@@ -118,6 +135,7 @@ export async function getDashboardStats(timeZone = 'UTC') {
     }).filter((card) => card.deckId),
     (reviewedToday ?? []).map((review) => review.card_id)
   )
+  const completedTodayDeckIds = getCompletedTodayDeckIds(completedTodayRows ?? null, completionsError)
 
   const stats = await Promise.all(
     decks.map(async (deck) => {
@@ -134,7 +152,13 @@ export async function getDashboardStats(timeZone = 'UTC') {
           .eq('status', 'draft'),
       ])
 
-      return { deck, due: visibleDueByDeck.get(deck.id) ?? 0, total: total ?? 0, drafts: drafts ?? 0 }
+      return {
+        deck,
+        due: visibleDueByDeck.get(deck.id) ?? 0,
+        total: total ?? 0,
+        drafts: drafts ?? 0,
+        completedToday: completedTodayDeckIds.has(deck.id),
+      }
     })
   )
   return stats
@@ -162,4 +186,25 @@ export async function createDeck(name: string, language: Language) {
 
   revalidatePath('/')
   return data
+}
+
+export async function markReviewSessionCompleted(
+  deckId: string,
+  sessionType: 'due' | 'manual' | 'extra'
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('review_session_completions')
+    .insert({
+      deck_id: deckId,
+      user_id: user.id,
+      session_type: sessionType,
+    })
+
+  if (error && !isMissingCompletionTableError(error)) throw error
+
+  revalidatePath('/')
 }

@@ -1,7 +1,18 @@
+import '../src/app/globals.css'
 import type { Preview } from '@storybook/nextjs-vite'
+import { Inter } from 'next/font/google'
+import { createElement } from 'react'
+
+const inter = Inter({ subsets: ['latin', 'latin-ext', 'cyrillic'] })
 
 const preview: Preview = {
+  decorators: [
+    (Story) => createElement('div', { className: inter.className }, createElement(Story)),
+  ],
   parameters: {
+    nextjs: {
+      appDirectory: true,
+    },
     controls: {
       matchers: {
        color: /(background|color)$/i,
