@@ -241,8 +241,9 @@ export const RatingButtonsVisible: Story = {
 
 export const MobileAppReview: Story = {
   render: (args) => (
-    <div className="min-h-screen bg-muted/30 p-3">
-      <div className="mx-auto max-w-[24rem] rounded-[28px] border bg-background/70 p-3 shadow-sm">
+    <div className="min-h-screen bg-muted/20 p-3">
+      <div className="relative mx-auto max-w-[24rem] overflow-hidden rounded-[30px] border border-foreground/10 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.18),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.01))] p-3 shadow-[0_18px_60px_-34px_hsl(var(--foreground)/0.55)]">
+        <div className="pointer-events-none absolute left-1/2 top-0 h-full w-44 -translate-x-1/2 bg-[linear-gradient(180deg,rgba(255,248,214,0.00),rgba(255,248,214,0.16),rgba(193,231,255,0.28),rgba(255,255,255,0.40),rgba(193,231,255,0.20),rgba(255,248,214,0.00))] blur-2xl" />
         <InteractiveFlashcard {...args} mobileActionsSticky />
       </div>
     </div>

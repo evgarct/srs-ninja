@@ -1,91 +1,81 @@
-# Review Session Mobile App Pass
+# Review Session UI Reset
 
 ## Summary
 
-The review session now behaves more like a focused mobile app screen on phones:
+The review surface now uses a simpler custom shell instead of the previous stack-and-dock treatment:
 
-- mobile review routes hide the global top navigation;
-- the local review header is tighter and more app-like;
-- answer buttons move into a sticky bottom action bar on mobile;
-- card details are presented with stronger hierarchy and delayed secondary detail;
-- card transitions now leave in the direction of the chosen answer;
-- a short emoji burst adds fast tactile feedback after grading.
+- one active flashcard stays in focus;
+- the bottom action area uses floating Tinder-like round rating buttons instead of the dock component;
+- rating presses trigger a short emoji-only burst;
+- `Extra study` no longer shows the session title in the centered header area;
+- mobile review has a visible top-left exit control;
+- the background is currently a static soft-light treatment over `#dedede`; the animated React Bits `Light Pillar` experiment is temporarily hidden.
+
+Review mechanics, FSRS behavior, queue pacing, and card content remain unchanged.
 
 ## Files
 
-- `src/app/decks/[id]/review/page.tsx`
-- `src/app/review/[deckId]/page.tsx`
-- `src/components/nav.tsx`
 - `src/components/review-session.tsx`
 - `src/components/review-rating-burst.tsx`
-- `src/components/flashcard/Flashcard.tsx`
 - `src/components/flashcard/RatingButtons.tsx`
-- `src/lib/review-rating-motion.ts`
-- `src/lib/review-rating-motion.test.ts`
-- `src/components/flashcard/Flashcard.stories.tsx`
 - `src/components/flashcard/RatingButtons.stories.tsx`
+- `src/components/flashcard/Flashcard.stories.tsx`
+- `specs/SRS_NINJA_REVIEW_SESSION_MOBILE_APP_PASS.md`
 
-## Mobile Shell
+## Review Shell
 
-Review pages now use a more compact local header and hide the global nav on mobile review routes.
+`ReviewSession` now owns a dedicated session shell instead of composing the earlier `ReactBitsReviewStack` and `ReviewFeedbackDock`.
 
-This reduces the feeling of reviewing inside a long document and gives the card stack more of the first screen.
+The shell now provides:
 
-## Sticky Action Bar
+- top review chrome with exit action and progress ring;
+- `Extra study` intentionally removes the centered session label block;
+- one animated live-card surface over the full-page pillar background;
+- a floating bottom action row that appears only after reveal.
 
-`Flashcard` can now render rating actions in a mobile-only sticky bottom bar.
+The old stack illusion is no longer the primary interaction model.
 
-This action bar:
+## Bottom Rating Area
 
-- appears only after reveal;
-- respects bottom safe-area insets;
-- keeps the four ratings visible without additional scrolling;
-- switches back to inline actions on desktop.
+`RatingButtons` keeps the same ratings and keyboard meanings, but the presentation changed:
 
-## Card Hierarchy
+- each action is circular and icon-led;
+- the row floats directly above the browser bottom edge;
+- there is no labeled or bordered utility container around the buttons;
+- the interaction direction is closer to Tinder-style floating action controls than to a dock or sheet.
 
-The flashcard body keeps the same information model, but the mobile presentation is more focused:
+The shell captures the pressed button position so feedback effects can originate from the tapped rating instead of from a generic center point.
 
-- tighter spacing and headline sizing on phones;
-- reveal hint uses mobile-friendly copy;
-- low-priority details such as frequency/style/notes live in a softer supplementary block;
-- the main word, translation, examples, and actions stay visually dominant.
+## Emoji Burst Feedback
 
-## Directional Motion
+`ReviewRatingBurst` remains emoji-only and now supports an explicit horizontal anchor.
 
-`ReviewSession` now maps each rating to its own entry/exit motion preset through `getReviewRatingMotion()`.
+The review shell passes the pressed button location into the burst so the effect appears from the selected rating area.
 
-The motion model is intentionally simple:
+The burst:
 
-- `Again` exits harder to the left;
-- `Hard` exits left but less aggressively;
-- `Good` exits right;
-- `Easy` exits farther to the right.
+- is transient;
+- ignores pointer events;
+- is disabled for reduced-motion users;
+- persists briefly even after the session advances to the next card.
 
-The next card enters from the opposite side with a short spring transition.
+## Background Treatment
 
-## Emoji Burst
+The session background is currently a static light treatment over `#dedede`, with brighter falloff at the center and edges.
 
-`ReviewRatingBurst` adds a brief directional emoji burst after grading.
+The animated React Bits `Light Pillar` component remains in the codebase but is temporarily hidden while the visual treatment is being tuned.
 
-This effect is:
+## Storybook
 
-- short-lived;
-- pointer-events-free;
-- disabled when reduced motion is requested.
+Reusable touched UI states are reflected in Storybook through:
 
-It is meant to feel more tactile and alive, borrowing the spirit of Magic UI / React Bits interaction patterns without importing a separate visual system.
+- updated circular `RatingButtons` stories;
+- updated flashcard shell stories that better match the new review atmosphere.
 
-## Storybook and Verification
+## Verification
 
-Storybook now includes mobile-oriented stories for:
+Run the relevant checks for this pass before opening a PR:
 
-- `Flashcard` in a mobile app review shell;
-- `RatingButtons` in a sticky bottom-bar treatment.
-
-Verification run for this pass:
-
-- `npx vitest run --config vitest.unit.config.ts src/lib/review-rating-motion.test.ts`
-- `npx eslint src/components/review-session.tsx src/components/review-rating-burst.tsx src/components/flashcard/Flashcard.tsx src/components/flashcard/RatingButtons.tsx src/components/nav.tsx src/app/decks/[id]/review/page.tsx src/app/review/[deckId]/page.tsx src/lib/review-rating-motion.ts src/lib/review-rating-motion.test.ts src/components/flashcard/Flashcard.stories.tsx src/components/flashcard/RatingButtons.stories.tsx`
+- `npx eslint src/components/review-session.tsx src/components/review-rating-burst.tsx src/components/flashcard/RatingButtons.tsx src/components/flashcard/Flashcard.stories.tsx src/components/flashcard/RatingButtons.stories.tsx`
 - `npx tsc --noEmit`
 - `npm run build-storybook`

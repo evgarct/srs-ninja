@@ -107,7 +107,7 @@ export default async function ReviewPage({
   }
 
   return (
-    <main className="mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-3 pb-0 pt-3 md:min-h-[calc(100svh-3.5rem)] sm:px-4 sm:pt-4">
+    <main className="mx-auto flex h-[calc(100svh-3.5rem)] w-full flex-col overflow-hidden bg-[#dedede] px-3 pb-0 pt-0 sm:px-4">
       <ReviewSession
         cards={cards}
         deckId={deckId}

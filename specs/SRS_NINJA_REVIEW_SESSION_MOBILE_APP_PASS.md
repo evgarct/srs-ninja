@@ -1,80 +1,98 @@
-# SRS Ninja - Feature: Review Session Mobile App Pass
+# SRS Ninja - Feature: Review Session UI Reset
 
 ## Context
 
-The earlier review-session polish improved progress framing and basic card motion, but the mobile review flow still feels like a web page:
+The earlier mobile review pass moved the product toward a more app-like session, but the current stack-and-dock direction is still too experimental for a core learning surface:
 
-- too much vertical chrome appears before the main action;
-- rating buttons can sit too low on the screen after reveal;
-- the card content and metadata feel visually heavy on phones;
-- motion is smoother than before, but it still does not feel like a focused app screen.
+- the stack treatment feels glitchy instead of stable;
+- the dock metaphor does not fit the product's review UI;
+- mobile lacks a clear exit action inside the review surface;
+- the current background is too weak for the vertical review layout.
 
 ## Goal
 
-Make the mobile review session feel mobile-app-first while preserving the existing review mechanics and card content model.
+Reset the review session UI to a simpler custom surface that feels reliable, readable, and mobile-first while preserving existing review mechanics.
 
 ## Product Rules
 
-### 1. App-style composition
+### 1. One live card, not a stack illusion
 
-On mobile, the review session should read as a single focused screen:
+The review session should center one active flashcard.
 
-- compact session chrome at the top;
-- one primary card stack in the middle;
-- always-reachable actions at the bottom.
+Allowed:
 
-### 2. Reachable actions
-
-After reveal, rating actions must remain available without extra scrolling.
-
-The bottom action area should:
-
-- respect safe-area insets;
-- feel tactile and intentional;
-- remain visually subordinate to the card, but clearly reachable.
-
-### 3. Lower mobile density
-
-The card content model stays unchanged, but the mobile presentation should reduce overload:
-
-- main learning content remains dominant;
-- lower-priority details can be delayed or visually softened;
-- spacing should feel tighter and more app-like on phones.
-
-### 4. Directional motion
-
-Card motion should be tied to the chosen answer:
-
-- `Again` and `Hard` leave toward the negative side;
-- `Good` and `Easy` leave toward the positive side;
-- the next card rises into focus from the stack.
-
-### 5. Interactive references
-
-Use Magic UI and React Bits as pattern references for interaction quality, not as wholesale styling imports.
-
-Safe reference areas:
-
-- short emoji or particle bursts;
-- tactile press feedback;
-- compact action surfaces;
-- directional card transitions.
+- subtle depth hints behind the active card;
+- fast card-to-card transitions;
+- simple motion tied to rating feedback.
 
 Avoid:
 
-- decorative ambient motion;
-- heavy animated backgrounds;
-- a parallel visual language disconnected from the current product.
+- fanned stack metaphors as the main visual model;
+- effects that suggest multiple simultaneously active cards;
+- motion that feels playful at the cost of clarity.
+
+### 2. Custom bottom rating area
+
+The review session must no longer depend on the dock-style feedback UI.
+
+The rating surface should:
+
+- use round rating buttons;
+- sit at the bottom of the review screen;
+- feel like floating Tinder-style action buttons rather than a toolbar or bordered utility block;
+- stay easy to reach on mobile.
+
+### 3. Emoji-only press feedback
+
+Pressing a rating button should trigger a short-lived emoji burst:
+
+- one brief transient effect per press;
+- fast and non-blocking;
+- no generic confetti particles;
+- reduced-motion users should not get a noisy effect.
+
+### 4. Mobile exit affordance
+
+The review surface must include a clear top-left exit control on mobile.
+
+It should feel like part of the session chrome rather than a hidden browser-navigation fallback.
+
+### 5. Readable active background
+
+The review background should use a readable centered light treatment over `#dedede`:
+
+- active enough to support the vertical layout;
+- readable behind the flashcard;
+- currently allowed to be static while the animated React Bits `Light Pillar` treatment is being tuned;
+- no heavy ambient motion or decorative noise.
+
+### 6. Extra study header
+
+`Extra study` should not show the centered session title block or the `n remaining` sublabel in the session header.
+
+### 7. Shared review consistency
+
+The new presentation should apply consistently wherever the shared review surface is used:
+
+- regular due review;
+- manual filtered review;
+- extra study.
+
+Review logic and FSRS behavior remain unchanged.
 
 ## Acceptance Criteria
 
-- [ ] On mobile, rating actions are visible and reachable immediately after reveal without requiring extra scrolling.
-- [ ] The mobile session chrome is more compact than the previous review-session polish version.
-- [ ] The review screen reads as a focused app-like surface instead of a stacked document.
-- [ ] The card remains the main focal element on mobile.
-- [ ] Current-card exit direction matches the chosen rating.
-- [ ] The next card enters from the stack with fast, readable motion.
-- [ ] Any emoji or particle burst is brief, low-noise, and does not interrupt rapid review.
-- [ ] Review mechanics stay aligned across regular review, manual review, and extra study.
-- [ ] Storybook reflects the updated mobile review states where practical.
-- [ ] Mobile QA covers safe-area handling, touch targets, spacing, and perceived responsiveness.
+- [ ] The review session no longer uses the current stack component for active-card presentation.
+- [ ] The review session no longer uses the current dock component for feedback actions.
+- [ ] The active card remains the primary focal point on mobile and desktop.
+- [ ] Rating buttons are round and anchored to a floating bottom action area.
+- [ ] The floating rating row does not use a labeled or bordered utility container.
+- [ ] On mobile, the review surface shows a visible top-left exit action.
+- [ ] In `Extra study`, the centered `Extra study` header block is absent.
+- [ ] Pressing `Again`, `Hard`, `Good`, or `Easy` triggers a brief emoji-only burst that disappears automatically.
+- [ ] The emoji feedback does not interrupt rapid repeated review.
+- [ ] The review background uses an active centered treatment while preserving text and card readability.
+- [ ] The updated presentation works in both mobile and web layouts.
+- [ ] Review mechanics remain aligned across regular review, manual review, and extra study.
+- [ ] Storybook reflects the touched reusable review UI states when practical.
+- [ ] `docs/` and `specs/` are updated before PR creation to match shipped behavior.
