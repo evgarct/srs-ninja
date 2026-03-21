@@ -43,6 +43,8 @@ export interface FlashcardProps {
   // Header action (e.g. Edit note button)
   headerAction?: React.ReactNode
   previewMode?: boolean
+  mobileActionsSticky?: boolean
+  renderRatingButtons?: boolean
   className?: string
 }
 
@@ -68,6 +70,8 @@ export function Flashcard({
   intervals,
   headerAction,
   previewMode = false,
+  mobileActionsSticky = false,
+  renderRatingButtons = true,
   className,
 }: FlashcardProps) {
   const isCzech = language === "czech"
@@ -299,17 +303,40 @@ export function Flashcard({
       </div>
 
       {/* ── Rating buttons — outside the card, animate in ── */}
-      {!previewMode && (
-        <div
-          className="overflow-hidden transition-all duration-150 ease-out"
-          style={{
-            maxHeight: isRevealed ? "10rem" : "0",
-            opacity: isRevealed ? 1 : 0,
-            pointerEvents: isRevealed ? "auto" : "none",
-          }}
-        >
-          <RatingButtons onRate={onRate} intervals={intervals} />
-        </div>
+      {!previewMode && renderRatingButtons && (
+        <>
+          <div
+            className="overflow-hidden transition-all duration-150 ease-out md:block"
+            style={{
+              maxHeight: isRevealed ? "10rem" : "0",
+              opacity: isRevealed ? 1 : 0,
+              pointerEvents: isRevealed ? "auto" : "none",
+            }}
+          >
+            <div className={cn(mobileActionsSticky && "hidden md:block")}>
+              <RatingButtons onRate={onRate} intervals={intervals} />
+            </div>
+          </div>
+
+          {mobileActionsSticky && (
+            <>
+              <div
+                className="fixed inset-x-0 bottom-0 z-40 px-3 pt-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] md:hidden"
+                style={{
+                  opacity: isRevealed ? 1 : 0,
+                  pointerEvents: isRevealed ? "auto" : "none",
+                  transform: isRevealed ? "translateY(0)" : "translateY(16px)",
+                  transition: "opacity 160ms ease-out, transform 180ms ease-out",
+                }}
+              >
+                <div className="mx-auto max-w-xl rounded-[28px] border border-foreground/10 bg-background/92 p-3 shadow-[0_-10px_35px_-26px_hsl(var(--foreground)/0.45)] backdrop-blur-xl">
+                  <RatingButtons onRate={onRate} intervals={intervals} stickyMobile />
+                </div>
+              </div>
+              {isRevealed && <div className="h-28 md:hidden" aria-hidden="true" />}
+            </>
+          )}
+        </>
       )}
     </div>
   )

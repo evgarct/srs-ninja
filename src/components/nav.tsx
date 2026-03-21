@@ -15,6 +15,7 @@ const links = [
 export function Nav() {
   const pathname = usePathname()
   const router = useRouter()
+  const isReviewRoute = pathname.startsWith('/review/') || /^\/decks\/[^/]+\/review$/.test(pathname)
 
   async function signOut() {
     const supabase = createClient()
@@ -24,7 +25,7 @@ export function Nav() {
   }
 
   return (
-    <header className="border-b">
+    <header className={cn('border-b', isReviewRoute && 'hidden md:block')}>
       <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
         <nav className="flex items-center gap-1">
           {links.map((link) => (

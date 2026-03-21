@@ -107,15 +107,7 @@ export default async function ReviewPage({
   }
 
   return (
-    <main className="max-w-xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <Link href={`/deck/${deckId}`} className="text-muted-foreground hover:text-foreground text-sm">
-          ← {deck.name}
-        </Link>
-        <span className="text-sm text-muted-foreground">
-          {isExtra ? '✨ Новые слова · ' : isManual ? '🧪 Ручная тренировка · ' : ''}{cards.length} карточек
-        </span>
-      </div>
+    <main className="mx-auto flex min-h-[100svh] w-full max-w-xl flex-col px-3 pb-0 pt-3 md:min-h-[calc(100svh-3.5rem)] sm:px-4 sm:pt-4">
       <ReviewSession
         cards={cards}
         deckId={deckId}

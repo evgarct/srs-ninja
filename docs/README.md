@@ -21,6 +21,7 @@
 | [review-flow-dashboard.md](./review-flow-dashboard.md) | Review flow and dashboard due counts: review entry points, optimistic queue UX и home page due inventory |
 | [review-completion-summary.md](./review-completion-summary.md) | Review completion summary: richer done state, answer distribution, time spent and restrained completion animation |
 | [review-heatmap.md](./review-heatmap.md) | Review Heatmap: Monday-first historical activity grid on `/stats`, mobile/desktop windows и stable layout behavior |
+| [review-session-mobile-app-pass.md](./review-session-mobile-app-pass.md) | Review session mobile app pass: compact mobile shell, sticky rating bar, directional card motion and emoji burst |
 | [review-session-polish.md](./review-session-polish.md) | Review session polish: stronger progress chrome, stack depth cues and smooth card transitions |
 | [review-session-prefetch.md](./review-session-prefetch.md) | Review session prefetch: prepared queue, instant next-card progression и lookahead audio warmup |
 | [review-queue-pacing.md](./review-queue-pacing.md) | Review queue pacing: 200-card due-session limit, separate new-card cap и delayed requeue windows for difficult cards |

@@ -239,6 +239,28 @@ export const RatingButtonsVisible: Story = {
   },
 }
 
+export const MobileAppReview: Story = {
+  render: (args) => (
+    <div className="min-h-screen bg-muted/30 p-3">
+      <div className="mx-auto max-w-[24rem] rounded-[28px] border bg-background/70 p-3 shadow-sm">
+        <InteractiveFlashcard {...args} mobileActionsSticky />
+      </div>
+    </div>
+  ),
+  args: {
+    ...ENGLISH_DATA,
+    direction: "recognition",
+    isRevealed: true,
+    audioUrl: "https://example.com/bow.mp3",
+    onPlayAudio: fn(),
+  },
+  parameters: {
+    viewport: {
+      defaultViewport: "mobile1",
+    },
+  },
+}
+
 export const MobileTouchReview: Story = {
   render: (args) => (
     <div className="mx-auto w-[22rem] max-w-full p-3">

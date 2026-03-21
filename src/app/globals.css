@@ -127,3 +127,28 @@
     @apply font-sans;
   }
 }
+
+@keyframes review-floating-line {
+  0% {
+    transform: translate3d(-8%, 0, 0) rotate(-8deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(6%, -14px, 0) rotate(-5deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(16%, -28px, 0) rotate(-2deg);
+    opacity: 0;
+  }
+}
+
+.review-floating-line {
+  animation-name: review-floating-line;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}

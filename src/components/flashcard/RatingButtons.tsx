@@ -13,6 +13,7 @@ interface RatingButtonsProps {
     easy: string
   }
   className?: string
+  stickyMobile?: boolean
 }
 
 const BUTTONS: {
@@ -57,10 +58,10 @@ const BUTTONS: {
   },
 ]
 
-export function RatingButtons({ onRate, intervals, className }: RatingButtonsProps) {
+export function RatingButtons({ onRate, intervals, className, stickyMobile = false }: RatingButtonsProps) {
   return (
     <div
-      className={`grid grid-cols-4 gap-2 ${className ?? ""}`}
+      className={`grid grid-cols-4 gap-2 ${stickyMobile ? "sm:gap-2.5" : ""} ${className ?? ""}`}
       role="group"
       aria-label="Rate your recall"
     >
@@ -72,19 +73,21 @@ export function RatingButtons({ onRate, intervals, className }: RatingButtonsPro
           aria-label={`${label} (key ${key})${intervals ? `, ${intervals[intervalKey]}` : ""}`}
           className={`
             flex flex-col items-center justify-center gap-0.5
-            min-h-16 rounded-lg border py-2.5 px-2
+            min-h-16 rounded-xl border px-1.5 py-2.5 sm:px-2
             text-center font-medium
             touch-manipulation [webkit-tap-highlight-color:transparent]
-            transition-all duration-100
+            transition-all duration-150
             active:scale-95 active:brightness-95
             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+            bg-background/85 backdrop-blur-sm
+            shadow-[inset_0_1px_0_hsl(var(--background)),0_10px_25px_-22px_hsl(var(--foreground)/0.45)]
             ${colorClass}
             ${hoverClass}
           `}
         >
-          <span className="text-sm font-semibold">{label}</span>
+          <span className="text-[0.95rem] font-semibold sm:text-sm">{label}</span>
           {intervals && (
-            <span className="text-[10px] opacity-70 font-normal tabular-nums">
+            <span className="text-[10px] font-normal tabular-nums opacity-70">
               {intervals[intervalKey]}
             </span>
           )}
