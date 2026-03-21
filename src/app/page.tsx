@@ -7,6 +7,7 @@ import { CreateDeckDialog } from '@/components/create-deck-dialog'
 import { WeeklyActivity } from '@/components/activity'
 import { headers } from 'next/headers'
 import { HomeDeckCard } from '@/components/home-deck-card'
+import { ReactBitsRibbons } from '@/components/reactbits-ribbons'
 
 /**
  * The main application dashboard.
@@ -40,7 +41,16 @@ export default async function Home() {
   ])
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8">
+    <main className="relative mx-auto max-w-4xl overflow-hidden px-4 py-8">
+      <div className="pointer-events-none absolute inset-0 -z-10 opacity-70">
+        <ReactBitsRibbons
+          baseThickness={5}
+          colors={['#f59e0b', '#34d399', '#60a5fa', '#a78bfa']}
+          backgroundColor={[0, 0, 0, 0]}
+          speedMultiplier={0.35}
+          enableFade
+        />
+      </div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">SRS Ninja</h1>
         <CreateDeckDialog />

@@ -7,6 +7,7 @@
 - Treat `docs/` as technical documentation: how the feature works and is implemented.
 - Follow the existing design system and component patterns already used in the repository; do not introduce a parallel visual language for new UI work.
 - Prefer extending or composing the current shared UI primitives and established styling patterns instead of inventing one-off controls.
+- When designing new interactive UI, prefer using or adapting components and interaction patterns from Magic UI to create a more alive, expressive visual language, while still matching the repository's existing design system and product tone.
 - For product UI, optimize for focus first and delight second; improve clarity, hierarchy, and motivation without adding decorative noise.
 - Prefer improving spacing, emphasis, feedback, and perceived responsiveness before adding new visual treatment.
 - Use motion only when it improves comprehension or feedback, such as hover and tap states, layout transitions, progress updates, answer reveal, and card transitions.
@@ -22,6 +23,7 @@
 - When UI behavior changes in a reusable or user-visible way, reflect it in Storybook when practical.
 - Before finalizing a branch, run the relevant verification commands for the touched area: targeted `eslint`, tests, `tsc`, and Storybook build when stories were changed.
 - After creating a PR, call the `$product-manager` skill to update the related Linear issue(s), sync the current implementation status, and add the PR link/reference in Linear.
+- For this repository, use WSL as the default execution environment for git, npm, Node, lint, test, build, and dev-server commands. Do not use Windows-side git/npm/tooling unless the user explicitly asks for it.
 
 ## UI / Storybook Execution Order
 

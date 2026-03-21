@@ -2,13 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { AnimatePresence, motion } from 'motion/react'
+import { useReducedMotion } from 'motion/react'
 import { submitReview } from '@/lib/actions/cards'
-import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Ripple } from '@/components/ui/ripple'
+import { AnimatedCircularProgressBar } from '@/components/ui/animated-circular-progress-bar'
+import { Confetti, type ConfettiRef } from '@/components/ui/confetti'
 import { Flashcard } from '@/components/flashcard'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
+import { ReviewFeedbackDock } from '@/components/review-feedback-dock'
 import { Pencil } from 'lucide-react'
 import type { Language, Rating } from '@/lib/types'
 import {
@@ -19,12 +21,12 @@ import {
 import { applyReviewQueueOutcome } from '@/lib/review-loop'
 import { markReviewSessionCompleted } from '@/lib/actions/decks'
 import { ReviewSessionComplete, type ReviewSessionStats } from '@/components/review-session-complete'
-import { cn } from '@/lib/utils'
 import {
   clearReviewSessionCompletionState,
   persistCompletionUrl,
   saveReviewSessionCompletionState,
 } from '@/lib/review-session-completion-state'
+import { ReactBitsReviewStack } from '@/components/reactbits-review-stack'
 
 export function ReviewSession({
   cards,
@@ -57,13 +59,16 @@ export function ReviewSession({
   })
   const [pendingReviewCount, setPendingReviewCount] = useState(0)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [lastRating, setLastRating] = useState<Rating | null>(null)
   const startTimeRef = useRef<number>(0)
+  const confettiRef = useRef<ConfettiRef>(null)
   const hasAutoPlayedRef = useRef(false)
   const warmedAudioRef = useRef(new Set<string>())
   const hasPersistedCompletionRef = useRef(false)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const shouldReduceMotion = useReducedMotion()
 
   const total = cards.length
   const lang = language as Language
@@ -79,14 +84,13 @@ export function ReviewSession({
   const currentPrepared = preparedQueue[0]
   const completedReviews = sessionStats.total
   const projectedTotal = completedReviews + queue.length
-  const remainingCards = queue.length
   const progress = projectedTotal > 0
     ? Math.round((completedReviews / projectedTotal) * 100)
     : 0
 
   const isRecognition = currentPrepared?.direction === 'recognition'
   const audioUrl = currentPrepared?.audioUrl
-  const sessionChrome = getSessionChrome(sessionMode, remainingCards)
+  const currentStep = Math.min(completedReviews + 1, projectedTotal || total)
 
   function handleSaveSuccess(
     updatedFields: Record<string, unknown>,
@@ -203,6 +207,19 @@ export function ReviewSession({
       },
     }
 
+    setLastRating(rating)
+    if (!shouldReduceMotion && (rating === 3 || rating === 4)) {
+      confettiRef.current?.fire({
+        particleCount: rating === 4 ? 18 : 12,
+        spread: rating === 4 ? 52 : 34,
+        startVelocity: rating === 4 ? 22 : 18,
+        scalar: 0.8,
+        ticks: 70,
+        gravity: 0.85,
+        origin: { x: rating === 4 ? 0.72 : 0.58, y: 0.82 },
+      })
+    }
+
     setSessionStats(nextStats)
 
     const nextQueue = applyReviewQueueOutcome(queue, rating)
@@ -243,120 +260,94 @@ export function ReviewSession({
 
   if (!current) return null
 
-  const noteFields = currentPrepared?.noteFields ?? {}
   const flashcardProps = currentPrepared?.flashcardProps
   const intervals = currentPrepared?.intervals
 
   if (!flashcardProps || !intervals || !currentPrepared) return null
 
+  const sharedHeaderAction = (
+    <NoteEditSheet
+      noteId={current.note_id}
+      deckId={deckId}
+      language={lang}
+      initialFields={(currentPrepared?.noteFields ?? {}) as Record<string, string>}
+      initialTags={current.notes?.tags ?? []}
+      onSaveSuccess={handleSaveSuccess}
+      trigger={
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" title="Edit Note">
+          <Pencil className="w-4 h-4" />
+        </Button>
+      }
+    />
+  )
+
+  const actualFlashcard = (
+    <Flashcard
+      {...flashcardProps}
+      language={lang}
+      direction={currentPrepared.direction}
+      isRevealed={revealed}
+      intervals={intervals}
+      audioUrl={audioUrl}
+      onPlayAudio={audioUrl ? playAudio : undefined}
+      onReveal={() => {
+        setRevealed(true)
+        startTimeRef.current = Date.now()
+      }}
+      onRate={handleRating}
+      mobileActionsSticky
+      renderRatingButtons={false}
+      headerAction={sharedHeaderAction}
+    />
+  )
+
+  const stackCards = queue.slice(0, 4).map((card, index) => ({
+    id: card.id,
+    content: index === 0 ? actualFlashcard : (
+      <Flashcard
+        {...flashcardProps}
+        language={lang}
+        direction={currentPrepared.direction}
+        isRevealed={revealed}
+        intervals={intervals}
+        previewMode
+        renderRatingButtons={false}
+        onReveal={() => {}}
+        onRate={() => {}}
+        className="pointer-events-none"
+      />
+    ),
+  }))
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="rounded-2xl border bg-muted/20 px-4 py-3 shadow-sm">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className={cn('gap-1.5', sessionChrome.badgeClassName)}>
-                {sessionChrome.badgeLabel}
-              </Badge>
-              <Badge variant="outline" className="tabular-nums">
-                Осталось {remainingCards}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {sessionChrome.description}
-            </p>
-          </div>
-          <span className="shrink-0 text-sm text-muted-foreground tabular-nums">
-            {Math.min(completedReviews + 1, projectedTotal || total)} / {projectedTotal || total}
-          </span>
+    <div className="grid min-h-0 flex-1 grid-rows-[1fr_auto]">
+      <div className="relative flex min-h-0 items-center justify-center pb-4 pt-16 sm:pt-20">
+        <Confetti
+          ref={confettiRef}
+          manualstart
+          className="pointer-events-none absolute inset-0 z-30"
+        />
+        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-[32px] opacity-60">
+          <Ripple mainCircleSize={140} mainCircleOpacity={0.14} numCircles={7} className="[mask-image:none]" />
         </div>
-        <Progress value={progress} className="mt-3 h-2.5" />
-      </div>
-
-      <div className="relative pt-4">
-        <div className="pointer-events-none absolute inset-x-0 top-8 flex justify-center">
-          {[0, 1].map((layer) => {
-            const isVisible = remainingCards > layer + 1
-
-            return (
-              <div
-                key={layer}
-                className={cn(
-                  'absolute h-[calc(100%-0.75rem)] w-full max-w-xl rounded-[28px] border bg-card/70 shadow-sm transition-opacity',
-                  layer === 0 && 'translate-y-3 scale-[0.985] opacity-70',
-                  layer === 1 && 'translate-y-6 scale-[0.97] opacity-45',
-                  !isVisible && 'opacity-0'
-                )}
-              />
-            )
-          })}
+        <div className="pointer-events-none absolute right-1 top-0 z-20 sm:right-2">
+          <AnimatedCircularProgressBar
+            value={progress}
+            gaugePrimaryColor="rgb(16 185 129)"
+            gaugeSecondaryColor="rgba(15, 23, 42, 0.08)"
+            className="size-12 text-[10px] sm:size-14 sm:text-xs"
+            label={`${currentStep} / ${projectedTotal || total}`}
+          />
         </div>
-
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={current.id}
-            initial={{ opacity: 0, y: 18, scale: 0.985 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.985 }}
-            transition={{ type: 'spring', stiffness: 240, damping: 24 }}
-            className="relative"
-          >
-            <Flashcard
-              {...flashcardProps}
-              language={lang}
-              direction={currentPrepared.direction}
-              isRevealed={revealed}
-              intervals={intervals}
-              audioUrl={audioUrl}
-              onPlayAudio={audioUrl ? playAudio : undefined}
-              onReveal={() => {
-                setRevealed(true)
-                startTimeRef.current = Date.now()
-              }}
-              onRate={handleRating}
-              headerAction={
-                <NoteEditSheet
-                  noteId={current.note_id}
-                  deckId={deckId}
-                  language={lang}
-                  initialFields={noteFields as Record<string, string>}
-                  initialTags={current.notes?.tags ?? []}
-                  onSaveSuccess={handleSaveSuccess}
-                  trigger={
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" title="Edit Note">
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                  }
-                />
-              }
-            />
-          </motion.div>
-        </AnimatePresence>
+        <div className="relative z-10 w-full max-w-xl">
+          <ReactBitsReviewStack
+            cards={stackCards}
+            activeCardKey={current.id}
+            lastRating={lastRating}
+          />
+        </div>
       </div>
+      <ReviewFeedbackDock onRate={handleRating} intervals={intervals} visible={revealed} />
     </div>
   )
-}
-
-function getSessionChrome(sessionMode: 'due' | 'manual' | 'extra', remainingCards: number) {
-  if (sessionMode === 'manual') {
-    return {
-      badgeLabel: 'Manual review',
-      badgeClassName: 'bg-sky-500/10 text-sky-700',
-      description: `Фильтрованный набор в фокусе. Осталось ${remainingCards} карточек в текущей выборке.`,
-    }
-  }
-
-  if (sessionMode === 'extra') {
-    return {
-      badgeLabel: 'Extra study',
-      badgeClassName: 'bg-violet-500/10 text-violet-700',
-      description: `Дополнительная практика вне основной due-очереди. Осталось ${remainingCards} карточек.`,
-    }
-  }
-
-  return {
-    badgeLabel: 'Due review',
-    badgeClassName: 'bg-emerald-500/10 text-emerald-700',
-    description: `Сегодняшняя основная очередь в работе. Осталось ${remainingCards} карточек до конца текущей сессии.`,
-  }
 }

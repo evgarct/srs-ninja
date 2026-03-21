@@ -52,3 +52,30 @@ export const MobileTouchTargets: Story = {
     </div>
   ),
 }
+
+export const MobileStickyBar: Story = {
+  args: {
+    intervals: {
+      again: "<1m",
+      hard: "8m",
+      good: "2d",
+      easy: "5d",
+    },
+    stickyMobile: true,
+  },
+  render: (args) => (
+    <div className="relative min-h-[18rem] w-[24rem] max-w-full rounded-[28px] border bg-muted/30 p-3">
+      <div className="h-28 rounded-[24px] border bg-background/80" />
+      <div className="fixed inset-x-0 bottom-0 px-3 pt-3 pb-6">
+        <div className="mx-auto max-w-[24rem] rounded-[28px] border bg-background/92 p-3 shadow-[0_-10px_35px_-26px_hsl(var(--foreground)/0.45)]">
+          <RatingButtons {...args} />
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    viewport: {
+      defaultViewport: "mobile1",
+    },
+  },
+}
