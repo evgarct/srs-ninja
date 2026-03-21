@@ -23,6 +23,7 @@
 - When UI behavior changes in a reusable or user-visible way, reflect it in Storybook when practical.
 - Before finalizing a branch, run the relevant verification commands for the touched area: targeted `eslint`, tests, `tsc`, and Storybook build when stories were changed.
 - After creating a PR, call the `$product-manager` skill to update the related Linear issue(s), sync the current implementation status, and add the PR link/reference in Linear.
+- For this repository, use WSL as the default execution environment for git, npm, Node, lint, test, build, and dev-server commands. Do not use Windows-side git/npm/tooling unless the user explicitly asks for it.
 
 ## UI / Storybook Execution Order
 
