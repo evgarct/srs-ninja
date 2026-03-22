@@ -3,6 +3,9 @@ export interface CompletionTableErrorLike {
   message?: string
 }
 
+export const HOME_COMPLETION_SESSION_TYPES = ['due', 'extra'] as const
+export type HomeCompletionSessionType = (typeof HOME_COMPLETION_SESSION_TYPES)[number]
+
 export function isMissingCompletionTableError(error: CompletionTableErrorLike | null) {
   if (!error) return false
 
@@ -14,12 +17,20 @@ export function isMissingCompletionTableError(error: CompletionTableErrorLike | 
 }
 
 export function getCompletedTodayDeckIds(
-  rows: Array<{ deck_id: string }> | null,
+  rows: Array<{ deck_id: string; session_type?: string | null }> | null,
   error: CompletionTableErrorLike | null
 ) {
   if (isMissingCompletionTableError(error)) {
     return new Set<string>()
   }
 
-  return new Set((rows ?? []).map((row) => row.deck_id))
+  return new Set(
+    (rows ?? [])
+      .filter((row) =>
+        row.session_type
+          ? HOME_COMPLETION_SESSION_TYPES.includes(row.session_type as HomeCompletionSessionType)
+          : true
+      )
+      .map((row) => row.deck_id)
+  )
 }

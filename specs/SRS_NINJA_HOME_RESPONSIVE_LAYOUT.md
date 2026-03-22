@@ -74,7 +74,8 @@ Home не должен показывать raw red due-pressure, если он 
 - `Done today` и `Ready to start` не могут показываться вместе;
 - `Drafts` может сосуществовать с любым основным статусом;
 - chip-строка должна быть на одной линии с заголовком колоды и выровнена вправо.
-- если deck помечен как `Done today`, primary CTA на Home открывает optional extra-study choice (`+10`, `+20`);
+- если deck помечен как `Done today` и visible due work нет, primary CTA на Home открывает optional extra-study choice (`+10`, `+20`);
+- если deck помечен как `Done today`, но visible due work снова появилось, Home сохраняет позитивный статус и все равно дает прямой due-review CTA;
 - если deck еще не был пройден сегодня, Home не показывает extra-study choice и дает один прямой стартовый CTA.
 
 ### 5. Desktop as a larger version of mobile

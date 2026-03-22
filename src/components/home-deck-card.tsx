@@ -131,7 +131,7 @@ export function HomeDeckCard({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3 pt-0">
-        {!completedToday && due > 0 ? (
+        {due > 0 ? (
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link href={`/decks/${deck.id}/review`} className={cn(primaryActionClassName, 'flex-1')}>
               <span>{completedToday ? 'Continue review' : 'Continue learning'}</span>

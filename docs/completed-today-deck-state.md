@@ -2,7 +2,7 @@
 
 ## Summary
 
-Home deck cards can now show a deck-specific success state when the user has already completed the regular due-review session for that deck today.
+Home deck cards can now show a deck-specific success state when the user has already completed a meaningful study session for that deck today.
 
 This is backed by a persisted completion marker instead of a heuristic derived from generic review activity.
 
@@ -19,9 +19,10 @@ This is backed by a persisted completion marker instead of a heuristic derived f
 
 A new table, `review_session_completions`, stores completion events for review sessions.
 
-For this feature, the product writes a completion row only when:
+For this feature, the product writes a completion row when:
 
 - a regular due-review session reaches its done state;
+- an extra-study session reaches its done state;
 - all pending review submissions have finished;
 - no sync error remains.
 
@@ -36,9 +37,8 @@ The stored row includes:
 
 `Completed today` means:
 
-- the user completed the regular due-review session for that deck today;
+- the user completed the regular due-review session or an extra-study session for that deck today;
 - manual review does not mark the deck as completed-today;
-- extra study does not mark the deck as completed-today.
 
 This is intentionally a motivational status layer, not a guarantee that the deck cannot have more due cards later the same day.
 
@@ -48,7 +48,7 @@ This is intentionally a motivational status layer, not a guarantee that the deck
 
 That allows the home card to:
 
-- show a calm success badge and status line;
+- show a calm success chip in the title row;
 - keep the existing due CTA if due work is still visible;
 - pass deck-specific `hasStudiedToday` state to `ExtraStudyBox` instead of the previous global same-day activity heuristic.
 
@@ -56,11 +56,12 @@ That allows the home card to:
 
 The new `HomeDeckCard` component keeps the existing dashboard card structure and adds:
 
-- a compact completed-today badge;
+- a compact completed-today chip;
 - a single clear primary CTA per state.
 - a consistent action row pattern where the primary learning CTA expands and `Open deck` stays on the right as the secondary action.
 
 For idle states, the card keeps the same action-row structure as due states: the primary `Continue learning` CTA expands to fill available space, and `Open deck` remains the secondary action on the right. Extra-study sizing options are exposed from a dropdown attached to the primary CTA instead of expanding the card vertically.
+If a deck is already marked as completed today but due work becomes visible again, the completed chip stays visible and the primary CTA switches back to the direct due-review route instead of showing the extra-study dropdown.
 
 The component intentionally avoids:
 

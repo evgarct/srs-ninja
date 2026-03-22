@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { AnimatePresence, motion } from "motion/react"
 import { cn } from "@/lib/utils"
 import { LevelBadge, type CEFRLevel } from "./LevelBadge"
 import { FrequencyBar } from "./FrequencyBar"
@@ -98,6 +99,8 @@ export function Flashcard({
 
   // Show examples after reveal in production, always in recognition
   const showExamples = isRecognition || (isProduction && isRevealed)
+  const showExtraDetails =
+    (showExamples && examples.length > 0) || !!(isRevealed && (synonyms?.length || antonyms?.length))
 
   // Play button: only when expression is visible
   const expressionVisible = isRecognition || (isProduction && isRevealed)
@@ -169,7 +172,7 @@ export function Flashcard({
           "relative rounded-2xl border border-foreground/10",
           "bg-card text-card-foreground",
           "shadow-sm ring-1 ring-foreground/5",
-          "touch-manipulation [webkit-tap-highlight-color:transparent] transition-all duration-150",
+          "touch-manipulation [webkit-tap-highlight-color:transparent] transition-[transform,box-shadow,ring-color,background-color] duration-150",
           !previewMode && !isRevealed
             ? "cursor-pointer hover:shadow-md hover:ring-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             : "cursor-default",
@@ -199,39 +202,48 @@ export function Flashcard({
                 {showProductionFront ? translation : expression}
               </h2>
 
-              {/*
-               * Secondary translation line — always in DOM to prevent layout shift.
-               * Uses height transition via max-height trick.
-               */}
-              <div
-                className="overflow-hidden transition-all duration-150 ease-out"
-                style={{
-                  maxHeight: showSecondaryTranslation ? "5rem" : "0",
-                  opacity: showSecondaryTranslation ? 1 : 0,
-                  marginTop: showSecondaryTranslation ? "0.25rem" : "0",
-                }}
-                aria-hidden={!showSecondaryTranslation}
-              >
-                <p className="text-lg text-muted-foreground font-medium">
+              {showSecondaryTranslation ? (
+                <p className="mt-1 text-lg text-muted-foreground font-medium">
                   {secondaryText}
                 </p>
-              </div>
+              ) : null}
             </div>
           </div>
 
-          {/* ── Gradient divider ── */}
-          <div
-            className="h-px rounded-full"
-            style={{
-              background:
-                "linear-gradient(90deg, hsl(var(--foreground) / 0.15) 0%, transparent 80%)",
-            }}
-          />
+          <AnimatePresence initial={false}>
+            {showExtraDetails ? (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 4 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="space-y-4"
+              >
+                {/* ── Example sentences ── */}
+                {showExamples && examples.length > 0 ? (
+                  <ExamplesList examples={examples} />
+                ) : null}
 
-          {/* ── Example sentences ── */}
-          {showExamples && examples.length > 0 && (
-            <ExamplesList examples={examples} />
-          )}
+                {/* ── Synonyms & Antonyms (after reveal only) ── */}
+                {isRevealed && (synonyms?.length || antonyms?.length) ? (
+                  <div className="flex flex-col gap-1 pt-0.5 text-xs text-muted-foreground">
+                    {synonyms && synonyms.length > 0 && (
+                      <p>
+                        <span className="font-medium text-foreground/60">Synonyms: </span>
+                        {synonyms.join(', ')}
+                      </p>
+                    )}
+                    {antonyms && antonyms.length > 0 && (
+                      <p>
+                        <span className="font-medium text-foreground/60">Antonyms: </span>
+                        {antonyms.join(', ')}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           {/* ── Metadata ── */}
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -269,24 +281,6 @@ export function Flashcard({
             </div>
           )}
 
-          {/* ── Synonyms & Antonyms (after reveal only) ── */}
-          {isRevealed && (synonyms?.length || antonyms?.length) ? (
-            <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-              {synonyms && synonyms.length > 0 && (
-                <p>
-                  <span className="font-medium text-foreground/60">Synonyms: </span>
-                  {synonyms.join(', ')}
-                </p>
-              )}
-              {antonyms && antonyms.length > 0 && (
-                <p>
-                  <span className="font-medium text-foreground/60">Antonyms: </span>
-                  {antonyms.join(', ')}
-                </p>
-              )}
-            </div>
-          ) : null}
-
           {/* ── Reveal hint (front only) ── */}
           {!previewMode && !isRevealed && (
             <div className="flex justify-center pt-1">
@@ -305,18 +299,21 @@ export function Flashcard({
       {/* ── Rating buttons — outside the card, animate in ── */}
       {!previewMode && renderRatingButtons && (
         <>
-          <div
-            className="overflow-hidden transition-all duration-150 ease-out md:block"
-            style={{
-              maxHeight: isRevealed ? "10rem" : "0",
-              opacity: isRevealed ? 1 : 0,
-              pointerEvents: isRevealed ? "auto" : "none",
-            }}
-          >
-            <div className={cn(mobileActionsSticky && "hidden md:block")}>
-              <RatingButtons onRate={onRate} intervals={intervals} />
-            </div>
-          </div>
+          <AnimatePresence initial={false}>
+            {isRevealed ? (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 6 }}
+                transition={{ duration: 0.16, ease: "easeOut" }}
+                className="hidden md:block"
+              >
+                <div className={cn(mobileActionsSticky && "hidden md:block")}>
+                  <RatingButtons onRate={onRate} intervals={intervals} />
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
 
           {mobileActionsSticky && (
             <>
