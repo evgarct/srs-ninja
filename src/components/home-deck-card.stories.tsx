@@ -9,7 +9,7 @@ const meta: Meta<typeof HomeDeckCard> = {
   parameters: { layout: 'centered' },
   decorators: [
     (Story) => (
-      <div className="w-[22rem] max-w-full p-4 sm:w-[32rem]">
+      <div className="w-[24rem] max-w-full p-4">
         <Story />
       </div>
     ),
@@ -20,6 +20,7 @@ const meta: Meta<typeof HomeDeckCard> = {
       name: 'English Core',
       language: 'english',
     },
+    total: 128,
     due: 18,
     drafts: 2,
     completedToday: false,

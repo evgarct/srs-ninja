@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import {
-  getCurrentWeekDateKeys,
   toDateKeyInTimeZone,
   type ActivityDaySummary,
 } from '@/lib/activity'
@@ -88,14 +87,16 @@ export async function getCardStateDistribution() {
 }
 
 /**
- * Retrieves review activity for the current calendar week (Monday-first)
- * and calculates the streak ending today.
+ * Retrieves review activity for the last 7 days and calculates current streak.
+ *
+ * A day is active when at least one review exists for that local calendar day.
+ * Streak is counted as consecutive active days ending today.
  */
 export async function getWeeklyActivityStats(timeZone: string) {
   const supabase = await createClient()
   const now = new Date()
-  const { todayKey, weekStartKey, weekDateKeys } = getCurrentWeekDateKeys(timeZone, now)
-  const since = new Date(`${weekStartKey}T00:00:00Z`)
+  const since = new Date(now)
+  since.setUTCDate(since.getUTCDate() - 8)
 
   const { data, error } = await supabase
     .from('reviews')
@@ -118,17 +119,23 @@ export async function getWeeklyActivityStats(timeZone: string) {
     }
   }
 
-  const days: ActivityDaySummary[] = weekDateKeys.map((key) => ({
-    date: key,
-    reviews: reviewCountByDay.get(key) ?? 0,
-    masteredWords: masteredCardIdsByDay.get(key)?.size ?? 0,
-    isToday: key === todayKey,
-    isFuture: key > todayKey,
-  }))
+  const days: ActivityDaySummary[] = []
+  for (let offset = 6; offset >= 0; offset--) {
+    const date = new Date(now)
+    date.setUTCDate(date.getUTCDate() - offset)
+    const key = toDateKeyInTimeZone(date, timeZone)
+
+    days.push({
+      date: key,
+      reviews: reviewCountByDay.get(key) ?? 0,
+      masteredWords: masteredCardIdsByDay.get(key)?.size ?? 0,
+      isToday: offset === 0,
+      isFuture: false,
+    })
+  }
 
   let streak = 0
-  for (let index = days.findIndex((day) => day.isToday); index >= 0; index--) {
-    if (index < 0) break
+  for (let index = days.length - 1; index >= 0; index--) {
     if (days[index].reviews < 1) break
     streak++
   }
@@ -137,7 +144,7 @@ export async function getWeeklyActivityStats(timeZone: string) {
     days,
     streak,
     activeDays: days.filter((day) => day.reviews > 0).length,
-    weekStartKey,
-    todayKey,
+    weekStartKey: days[0]?.date ?? '',
+    todayKey: days.at(-1)?.date ?? '',
   }
 }

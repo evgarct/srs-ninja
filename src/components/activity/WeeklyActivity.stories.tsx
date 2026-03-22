@@ -16,13 +16,13 @@ export const EmptyWeek: Story = {
   args: {
     streak: 0,
     days: [
-      { date: '2026-03-16', reviews: 0, masteredWords: 0, isToday: false, isFuture: false },
-      { date: '2026-03-17', reviews: 0, masteredWords: 0, isToday: false, isFuture: false },
-      { date: '2026-03-18', reviews: 0, masteredWords: 0, isToday: false, isFuture: false },
-      { date: '2026-03-19', reviews: 0, masteredWords: 0, isToday: false, isFuture: false },
-      { date: '2026-03-20', reviews: 0, masteredWords: 0, isToday: false, isFuture: false },
-      { date: '2026-03-21', reviews: 0, masteredWords: 0, isToday: true, isFuture: false },
-      { date: '2026-03-22', reviews: 0, masteredWords: 0, isToday: false, isFuture: true },
+      { date: '2026-03-09', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-10', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-11', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-12', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-13', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-14', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-15', reviews: 0, masteredWords: 0 },
     ],
   },
 }
@@ -31,13 +31,13 @@ export const ActiveStreak: Story = {
   args: {
     streak: 5,
     days: [
-      { date: '2026-03-16', reviews: 0, masteredWords: 0, isToday: false, isFuture: false },
-      { date: '2026-03-17', reviews: 1, masteredWords: 1, isToday: false, isFuture: false },
-      { date: '2026-03-18', reviews: 3, masteredWords: 2, isToday: false, isFuture: false },
-      { date: '2026-03-19', reviews: 1, masteredWords: 1, isToday: false, isFuture: false },
-      { date: '2026-03-20', reviews: 2, masteredWords: 1, isToday: false, isFuture: false },
-      { date: '2026-03-21', reviews: 1, masteredWords: 1, isToday: true, isFuture: false },
-      { date: '2026-03-22', reviews: 0, masteredWords: 0, isToday: false, isFuture: true },
+      { date: '2026-03-09', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-10', reviews: 0, masteredWords: 0 },
+      { date: '2026-03-11', reviews: 1, masteredWords: 1 },
+      { date: '2026-03-12', reviews: 3, masteredWords: 2 },
+      { date: '2026-03-13', reviews: 1, masteredWords: 1 },
+      { date: '2026-03-14', reviews: 2, masteredWords: 1 },
+      { date: '2026-03-15', reviews: 1, masteredWords: 1 },
     ],
   },
 }

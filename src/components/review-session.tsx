@@ -65,8 +65,8 @@ export function ReviewSession({
   })
   const [pendingReviewCount, setPendingReviewCount] = useState(0)
   const [syncError, setSyncError] = useState<string | null>(null)
-  const [cardExitDirection, setCardExitDirection] = useState<'left' | 'right' | null>(null)
-  const [burstState, setBurstState] = useState<{ id: number; rating: Rating; anchorX: number; emoji: string } | null>(null)
+  const [lastRating, setLastRating] = useState<Rating | null>(null)
+  const [burstState, setBurstState] = useState<{ id: number; rating: Rating; anchorX: number } | null>(null)
   const startTimeRef = useRef<number>(0)
   const hasAutoPlayedRef = useRef(false)
   const warmedAudioRef = useRef(new Set<string>())
@@ -96,6 +96,7 @@ export function ReviewSession({
     : 0
   const sessionLabel = getSessionLabel(sessionMode)
   const showSessionHeader = sessionMode !== 'extra'
+  const ratingMotion = lastRating ? getReviewRatingMotion(lastRating) : null
   const showActionBar = revealed || burstState !== null
 
   const isRecognition = currentPrepared?.direction === 'recognition'
@@ -228,24 +229,15 @@ export function ReviewSession({
       ? (buttonRect.left + buttonRect.width / 2 - containerRect.left) / containerRect.width
       : 0.5
 
-    const motionPreset = getReviewRatingMotion(rating)
-    const emoji =
-      motionPreset.burstEmojis[Math.floor(Math.random() * motionPreset.burstEmojis.length)] ??
-      motionPreset.burstEmojis[0] ??
-      '✨'
-
     setBurstState({
       id: Date.now(),
       rating,
       anchorX: Math.min(0.92, Math.max(0.08, anchorX)),
-      emoji,
     })
   }
 
   function handleRating(rating: Rating) {
     if (!current) return
-
-    setCardExitDirection(rating <= 2 ? 'left' : 'right')
 
     const currentCardId = current.id
     const durationMs = Date.now() - startTimeRef.current
@@ -261,6 +253,7 @@ export function ReviewSession({
       },
     }
 
+    setLastRating(rating)
     setSessionStats(nextStats)
 
     const nextQueue = applyReviewQueueOutcome(queue, rating)
@@ -306,28 +299,6 @@ export function ReviewSession({
 
   if (!flashcardProps || !intervals || !currentPrepared) return null
 
-  const cardVariants = {
-    initial: shouldReduceMotion
-      ? { opacity: 0, y: 8, scale: 0.995 }
-      : { opacity: 0, y: 12, scale: 0.985 },
-    animate: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
-    exit: (direction: 'left' | 'right' | null) => {
-      if (shouldReduceMotion) {
-        return { opacity: 0, y: -10, scale: 0.99 }
-      }
-
-      if (direction === 'left') {
-        return { opacity: 0, x: -460, y: 0, scale: 0.95, rotate: -16 }
-      }
-
-      if (direction === 'right') {
-        return { opacity: 0, x: 460, y: 0, scale: 0.95, rotate: 16 }
-      }
-
-      return { opacity: 0, y: -18, scale: 0.97 }
-    },
-  }
-
   const sharedHeaderAction = (
     <NoteEditSheet
       noteId={current.note_id}
@@ -365,9 +336,11 @@ export function ReviewSession({
   )
 
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f4f1ec]">
+    <div className="relative min-h-0 flex-1 overflow-hidden bg-[#dedede]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.62)_0%,rgba(255,255,255,0.22)_32%,rgba(244,241,236,0.94)_74%,rgba(244,241,236,1)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.28)_0%,rgba(255,255,255,0.18)_24%,rgba(255,255,255,0.12)_48%,rgba(255,255,255,0.34)_78%,rgba(255,255,255,0.58)_100%)]" />
+        <div className="absolute inset-y-0 left-0 w-[24%] bg-[linear-gradient(90deg,rgba(255,255,255,0.52)_0%,rgba(255,255,255,0.22)_42%,rgba(255,255,255,0)_100%)]" />
+        <div className="absolute inset-y-0 right-0 w-[24%] bg-[linear-gradient(270deg,rgba(255,255,255,0.52)_0%,rgba(255,255,255,0.22)_42%,rgba(255,255,255,0)_100%)]" />
       </div>
 
       <TooltipProvider delay={0} closeDelay={0}>
@@ -415,14 +388,20 @@ export function ReviewSession({
 
             <div className="flex min-h-0 flex-1 items-center justify-center pt-1 sm:pt-3">
               <div className="relative w-full max-w-xl">
-                <AnimatePresence mode="wait" initial={false} custom={cardExitDirection}>
+                <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={current.id}
-                    custom={cardExitDirection}
-                    variants={cardVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
+                    initial={
+                      shouldReduceMotion
+                        ? { opacity: 0, y: 8, scale: 0.995 }
+                        : ratingMotion?.enter ?? { opacity: 0, y: 18, scale: 0.985 }
+                    }
+                    animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }}
+                    exit={
+                      shouldReduceMotion
+                        ? { opacity: 0, y: -10, scale: 0.99 }
+                        : ratingMotion?.exit ?? { opacity: 0, y: -18, scale: 0.97 }
+                    }
                     transition={{ type: 'spring', stiffness: 230, damping: 24, mass: 0.88 }}
                     className="relative z-10"
                   >
@@ -440,7 +419,7 @@ export function ReviewSession({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 16 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-6 sm:px-4"
+                className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] sm:px-4"
               >
                 <div
                   ref={actionBarRef}
@@ -451,7 +430,6 @@ export function ReviewSession({
                       <ReviewRatingBurst
                         key={`${burstState.id}-${burstState.rating}`}
                         rating={burstState.rating}
-                        emoji={burstState.emoji}
                         reducedMotion={shouldReduceMotion}
                         anchorX={burstState.anchorX}
                         className="absolute inset-x-0 -top-28 bottom-0"

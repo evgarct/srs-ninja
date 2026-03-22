@@ -13,7 +13,6 @@
 | [deck-table-view.md](./deck-table-view.md) | Deck table view: full-width таблица колоды, dropdown multi-select filters, preview на реальном Flashcard и batch audio по текущему filtered subset |
 | [english-note-schema.md](./english-note-schema.md) | Canonical English note contract: shared field schema, legacy normalization, and alignment across forms, flashcards, and MCP |
 | [extra-study.md](./extra-study.md) | Фича Extra Study: адаптивный подбор карточек, URL-параметры, поведение FSRS при досрочном повторении |
-| [home-responsive-layout.md](./home-responsive-layout.md) | Responsive-first Home layout: compact nav, calmer summary/streak hierarchy, and one shared mobile-to-desktop composition |
 | [mcp-draft-import.md](./mcp-draft-import.md) | MCP draft import: AI-generated candidate notes, draft-first persistence, import batches и ручной approve flow |
 | [note-editor.md](./note-editor.md) | Note editor: редактирование ноты из deck page и review session, shared field helpers и audio regeneration |
 | [card-ordering.md](./card-ordering.md) | Smart card ordering: tier-based queue, sibling separation, new-card cap и bypass для manual/extra modes |

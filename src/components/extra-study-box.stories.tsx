@@ -16,7 +16,6 @@ const meta: Meta<typeof ExtraStudyBox> = {
   ],
   args: {
     deckId: 'deck-1',
-    mode: 'menu',
   },
 }
 
@@ -24,10 +23,10 @@ export default meta
 
 type Story = StoryObj<typeof ExtraStudyBox>
 
-export const CompletedTodayMenu: Story = {}
+export const SuggestedWhenIdle: Story = {}
 
-export const DirectStart: Story = {
+export const CollapsedAfterStudyingToday: Story = {
   args: {
-    mode: 'direct',
+    hasStudiedToday: true,
   },
 }
