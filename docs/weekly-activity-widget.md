@@ -20,7 +20,7 @@
 ## Data Flow
 
 1. Home page получает timezone из request header `x-vercel-ip-timezone` (fallback: `UTC`).
-2. `getWeeklyActivityStats(timeZone)` запрашивает `reviews` и строит 7-дневный срез.
+2. `getWeeklyActivityStats(timeZone)` запрашивает `reviews` через slightly wider UTC window, а затем фильтрует записи обратно к нужным local week date keys.
 3. На UI передаются `days[]` и `streak`.
 
 ## Activity Logic

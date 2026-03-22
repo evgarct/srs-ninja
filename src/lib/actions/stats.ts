@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import {
   getCurrentWeekDateKeys,
+  getWeeklyQueryStartUtc,
   toDateKeyInTimeZone,
   type ActivityDaySummary,
 } from '@/lib/activity'
@@ -95,7 +96,8 @@ export async function getWeeklyActivityStats(timeZone: string) {
   const supabase = await createClient()
   const now = new Date()
   const { todayKey, weekStartKey, weekDateKeys } = getCurrentWeekDateKeys(timeZone, now)
-  const since = new Date(`${weekStartKey}T00:00:00Z`)
+  const since = getWeeklyQueryStartUtc(weekStartKey)
+  const weekDateKeySet = new Set(weekDateKeys)
 
   const { data, error } = await supabase
     .from('reviews')
@@ -109,6 +111,8 @@ export async function getWeeklyActivityStats(timeZone: string) {
 
   for (const review of data) {
     const key = toDateKeyInTimeZone(new Date(review.reviewed_at), timeZone)
+    if (!weekDateKeySet.has(key)) continue
+
     reviewCountByDay.set(key, (reviewCountByDay.get(key) ?? 0) + 1)
 
     if (review.rating >= 3 && review.state === 'review') {

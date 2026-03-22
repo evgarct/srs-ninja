@@ -60,6 +60,13 @@ export function getCurrentWeekDateKeys(
   }
 }
 
+export function getWeeklyQueryStartUtc(weekStartKey: string) {
+  // Query one extra UTC day before the local week start so we do not lose
+  // early-morning reviews in timezones east of UTC. Callers should still
+  // filter results by the explicit local week date keys they care about.
+  return new Date(`${shiftDateKey(weekStartKey, -1)}T00:00:00Z`)
+}
+
 function summarizeActivityByDay(records: ActivityRecord[], timeZone: string) {
   const reviewCountByDay = new Map<string, number>()
   const masteredCardIdsByDay = new Map<string, Set<string>>()

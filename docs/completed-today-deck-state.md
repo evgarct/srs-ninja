@@ -48,7 +48,7 @@ This is intentionally a motivational status layer, not a guarantee that the deck
 
 That allows the home card to:
 
-- show a calm success badge and status line;
+- show a calm success chip in the title row;
 - keep the existing due CTA if due work is still visible;
 - pass deck-specific `hasStudiedToday` state to `ExtraStudyBox` instead of the previous global same-day activity heuristic.
 
@@ -56,11 +56,12 @@ That allows the home card to:
 
 The new `HomeDeckCard` component keeps the existing dashboard card structure and adds:
 
-- a compact completed-today badge;
+- a compact completed-today chip;
 - a single clear primary CTA per state.
 - a consistent action row pattern where the primary learning CTA expands and `Open deck` stays on the right as the secondary action.
 
 For idle states, the card keeps the same action-row structure as due states: the primary `Continue learning` CTA expands to fill available space, and `Open deck` remains the secondary action on the right. Extra-study sizing options are exposed from a dropdown attached to the primary CTA instead of expanding the card vertically.
+If a deck is already marked as completed today but due work becomes visible again, the completed chip stays visible and the primary CTA switches back to the direct due-review route instead of showing the extra-study dropdown.
 
 The component intentionally avoids:
 

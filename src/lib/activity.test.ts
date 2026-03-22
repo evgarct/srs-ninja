@@ -4,6 +4,7 @@ import {
   buildReviewHeatmapWeeks,
   getActivityIntensity,
   getCurrentWeekDateKeys,
+  getWeeklyQueryStartUtc,
   shiftDateKey,
 } from './activity'
 
@@ -72,5 +73,11 @@ describe('shiftDateKey', () => {
   it('moves a date key by calendar days', () => {
     expect(shiftDateKey('2026-03-16', 6)).toBe('2026-03-22')
     expect(shiftDateKey('2026-03-16', -7)).toBe('2026-03-09')
+  })
+})
+
+describe('getWeeklyQueryStartUtc', () => {
+  it('starts one UTC day before the local week start to avoid timezone clipping', () => {
+    expect(getWeeklyQueryStartUtc('2026-03-16').toISOString()).toBe('2026-03-15T00:00:00.000Z')
   })
 })
