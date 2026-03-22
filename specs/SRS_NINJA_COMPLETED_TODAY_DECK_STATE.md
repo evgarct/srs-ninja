@@ -12,7 +12,7 @@ This makes the dashboard weaker as a motivation surface:
 
 ## Goal
 
-Show a deck-specific completed-today state on home deck cards when the user has completed the regular due-review session for that deck today.
+Show a deck-specific completed-today state on home deck cards when the user has completed a meaningful study session for that deck today.
 
 ## Product Rules
 
@@ -20,15 +20,14 @@ Show a deck-specific completed-today state on home deck cards when the user has 
 
 `Completed today` means:
 
-- the user finished a **regular due-review session** for that deck today;
+- the user finished a **regular due-review session** or an **extra-study session** for that deck today;
 - manual filtered review does not mark the deck as completed-today;
-- extra study does not mark the deck as completed-today.
 
 This state is a motivational success signal, not a promise that the deck can never produce more due work later the same day.
 
 ### 2. Persistence
 
-The product must store a deck-specific completion marker when a regular due-review session is actually completed.
+The product must store a deck-specific completion marker when a regular due-review session or extra-study session is actually completed.
 
 This should not be derived only from generic `reviews` rows or global activity totals.
 
@@ -66,8 +65,8 @@ If new due cards appear later the same day because of scheduler behavior:
 ## Acceptance Criteria
 
 - [ ] Completing a regular due-review session stores a deck-specific completion marker.
+- [ ] Completing an extra-study session stores a deck-specific completion marker for Home.
 - [ ] Home dashboard queries and displays deck-specific completed-today state.
 - [ ] Manual review does not mark the deck as completed-today.
-- [ ] Extra study does not mark the deck as completed-today.
 - [ ] Completed-today state is visible on desktop and mobile without layout issues.
 - [ ] Existing deck navigation and CTA behavior remain intact.

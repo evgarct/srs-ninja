@@ -2,7 +2,7 @@
 
 ## Summary
 
-Home deck cards can now show a deck-specific success state when the user has already completed the regular due-review session for that deck today.
+Home deck cards can now show a deck-specific success state when the user has already completed a meaningful study session for that deck today.
 
 This is backed by a persisted completion marker instead of a heuristic derived from generic review activity.
 
@@ -19,9 +19,10 @@ This is backed by a persisted completion marker instead of a heuristic derived f
 
 A new table, `review_session_completions`, stores completion events for review sessions.
 
-For this feature, the product writes a completion row only when:
+For this feature, the product writes a completion row when:
 
 - a regular due-review session reaches its done state;
+- an extra-study session reaches its done state;
 - all pending review submissions have finished;
 - no sync error remains.
 
@@ -36,9 +37,8 @@ The stored row includes:
 
 `Completed today` means:
 
-- the user completed the regular due-review session for that deck today;
+- the user completed the regular due-review session or an extra-study session for that deck today;
 - manual review does not mark the deck as completed-today;
-- extra study does not mark the deck as completed-today.
 
 This is intentionally a motivational status layer, not a guarantee that the deck cannot have more due cards later the same day.
 

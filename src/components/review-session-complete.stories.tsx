@@ -53,6 +53,28 @@ export const ExtraStudy: Story = {
   },
 }
 
+export const MobileExtraStudy: Story = {
+  args: {
+    sessionMode: 'extra',
+    stats: {
+      total: 4,
+      correct: 4,
+      durationMs: 4000,
+      ratings: {
+        again: 0,
+        hard: 0,
+        good: 3,
+        easy: 1,
+      },
+    },
+  },
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+}
+
 export const SyncPending: Story = {
   args: {
     pendingReviewCount: 2,

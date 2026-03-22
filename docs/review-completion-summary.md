@@ -10,7 +10,8 @@ It provides:
 - answer distribution;
 - total time spent;
 - session-specific explanatory copy;
-- a restrained completion animation for the regular due-review ritual.
+- a restrained completion animation for the regular due-review ritual;
+- a mobile-safe scrollable completion surface with the main exit controls available at the top;
 - resilience against post-submit route refreshes, so the user keeps seeing the completed-session summary instead of a generic empty-state fallback.
 
 ## Files
@@ -41,8 +42,9 @@ If a server refresh happens after the final review submission, the review pages 
 Regular due review gets the strongest completion treatment:
 
 - success badge;
-- completion headline;
-- subtle particle burst;
+- shorter completion headline and copy;
+- top action row with direct return control;
+- repeating subtle particle bursts while the completion state is visible;
 - explanation that today's main session for the deck is complete.
 
 ### Manual review
@@ -58,7 +60,27 @@ Extra study is framed as additional practice, not as the main daily completion r
 The component uses `motion` for lightweight completion animation:
 
 - spring-based entry for cards and badges;
-- small particle burst on due-session completion;
+- small periodic particle bursts on the completion screen while it remains open;
 - reduced-motion-safe behavior through `useReducedMotion()`.
 
 The animation remains short, non-blocking, and mobile-safe.
+
+## Mobile Layout
+
+`ReviewSessionComplete` now owns its own vertical scrolling inside the fixed-height review shell.
+
+This prevents the previous mobile trap where the summary card could become taller than the viewport while the parent review page stayed `overflow-hidden`.
+
+The action row sits in a sticky top area so the user can always:
+
+- go back home;
+- jump to the deck or restart due review;
+- avoid needing to scroll to the bottom just to leave the screen.
+
+The metric and answer-distribution blocks now use a compact 2-column mobile layout to reduce overall height.
+
+The internal summary sections intentionally avoid heavy nested borders:
+
+- the outer completion card remains the primary surface;
+- metric tiles use softer filled panels instead of hard card-on-card borders;
+- the answer distribution group reads as a quiet grouped block rather than another bordered container.

@@ -113,9 +113,8 @@ export async function getDashboardStats(timeZone = 'UTC') {
       .gte('reviewed_at', todayStart),
     supabase
       .from('review_session_completions')
-      .select('deck_id')
+      .select('deck_id, session_type')
       .eq('user_id', user.id)
-      .eq('session_type', 'due')
       .gte('completed_at', todayStart),
   ])
 

@@ -30,11 +30,27 @@ describe('isMissingCompletionTableError', () => {
 describe('getCompletedTodayDeckIds', () => {
   it('returns deck ids when completion rows are available', () => {
     const ids = getCompletedTodayDeckIds(
-      [{ deck_id: 'deck-1' }, { deck_id: 'deck-2' }, { deck_id: 'deck-1' }],
+      [
+        { deck_id: 'deck-1', session_type: 'due' },
+        { deck_id: 'deck-2', session_type: 'extra' },
+        { deck_id: 'deck-1', session_type: 'due' },
+      ],
       null
     )
 
     expect([...ids]).toEqual(['deck-1', 'deck-2'])
+  })
+
+  it('ignores non-home session types such as manual review', () => {
+    const ids = getCompletedTodayDeckIds(
+      [
+        { deck_id: 'deck-1', session_type: 'manual' },
+        { deck_id: 'deck-2', session_type: 'extra' },
+      ],
+      null
+    )
+
+    expect([...ids]).toEqual(['deck-2'])
   })
 
   it('falls back to an empty set when the completion table is missing', () => {

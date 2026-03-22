@@ -176,12 +176,12 @@ export function ReviewSession({
   }, [preparedQueue])
 
   useEffect(() => {
-    if (!done || sessionMode !== 'due') return
+    if (!done || sessionMode === 'manual') return
     if (pendingReviewCount > 0 || syncError) return
     if (hasPersistedCompletionRef.current) return
 
     hasPersistedCompletionRef.current = true
-    void markReviewSessionCompleted(deckId, 'due').catch(() => {
+    void markReviewSessionCompleted(deckId, sessionMode).catch(() => {
       hasPersistedCompletionRef.current = false
     })
   }, [deckId, done, pendingReviewCount, sessionMode, syncError])
@@ -413,23 +413,21 @@ export function ReviewSession({
               </div>
             </div>
 
-            <div className="flex min-h-0 flex-1 items-center justify-center pt-1 sm:pt-3">
-              <div className="relative w-full max-w-xl">
-                <AnimatePresence mode="wait" initial={false} custom={cardExitDirection}>
-                  <motion.div
-                    key={current.id}
-                    custom={cardExitDirection}
-                    variants={cardVariants}
-                    initial="initial"
-                    animate="animate"
-                    exit="exit"
-                    transition={{ type: 'spring', stiffness: 230, damping: 24, mass: 0.88 }}
-                    className="relative z-10"
-                  >
-                    {actualFlashcard}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
+            <div className="relative mx-auto flex min-h-0 w-full max-w-xl flex-1 items-center justify-center">
+              <AnimatePresence mode="wait" initial={false} custom={cardExitDirection}>
+                <motion.div
+                  key={current.id}
+                  custom={cardExitDirection}
+                  variants={cardVariants}
+                  initial={false}
+                  animate="animate"
+                  exit="exit"
+                  transition={{ type: 'spring', stiffness: 230, damping: 24, mass: 0.88 }}
+                  className="relative z-10 w-full"
+                >
+                  {actualFlashcard}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
 
