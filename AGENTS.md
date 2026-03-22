@@ -20,6 +20,7 @@
 - When changing interactive flows, check both desktop and mobile behavior, including spacing, touch targets, wrapping, and perceived responsiveness.
 - If the user rejects two consecutive UI passes on the same screen, stop iterative tweaking. Summarize the target layout, the non-goals, and why the current direction is failing before making more code changes.
 - For user-visible UI changes, perform a visual self-review against the running app or screenshots before presenting the pass as complete. If the result still shows layout artifacts, conflicting visual language, duplicated information, or broken motion, keep iterating before asking the user to review.
+- After deciding that user-visible UI development is ready for review, start the local app and local Storybook in WSL so the user can verify the real screen and the component states before final handoff.
 - For each new feature branch, start from a fresh `main`.
 - If the task asks to match external product behavior (for example Anki), verify it from primary sources before implementing.
 - If behavior changes touch shared review flows, keep the mechanics aligned across regular review, manual filtered review, and extra study unless the task explicitly says otherwise.

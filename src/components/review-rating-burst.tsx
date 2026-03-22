@@ -7,11 +7,13 @@ import { getReviewRatingMotion } from '@/lib/review-rating-motion'
 
 export function ReviewRatingBurst({
   rating,
+  emoji,
   reducedMotion = false,
   anchorX = 0.5,
   className,
 }: {
   rating: Rating
+  emoji: string
   reducedMotion?: boolean
   anchorX?: number
   className?: string
@@ -24,32 +26,24 @@ export function ReviewRatingBurst({
 
   return (
     <div className={`pointer-events-none absolute inset-0 z-20 overflow-visible ${className ?? ''}`}>
-      {motionPreset.burstEmojis.map((emoji, index) => {
-        const spreadX = horizontalDirection * (28 + index * 18)
-        const liftY = -62 - index * 18 + motionPreset.exit.y * 0.18
-
-        return (
-          <motion.span
-            key={`${rating}-${emoji}-${index}`}
-            initial={{ x: 0, y: 0, scale: 0.7, opacity: 0 }}
-            animate={{
-              x: spreadX,
-              y: liftY,
-              scale: 1 + index * 0.04,
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 0.8,
-              ease: 'easeOut',
-              delay: index * 0.04,
-            }}
-            className="absolute top-[78%] text-[1.65rem] drop-shadow-[0_8px_14px_rgba(255,255,255,0.45)] sm:text-[1.9rem]"
-            style={{ left: `${anchorX * 100}%` }}
-          >
-            {emoji}
-          </motion.span>
-        )
-      })}
+      <motion.span
+        key={`${rating}-${emoji}`}
+        initial={{ x: 0, y: 0, scale: 0.85, opacity: 0 }}
+        animate={{
+          x: horizontalDirection * 56,
+          y: -94 + motionPreset.exit.y * 0.14,
+          scale: 1.28,
+          opacity: [0, 1, 0],
+        }}
+        transition={{
+          duration: 0.92,
+          ease: 'easeOut',
+        }}
+        className="absolute top-[78%] text-[2.15rem] drop-shadow-[0_12px_18px_rgba(255,255,255,0.58)] sm:text-[2.45rem]"
+        style={{ left: `${anchorX * 100}%` }}
+      >
+        {emoji}
+      </motion.span>
     </div>
   )
 }
