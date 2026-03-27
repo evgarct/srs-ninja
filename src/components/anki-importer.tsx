@@ -85,7 +85,7 @@ export function AnkiImporter({ decks }: { decks: Deck[] }) {
             : {
                 word: note.word,
                 translation: note.translation,
-                notes: note.extra,
+                note: note.extra,
               },
           []
         )

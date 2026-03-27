@@ -4,7 +4,7 @@ import {
   getPopularityDisplay,
   getPopularityValue,
 } from '@/lib/english-note-schema'
-import { getFields } from '@/lib/note-fields'
+import { getFields, normalizeNoteFields } from '@/lib/note-fields'
 import type { Language } from '@/lib/types'
 
 export interface DraftNoteDisplayMetaItem {
@@ -56,6 +56,7 @@ export function getDraftNoteDisplayState(
   fields: Record<string, unknown>,
   language: Language
 ): DraftNoteDisplayState {
+  const normalizedFields = normalizeNoteFields(fields, language)
   const labelMap = getFieldLabelMap(language)
 
   if (language === 'english') {
@@ -143,7 +144,7 @@ export function getDraftNoteDisplayState(
     }
   }
 
-  const fallback = Object.entries(fields)
+  const fallback = Object.entries(normalizedFields)
     .map(([key, value]) => ({
       key,
       label: labelMap.get(key) ?? key,

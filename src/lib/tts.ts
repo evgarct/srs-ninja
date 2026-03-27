@@ -1,13 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-
-export const ELEVENLABS_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'
-const ELEVENLABS_MODEL = 'eleven_flash_v2_5'
+import { getTtsLanguageConfig } from '@/lib/tts-config'
 
 /**
  * Calls ElevenLabs TTS, uploads the resulting mp3 to Supabase Storage,
  * upserts the URL into audio_cache, and returns the public URL.
- *
- * English only — caller is responsible for the language guard.
  */
 export async function generateAndCacheAudio(
   supabase: SupabaseClient,
@@ -20,9 +16,14 @@ export async function generateAndCacheAudio(
     return { error: 'ELEVENLABS_API_KEY is not configured' }
   }
 
+  const config = getTtsLanguageConfig(language)
+  if (!config) {
+    return { error: `TTS is not supported for ${language} decks` }
+  }
+
   // Call ElevenLabs
   const ttsResponse = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${config.voiceId}`,
     {
       method: 'POST',
       headers: {
@@ -31,8 +32,8 @@ export async function generateAndCacheAudio(
       },
       body: JSON.stringify({
         text,
-        model_id: ELEVENLABS_MODEL,
-        language_code: 'en',
+        model_id: config.modelId,
+        language_code: config.languageCode,
       }),
     }
   )
@@ -83,7 +84,7 @@ export async function generateAndCacheAudio(
       note_id: noteId,
       field_key: 'expression',
       language,
-      voice_id: ELEVENLABS_VOICE_ID,
+      voice_id: config.voiceId,
       storage_path: versionedAudioUrl,
     },
     { onConflict: 'note_id,field_key' }

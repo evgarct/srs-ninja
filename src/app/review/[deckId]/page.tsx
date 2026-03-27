@@ -9,6 +9,7 @@ import { buttonVariants } from '@/lib/button-variants'
 import { isFsrsState, normalizeAudioFilter, type AudioFilter, type FsrsState } from '@/lib/deck-notes'
 import { selectReviewSessionCards } from '@/lib/review-card-selection'
 import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
+import { supportsTtsLanguage } from '@/lib/tts-config'
 
 export default async function ReviewPage({
   params,
@@ -60,9 +61,9 @@ export default async function ReviewPage({
     orderCards,
   })
 
-  // Pre-fetch audio URLs for English decks
+  // Pre-fetch audio URLs for languages that support TTS.
   let audioMap: Record<string, string> = {}
-  if (deck.language === 'english' && cards.length > 0) {
+  if (supportsTtsLanguage(deck.language) && cards.length > 0) {
     const noteIds = [...new Set(cards.map((c) => c.note_id))]
     const { data: audioRows } = await supabase
       .from('audio_cache')

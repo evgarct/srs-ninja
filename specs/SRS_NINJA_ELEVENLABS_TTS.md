@@ -2,11 +2,12 @@
 
 ## Context
 
-Add text-to-speech audio to **English deck only** (for now) using ElevenLabs API. Free tier: 10,000 characters/month.
+Add text-to-speech audio to supported decks using ElevenLabs API. The first supported languages are English and Czech. Free tier: 10,000 characters/month.
 The API key should already be in `.env.local` as `ELEVENLABS_API_KEY`.
 
-**Voice ID:** `JBFqnCBsd6RMkjVDRZzb` (Free standard voice)
-**Language:** English only (`en`)
+**English Voice ID:** `JBFqnCBsd6RMkjVDRZzb`
+**Czech Voice ID:** `TX3LPaxmHKxFdv7VOQHJ`
+**Languages:** English (`en`) and Czech (`cs`)
 **Model:** `eleven_flash_v2_5` (fast, 0.5 credits per character)
 
 ---
@@ -32,8 +33,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing noteId or text' }, { status: 400 })
   }
 
-  // Single voice for English deck
-  const voiceId = 'JBFqnCBsd6RMkjVDRZzb'
+  // Voice comes from language-aware TTS config
+  const voiceId = getVoiceIdForLanguage(language)
 
   // Call ElevenLabs API
   const ttsResponse = await fetch(
@@ -324,9 +325,8 @@ Free tier: 10,000 chars/month.
 
 | Language | Voice ID | Notes |
 |---|---|---|
-| English | wWWn96OtTHu1sn8SRGEr | User's chosen voice from ElevenLabs library |
-
-Czech TTS will be added in a future phase.
+| English | JBFqnCBsd6RMkjVDRZzb | Shared English deck voice |
+| Czech | TX3LPaxmHKxFdv7VOQHJ | User-selected Czech voice |
 
 ---
 
@@ -335,7 +335,7 @@ Czech TTS will be added in a future phase.
 - [ ] `/api/tts` endpoint generates audio for a single note
 - [ ] Audio stored in Supabase Storage (`audio` bucket)
 - [ ] Audio URL saved in `audio_cache` table
-- [ ] `/api/tts/batch` generates audio for all notes in English deck
+- [ ] `/api/tts/batch` generates audio for all notes in supported decks
 - [ ] PlayButton in Flashcard actually plays the audio
 - [ ] **Autoplay: recognition front — audio plays when card appears**
 - [ ] **Autoplay: production back — audio plays when answer is revealed**
@@ -345,8 +345,9 @@ Czech TTS will be added in a future phase.
 - [ ] Graceful handling of browser autoplay restrictions
 - [ ] Rate limiting between API calls (500ms delay)
 - [ ] Error handling for API failures
-- [ ] Uses voice ID `wWWn96OtTHu1sn8SRGEr` for all English cards
+- [ ] Uses voice ID `JBFqnCBsd6RMkjVDRZzb` for English cards
+- [ ] Uses voice ID `TX3LPaxmHKxFdv7VOQHJ` for Czech cards
 - [ ] Character usage awareness (don't burn free tier)
 - [ ] "Generate Audio" button accessible from deck/review page
-- [ ] English only for now (Czech TTS in future phase)
+- [ ] Unsupported deck languages are rejected with a clear error
 - [ ] TTS input uses canonical primary text from `word -> expression -> term`

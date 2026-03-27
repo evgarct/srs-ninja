@@ -96,7 +96,7 @@ function playAudio(audioUrl: string) {
 ### Save Changes
 
 - сохраняет fields;
-- если primary text изменился и нота английская, сервер возвращает новый `audioUrl`;
+- если primary text изменился и язык ноты поддерживает TTS, сервер возвращает новый `audioUrl`;
 - клиент немедленно подменяет локальный audio state;
 - новый Play instantly available;
 - новый файл сразу пытается проиграться.

@@ -72,6 +72,33 @@ When calling save_draft_notes:
 
 Before saving, call get_deck_contract and match the returned field contract exactly.`
 
+const CZECH_IMPORT_PROMPT = `When importing into a Czech deck, always use the canonical Czech note schema.
+
+Required fields:
+- word
+- translation
+
+Optional fields:
+- pronunciation: IPA string
+- gender: mužský | ženský | střední | —
+- part_of_speech: podstatné jméno | sloveso | přídavné jméno | příslovce | zájmeno | předložka | spojka | částice | citoslovce | číslovka
+- level: A1 | A2 | B1 | B2 | C1 | C2
+- style: informal | neutral | formal | everyday | technical | academic | narrative | slang | poetic
+- popularity: integer 1..10
+- example_sentence: Czech example sentence
+- example_translation: translation of the example sentence
+- note: short grammar or usage note
+- image_url: absolute URL
+- tags: string[] stored separately from fields
+
+Use only the returned Czech contract keys. Do not rely on legacy Czech aliases.
+
+When calling save_draft_notes:
+- put note tags into item.tags
+- put batch-level requested tags into metadata.requestedTags
+
+Before saving, call get_deck_contract and match the returned field contract exactly.`
+
 export function McpConnectPanel({
   appOrigin,
   endpointUrl,
@@ -256,6 +283,25 @@ export function McpConnectPanel({
                 </div>
                 <pre className="overflow-x-auto rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground whitespace-pre-wrap break-words">
                   {ENGLISH_IMPORT_PROMPT}
+                </pre>
+              </div>
+
+              <div className="rounded-xl border p-4 space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">ChatGPT Czech import prompt</p>
+                    <p className="text-xs text-muted-foreground">
+                      Use this for Czech decks so draft fields stay aligned with the app schema and MCP contract.
+                    </p>
+                  </div>
+                  <CopyButton
+                    value={CZECH_IMPORT_PROMPT}
+                    label="Prompt copied"
+                    className="shrink-0"
+                  />
+                </div>
+                <pre className="overflow-x-auto rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                  {CZECH_IMPORT_PROMPT}
                 </pre>
               </div>
 

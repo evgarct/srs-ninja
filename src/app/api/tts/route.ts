@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { generateAndCacheAudio } from '@/lib/tts'
+import { supportsTtsLanguage } from '@/lib/tts-config'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -20,7 +21,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing noteId or text' }, { status: 400 })
   }
 
-  const result = await generateAndCacheAudio(supabase, user.id, noteId, text, language ?? 'english')
+  const normalizedLanguage = language ?? 'english'
+  if (!supportsTtsLanguage(normalizedLanguage)) {
+    return NextResponse.json(
+      { error: `TTS is not supported for ${normalizedLanguage} decks` },
+      { status: 400 }
+    )
+  }
+
+  const result = await generateAndCacheAudio(supabase, user.id, noteId, text, normalizedLanguage)
 
   if ('error' in result) {
     return NextResponse.json({ error: result.error }, { status: 500 })

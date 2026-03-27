@@ -1,3 +1,5 @@
+import { supportsTtsLanguage } from '@/lib/tts-config'
+
 export function shouldGenerateAudioForNote({
   language,
   status,
@@ -9,7 +11,7 @@ export function shouldGenerateAudioForNote({
   forceAudio: boolean
   expressionChanged: boolean
 }) {
-  if (language !== 'english') return false
+  if (!supportsTtsLanguage(language)) return false
   if (status !== 'approved') return false
   return forceAudio || expressionChanged
 }

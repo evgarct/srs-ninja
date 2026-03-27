@@ -43,7 +43,7 @@ describe('mapFieldsToFlashcard', () => {
           expression: 'konev',
           translation: 'лейка',
           level: 'Z9',
-          frequency: 999,
+          popularity: 999,
           part_of_speech: 'noun',
           gender: 'ženský',
           note: 'ч. мн.: konve',
