@@ -37,6 +37,25 @@ export interface DuplicateCandidate {
   primaryText: string
 }
 
+function applyFieldAliases(
+  language: Language,
+  fields: Record<string, unknown>
+): Record<string, unknown> {
+  const normalized = { ...fields }
+
+  if (!normalized.word) {
+    if (typeof normalized.expression === 'string' && normalized.expression.trim()) {
+      normalized.word = normalized.expression
+    } else if (typeof normalized.term === 'string' && normalized.term.trim()) {
+      normalized.word = normalized.term
+    }
+  }
+
+  if (language === 'czech') return normalized
+
+  return normalized
+}
+
 function normalizeStringValue(value: unknown): string {
   if (typeof value === 'string') return value.trim()
   if (typeof value === 'number' || typeof value === 'boolean') return String(value).trim()
@@ -103,7 +122,7 @@ export function validateDraftCandidate(
   const warnings: DraftValidationIssue[] = []
   const normalizedFields: Record<string, unknown> = {}
 
-  const inputFields = input.fields ?? {}
+  const inputFields = applyFieldAliases(language, input.fields ?? {})
 
   for (const key of Object.keys(inputFields)) {
     if (!fields.some((field) => field.key === key)) {

@@ -7,6 +7,7 @@ import { ReviewSessionCompleteRestore } from '@/components/review-session-comple
 import Link from 'next/link'
 import { buttonVariants } from '@/lib/button-variants'
 import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
+import { supportsTtsLanguage } from '@/lib/tts-config'
 
 export default async function ReviewPage({
   params,
@@ -30,9 +31,9 @@ export default async function ReviewPage({
   const rawCards = await getDueCards(deckId, REGULAR_DUE_REVIEW_LIMIT)
   const cards = orderCards(rawCards)
 
-  // Pre-fetch audio URLs for all cards (English deck only)
+  // Pre-fetch audio URLs for all cards in languages that support TTS.
   let audioMap: Record<string, string> = {}
-  if (deck.language === 'english' && cards.length > 0) {
+  if (supportsTtsLanguage(deck.language) && cards.length > 0) {
     const noteIds = [...new Set(cards.map((c) => c.note_id))]
     const { data: audioRows } = await supabase
       .from('audio_cache')

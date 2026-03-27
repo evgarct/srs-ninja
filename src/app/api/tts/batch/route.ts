@@ -3,9 +3,10 @@ import { NextResponse } from 'next/server'
 import { generateAndCacheAudio } from '@/lib/tts'
 import { summarizeBatchAudioResults, type BatchAudioResult } from '@/lib/tts-batch'
 import { getNotePrimaryText } from '@/lib/note-fields'
+import { supportsTtsLanguage } from '@/lib/tts-config'
 
 // POST /api/tts/batch  { deckId, noteIds? }
-// Generates audio for filtered English notes in a deck that don't have audio yet.
+// Generates audio for filtered supported-language notes in a deck that don't have audio yet.
 export async function POST(request: Request) {
   const supabase = await createClient()
   const {
@@ -16,7 +17,6 @@ export async function POST(request: Request) {
   const { deckId, noteIds } = (await request.json()) as { deckId?: string; noteIds?: string[] }
   if (!deckId) return NextResponse.json({ error: 'Missing deckId' }, { status: 400 })
 
-  // Guard: English decks only
   const { data: deck } = await supabase
     .from('decks')
     .select('language')
@@ -25,8 +25,11 @@ export async function POST(request: Request) {
     .single()
 
   if (!deck) return NextResponse.json({ error: 'Deck not found' }, { status: 404 })
-  if (deck.language !== 'english') {
-    return NextResponse.json({ error: 'TTS is only supported for English decks' }, { status: 400 })
+  if (!supportsTtsLanguage(deck.language)) {
+    return NextResponse.json(
+      { error: `TTS is not supported for ${deck.language} decks` },
+      { status: 400 }
+    )
   }
 
   // Fetch all notes for the deck

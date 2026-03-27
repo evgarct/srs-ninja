@@ -22,8 +22,10 @@ describe('getDraftFieldContract', () => {
     const contract = getDraftFieldContract('czech')
 
     expect(contract.keys).toContain('gender')
-    expect(contract.keys).toContain('frequency')
+    expect(contract.keys).toContain('popularity')
     expect(contract.keys).toContain('image_url')
+    expect(contract.keys).toContain('note')
+    expect(contract.keys).not.toContain('notes')
   })
 })
 
@@ -95,6 +97,27 @@ describe('validateDraftCandidate', () => {
     expect(result.errors).toEqual([])
     expect(result.warnings.some((warning) => warning.code === 'unknown_field')).toBe(true)
     expect(result.candidate?.fields.popularity).toBeUndefined()
+  })
+
+  it('normalizes czech legacy note field into canonical note', () => {
+    const result = validateDraftCandidate('czech', {
+      fields: {
+        word: 'kniha',
+        translation: 'книга',
+        notes: 'Базовое существительное.',
+        frequency: '10',
+      },
+    })
+
+    expect(result.candidate).toEqual({
+      fields: {
+        word: 'kniha',
+        translation: 'книга',
+      },
+      tags: [],
+    })
+    expect(result.warnings.some((warning) => warning.field === 'notes')).toBe(true)
+    expect(result.warnings.some((warning) => warning.field === 'frequency')).toBe(true)
   })
 })
 

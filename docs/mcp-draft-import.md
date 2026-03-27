@@ -305,10 +305,10 @@ Enum constraints:
 - `part_of_speech`
 - `level`
 - `style`
-- `frequency`
+- `popularity`
 - `example_sentence`
 - `example_translation`
-- `notes`
+- `note`
 - `image_url`
 
 Required:
@@ -351,12 +351,8 @@ Enum constraints:
   - `narrative`
   - `slang`
   - `poetic`
-- `frequency`
-  - `1`
-  - `2`
-  - `3`
-  - `4`
-  - `5`
+- `popularity`
+  - integer `1..10`
 
 ## Payload Format Rules
 
@@ -603,10 +599,10 @@ AI-import не запускает TTS автоматически.
         "part_of_speech": "podstatné jméno",
         "level": "A1",
         "style": "neutral",
-        "frequency": "3",
+        "popularity": "6",
         "example_sentence": "Ta kniha je velmi zajímavá.",
         "example_translation": "Эта книга очень интересная.",
-        "notes": "Базовое существительное.",
+        "note": "Базовое существительное.",
         "image_url": "https://example.com/book.jpg"
       },
       "tags": ["CZECH::books", "CZECH::a1"]

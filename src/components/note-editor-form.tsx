@@ -14,6 +14,7 @@ import { toast } from 'sonner'
 import type { Language } from '@/lib/types'
 import { PlayButton } from '@/components/flashcard/PlayButton'
 import { playAudioUrl } from '@/lib/audio'
+import { supportsTtsLanguage } from '@/lib/tts-config'
 
 interface NoteEditorFormProps {
   noteId: string
@@ -51,6 +52,7 @@ export function NoteEditorForm({
   const [currentAudioUrl, setCurrentAudioUrl] = useState(initialAudioUrl)
   const formRef = useRef<HTMLFormElement>(null)
   const router = useRouter()
+  const canGenerateAudio = allowAudioGeneration && supportsTtsLanguage(language)
 
   useEffect(() => {
     setCurrentAudioUrl(initialAudioUrl)
@@ -111,7 +113,7 @@ export function NoteEditorForm({
 
   return (
     <form ref={formRef} onSubmit={(e) => submitForm(e, false)} className="space-y-4 py-4 w-full">
-      {allowAudioGeneration && currentAudioUrl && (
+      {canGenerateAudio && currentAudioUrl && (
         <div className="flex items-center justify-between rounded-lg border px-3 py-2">
           <div>
             <p className="text-sm font-medium">Audio preview</p>
@@ -183,7 +185,7 @@ export function NoteEditorForm({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-col gap-2 pt-4">
-        {allowAudioGeneration && language === 'english' && (
+        {canGenerateAudio && (
           <Button 
             type="button" 
             variant="secondary" 

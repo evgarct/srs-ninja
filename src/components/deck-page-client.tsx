@@ -25,6 +25,7 @@ import {
   type FsrsState,
 } from '@/lib/deck-notes'
 import type { Language } from '@/lib/types'
+import { supportsTtsLanguage } from '@/lib/tts-config'
 
 type BatchResult = {
   total: number
@@ -268,7 +269,7 @@ export function DeckPageClient({
               Тренировать показанные (0)
             </Button>
           )}
-          {deckLanguage === 'english' && (
+          {supportsTtsLanguage(deckLanguage) && (
             <GenerateAudioButton
               deckId={deckId}
               noteIds={visibleNoteIds}

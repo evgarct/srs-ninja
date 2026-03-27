@@ -24,10 +24,21 @@ describe('shouldGenerateAudioForNote', () => {
     ).toBe(true)
   })
 
-  it('blocks audio generation for non-english notes', () => {
+  it('allows audio generation for approved czech notes when forced', () => {
     expect(
       shouldGenerateAudioForNote({
         language: 'czech',
+        status: 'approved',
+        forceAudio: true,
+        expressionChanged: false,
+      })
+    ).toBe(true)
+  })
+
+  it('blocks audio generation for unsupported note languages', () => {
+    expect(
+      shouldGenerateAudioForNote({
+        language: 'german',
         status: 'approved',
         forceAudio: true,
         expressionChanged: true,

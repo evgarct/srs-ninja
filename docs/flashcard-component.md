@@ -48,7 +48,7 @@ import { Flashcard } from "@/components/flashcard"
 />
 ```
 
-Примечание: `Flashcard` по-прежнему принимает проп `expression`, но на уровне данных ноты каноническим считается `fields.word`. Для обратной совместимости чтение идет в порядке `word -> expression -> term`.
+Примечание: `Flashcard` по-прежнему принимает проп `expression`, но на уровне данных ноты каноническим считается `fields.word`. Для обратной совместимости чтение идет в порядке `word -> expression -> term`, а чешская грамматическая пометка канонически хранится в `fields.note` c fallback на legacy `fields.notes`.
 
 ## Props
 
@@ -62,7 +62,7 @@ import { Flashcard } from "@/components/flashcard"
 | `gender` | `string` | — | Род (только для чешского) |
 | `frequency` | `number` (1–10) | ✓ | Частотность слова |
 | `style` | `string` | ✓ | Стилистическая пометка с эмодзи |
-| `note` | `string` | — | Грамматическая пометка (только для чешского) |
+| `note` | `string` | — | Грамматическая или usage-пометка (только для чешского) |
 | `audioUrl` | `string` | — | URL аудио (если не указан — кнопка Play скрыта) |
 | `language` | `'czech' \| 'english'` | ✓ | Язык карточки |
 | `direction` | `'recognition' \| 'production'` | ✓ | Направление повторения |

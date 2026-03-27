@@ -26,7 +26,7 @@
 - **Canonical Primary Text**: Каноническим полем ноты считается `word`. Legacy-ключи `expression` и `term` допускаются только для обратной совместимости чтения старых записей.
 - **Shared Read Path**: Все UI-места, которым нужен основной текст ноты, должны читать его через общий helper `getNotePrimaryText(fields)` с порядком `word -> expression -> term`.
 - **Normalization on Save**: При сохранении редактор должен вызывать language-aware normalization. Для English это означает запись только в канонические keys и отказ от новых записей в `expression`, `term`, `example_sentence`, `example_translation`, `frequency`.
-- **Audio Regeneration**: Если изменяется primary text ноты, необходимо иметь возможность (или сделать это автоматически) перегенерировать аудио через ElevenLabs TTS.
+- **Audio Regeneration**: Если изменяется primary text ноты и язык входит в supported TTS set, необходимо иметь возможность (или сделать это автоматически) перегенерировать аудио через ElevenLabs TTS.
 - **Validation Parity**: Кнопка `Save & Regenerate Audio` должна проходить ту же обязательную browser validation, что и обычный submit. Путь forced save не должен позволять сохранить ноту с пустыми required-полями.
 - **UI Components**: Использовать shadcn/ui компоненты (Dialog/Sheet, Form, Input, Textarea, Button, Slider).
 - **State Management**: Осторожно работать со стейтом сессии, чтобы изменения в ноте корректно отражались в текущем компоненте `ReviewSession`.

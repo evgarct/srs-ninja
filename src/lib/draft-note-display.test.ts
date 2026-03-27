@@ -45,6 +45,7 @@ describe('getDraftNoteDisplayState', () => {
         word: 'konev',
         translation: 'лейка',
         example_sentence: 'Na zahradě jsme použili <b>konev</b>.',
+        note: 'ч. мн.: konve',
       },
       'czech'
     )
@@ -56,6 +57,7 @@ describe('getDraftNoteDisplayState', () => {
       { key: 'word', label: 'Слово (чешский)', value: 'konev' },
       { key: 'translation', label: 'Перевод (рус/англ)', value: 'лейка' },
       { key: 'example_sentence', label: 'Пример (чешский)', value: 'Na zahradě jsme použili <b>konev</b>.' },
+      { key: 'note', label: 'Заметка', value: 'ч. мн.: konve' },
     ])
   })
 })

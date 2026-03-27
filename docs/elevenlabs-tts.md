@@ -2,12 +2,23 @@
 
 ## Summary
 
-Аудиогенерация для английских колод вынесена в общий TTS pipeline: сервер вызывает ElevenLabs, загружает mp3 в Supabase Storage, сохраняет public URL в `audio_cache` и сразу возвращает его UI.
+Аудиогенерация для поддерживаемых колод вынесена в общий TTS pipeline: сервер вызывает ElevenLabs, загружает mp3 в Supabase Storage, сохраняет public URL в `audio_cache` и сразу возвращает его UI.
 
 Система поддерживает два режима:
 
 - single-note generation для редактирования ноты и точечных действий;
 - batch generation для deck page и filtered subset.
+
+## Supported Languages
+
+Сейчас TTS включён для:
+
+- `english` через voice `JBFqnCBsd6RMkjVDRZzb` и `language_code = 'en'`;
+- `czech` через voice `TX3LPaxmHKxFdv7VOQHJ` и `language_code = 'cs'`.
+
+Обе языковые конфигурации используют один и тот же ElevenLabs model:
+
+- `eleven_flash_v2_5`
 
 ## Files
 
@@ -23,7 +34,7 @@
 
 `generateAndCacheAudio(...)` является единым серверным helper для TTS:
 
-- вызывает ElevenLabs с фиксированными `voice_id` и `model_id`;
+- выбирает language-aware `voice_id`, `model_id` и `language_code`;
 - загружает итоговый mp3 в bucket `audio`;
 - получает public URL;
 - добавляет cache-busting query parameter;
@@ -32,9 +43,9 @@
 
 Это позволяет не дублировать TTS-логику между single и batch routes.
 
-## English-Only Guard
+## Supported-Language Guard
 
-TTS поддерживается только для `english` deck language.
+TTS поддерживается только для языков, описанных в `src/lib/tts-config.ts`.
 
 Guard живёт не только в UI, но и на сервере:
 
@@ -82,7 +93,7 @@ Route:
 
 Поведение batch route:
 
-- ограничивает генерацию английскими колодами;
+- ограничивает генерацию только поддерживаемыми языками;
 - загружает ноты колоды или только переданный subset;
 - исключает `note_id`, у которых уже есть `audio_cache`;
 - читает canonical primary text через `getNotePrimaryText(fields)`;

@@ -12,6 +12,8 @@ import {
   normalizeEnglishNoteFields,
 } from './english-note-schema'
 
+export const CZECH_POPULARITY_VALUES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] as const
+
 export interface FieldDef {
   key: string
   label: string
@@ -29,10 +31,10 @@ export const CZECH_FIELDS: FieldDef[] = [
   { key: 'part_of_speech', label: 'Часть речи', type: 'select', options: PARTS_OF_SPEECH_CZECH },
   { key: 'level', label: 'Уровень (CEFR)', type: 'select', options: CEFR_LEVELS },
   { key: 'style', label: 'Стиль', type: 'select', options: STYLE_REGISTERS },
-  { key: 'frequency', label: 'Частотность (1-5)', type: 'select', options: ['1','2','3','4','5'] },
+  { key: 'popularity', label: 'Частотность (1-10)', type: 'select', options: CZECH_POPULARITY_VALUES },
   { key: 'example_sentence', label: 'Пример (чешский)', type: 'textarea' },
   { key: 'example_translation', label: 'Перевод примера', type: 'textarea' },
-  { key: 'notes', label: 'Заметки', type: 'textarea' },
+  { key: 'note', label: 'Заметка', type: 'textarea' },
   { key: 'image_url', label: 'Картинка (URL)', type: 'text' },
 ]
 
@@ -60,18 +62,43 @@ export function normalizeNoteFields(
 
   const normalized = { ...fields }
   const primary = getNotePrimaryText(fields)
+  const noteValue = typeof fields.note === 'string' ? fields.note.trim() : ''
+  const popularityRaw =
+    typeof fields.popularity === 'string' || typeof fields.popularity === 'number'
+      ? String(fields.popularity).trim()
+      : ''
 
-  if (!primary) return normalized
+  if (primary) {
+    normalized.word = primary
 
-  normalized.word = primary
+    if ('expression' in normalized) {
+      normalized.expression = primary
+    }
 
-  if ('expression' in normalized) {
-    normalized.expression = primary
+    if ('term' in normalized) {
+      normalized.term = primary
+    }
   }
 
-  if ('term' in normalized) {
-    normalized.term = primary
+  if (noteValue) {
+    normalized.note = noteValue
+  } else {
+    delete normalized.note
   }
+
+  if (popularityRaw) {
+    const popularity = Math.max(1, Math.min(10, Math.round(Number(popularityRaw))))
+    if (Number.isFinite(popularity)) {
+      normalized.popularity = popularity
+    } else {
+      delete normalized.popularity
+    }
+  } else {
+    delete normalized.popularity
+  }
+
+  delete normalized.notes
+  delete normalized.frequency
 
   return normalized
 }
