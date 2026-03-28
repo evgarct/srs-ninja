@@ -111,6 +111,25 @@ describe('normalizeNoteFields', () => {
       note: 'Базовое существительное.',
     })
   })
+
+  it('normalizes czech legacy fields into the canonical schema', () => {
+    expect(
+      normalizeNoteFields(
+        {
+          expression: 'kniha',
+          translation: 'книга',
+          notes: 'Базовое существительное.',
+          frequency: '11',
+        },
+        'czech'
+      )
+    ).toEqual({
+      word: 'kniha',
+      translation: 'книга',
+      popularity: 10,
+      note: 'Базовое существительное.',
+    })
+  })
 })
 
 describe('getNoteFormValues', () => {

@@ -31,6 +31,7 @@ describe('getDraftFieldContract', () => {
     expect(contract.keys).toContain('verb_class')
     expect(contract.keys).toContain('note')
     expect(contract.keys).not.toContain('image_url')
+    expect(contract.keys).not.toContain('notes')
   })
 })
 
@@ -117,7 +118,6 @@ describe('validateDraftCandidate', () => {
         examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
         synonyms: ['том'],
         antonyms: ['журнал'],
-        note: 'Базовое существительное.',
         notes: 'legacy note',
         frequency: '10',
       },
@@ -135,12 +135,38 @@ describe('validateDraftCandidate', () => {
         examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
         synonyms: ['том'],
         antonyms: ['журнал'],
-        note: 'Базовое существительное.',
+        note: 'legacy note',
       },
       tags: [],
     })
     expect(result.warnings.some((warning) => warning.field === 'notes')).toBe(true)
     expect(result.warnings.some((warning) => warning.field === 'frequency')).toBe(true)
+  })
+
+  it('uses legacy notes when canonical note is blank', () => {
+    const result = validateDraftCandidate('czech', {
+      fields: {
+        word: 'kniha',
+        translation: 'книга',
+        note: '   ',
+        notes: 'legacy note',
+      },
+    })
+
+    expect(result.candidate?.fields.note).toBe('legacy note')
+  })
+
+  it('uses legacy frequency when canonical popularity is blank', () => {
+    const result = validateDraftCandidate('czech', {
+      fields: {
+        word: 'kniha',
+        translation: 'книга',
+        popularity: ' ',
+        frequency: '8',
+      },
+    })
+
+    expect(result.candidate?.fields.popularity).toBe(8)
   })
 })
 

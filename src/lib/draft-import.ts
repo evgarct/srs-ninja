@@ -55,19 +55,35 @@ export interface SimilarDraftCandidate {
   similarityScore: number
 }
 
+function hasMeaningfulValue(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim().length > 0
+  return value !== undefined && value !== null
+}
+
 function applyFieldAliases(
   language: Language,
   fields: Record<string, unknown>
 ): Record<string, unknown> {
   const normalized = { ...fields }
 
-  if (language === 'czech') return normalized
-
   if (!normalized.word) {
     if (typeof normalized.expression === 'string' && normalized.expression.trim()) {
       normalized.word = normalized.expression
     } else if (typeof normalized.term === 'string' && normalized.term.trim()) {
       normalized.word = normalized.term
+    }
+  }
+
+  if (language === 'czech') {
+    if (!hasMeaningfulValue(normalized.note) && typeof normalized.notes === 'string' && normalized.notes.trim()) {
+      normalized.note = normalized.notes
+    }
+
+    if (
+      !hasMeaningfulValue(normalized.popularity) &&
+      (typeof normalized.frequency === 'string' || typeof normalized.frequency === 'number')
+    ) {
+      normalized.popularity = normalized.frequency
     }
   }
 
