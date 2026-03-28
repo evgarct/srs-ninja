@@ -1,11 +1,16 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
 import { buildInitialNoteCards } from '@/lib/note-cards'
+import { normalizeNoteFields } from '@/lib/note-fields'
+import { normalizeNoteTags } from '@/lib/note-tags'
 import {
   canDeleteDraftBatch,
+  createDraftConflictMetadata,
   findDuplicateDraftCandidates,
+  findSimilarDraftCandidates,
   getImportBatchStatus,
   validateDraftCandidate,
+  type DraftConflictMetadata,
   type DraftNoteStatus,
   type DraftCandidateInput,
 } from '@/lib/draft-import'
@@ -31,8 +36,9 @@ export interface SaveDraftNotesResult {
   warnings: string[]
 }
 
-export interface DraftNoteListItem extends NoteRow {
+export type DraftNoteListItem = Omit<NoteRow, 'draft_conflict'> & {
   deck_name?: string
+  draft_conflict: DraftConflictMetadata | null
 }
 
 async function getOwnedDeckOrThrow(
@@ -95,6 +101,40 @@ async function deleteImportBatchIfEmpty(
   return true
 }
 
+function parseDraftConflict(
+  value: unknown
+): DraftConflictMetadata | null {
+  if (!value || typeof value !== 'object') return null
+
+  const conflict = value as Partial<DraftConflictMetadata> & {
+    matchedNoteId?: unknown
+    matchedPrimaryText?: unknown
+    similarityScore?: unknown
+    resolution?: unknown
+  }
+
+  if (
+    conflict.kind !== 'similar_existing_note' ||
+    typeof conflict.matchedNoteId !== 'string' ||
+    typeof conflict.matchedPrimaryText !== 'string' ||
+    typeof conflict.similarityScore !== 'number' ||
+    (conflict.resolution !== 'open' &&
+      conflict.resolution !== 'kept_separate' &&
+      conflict.resolution !== 'ignored')
+  ) {
+    return null
+  }
+
+  return {
+    kind: 'similar_existing_note',
+    matchedNoteId: conflict.matchedNoteId,
+    matchedPrimaryText: conflict.matchedPrimaryText,
+    similarityScore: conflict.similarityScore,
+    resolution: conflict.resolution,
+    resolvedAt: typeof conflict.resolvedAt === 'string' ? conflict.resolvedAt : undefined,
+  }
+}
+
 export async function saveDraftNotesForUser(
   supabase: SupabaseClient,
   userId: string,
@@ -123,9 +163,10 @@ export async function saveDraftNotesForUser(
 
   const { data: existingNotes, error: existingNotesError } = await supabase
     .from('notes')
-    .select('id, fields')
+    .select('id, fields, draft_conflict')
     .eq('deck_id', deckId)
     .eq('user_id', userId)
+    .order('created_at', { ascending: false })
 
   if (existingNotesError) throw existingNotesError
 
@@ -150,9 +191,32 @@ export async function saveDraftNotesForUser(
     )
   }
 
-  const notesToInsert = validCandidates
-    .filter((_, index) => !duplicateIndexSet.has(index))
-    .map((entry) => entry.result.candidate!)
+  const remainingCandidates = validCandidates.filter((_, index) => !duplicateIndexSet.has(index))
+  const similarMatches = findSimilarDraftCandidates(
+    ((existingNotes ?? []) as Array<{ id: string; fields: Record<string, unknown> }>).map((note) => ({
+      id: note.id,
+      fields: (note.fields as Record<string, unknown>) ?? {},
+    })),
+    remainingCandidates.map((entry) => entry.result.candidate!)
+  )
+
+  const similarIndexSet = new Set(similarMatches.map((similar) => similar.index))
+
+  for (const similar of similarMatches) {
+    const originalIndex = remainingCandidates[similar.index]?.index ?? similar.index
+    warnings.push(
+      `Item ${originalIndex + 1}: similar note "${similar.primaryText}" matches an existing note (${Math.round(
+        similar.similarityScore * 100
+      )}% similar).`
+    )
+  }
+
+  const notesToInsert = remainingCandidates.map((entry, index) => ({
+    ...entry.result.candidate!,
+    draft_conflict: similarIndexSet.has(index)
+      ? createDraftConflictMetadata(similarMatches.find((match) => match.index === index)!)
+      : null,
+  }))
 
   if (notesToInsert.length === 0) {
     return {
@@ -193,6 +257,7 @@ export async function saveDraftNotesForUser(
           deck_id: deckId,
           fields: candidate.fields,
           tags: candidate.tags,
+          draft_conflict: candidate.draft_conflict,
           status: 'draft',
           source: 'ai_import',
           import_batch_id: batch.id,
@@ -257,7 +322,119 @@ export async function listDraftNotesForUser(
   return ((data ?? []) as Array<NoteRow & { decks?: { name: string } | Array<{ name: string }> }>).map((note) => ({
     ...(note as NoteRow),
     deck_name: Array.isArray(note.decks) ? note.decks?.[0]?.name : note.decks?.name,
+    draft_conflict: parseDraftConflict((note as NoteRow & { draft_conflict?: unknown }).draft_conflict),
   }))
+}
+
+export async function resolveDraftConflictForUser(
+  supabase: SupabaseClient,
+  userId: string,
+  noteId: string,
+  resolution: 'kept_separate' | 'ignored'
+) {
+  const { data: note, error: noteError } = await supabase
+    .from('notes')
+    .select('id, deck_id, fields, tags, draft_conflict, status, import_batch_id')
+    .eq('id', noteId)
+    .eq('user_id', userId)
+    .single()
+
+  if (noteError || !note) throw noteError ?? new Error('Draft note not found')
+  if (note.status !== 'draft') throw new Error('Only draft notes can be resolved')
+
+  const conflict = parseDraftConflict((note as NoteRow & { draft_conflict?: unknown }).draft_conflict)
+  if (!conflict || conflict.resolution !== 'open') {
+    throw new Error('This draft note does not have an open similar-note conflict')
+  }
+
+  const { error: updateError } = await supabase
+    .from('notes')
+    .update({
+      draft_conflict: {
+        ...conflict,
+        resolution,
+        resolvedAt: new Date().toISOString(),
+      },
+    })
+    .eq('id', noteId)
+    .eq('user_id', userId)
+    .eq('status', 'draft')
+
+  if (updateError) throw updateError
+
+  revalidatePath(`/deck/${note.deck_id}`)
+  revalidatePath(`/deck/${note.deck_id}/drafts`)
+  revalidatePath('/import')
+
+  return {
+    noteId,
+    deckId: note.deck_id,
+    importBatchId: note.import_batch_id,
+    resolution,
+  }
+}
+
+export async function applyDraftConflictToExistingNoteForUser(
+  supabase: SupabaseClient,
+  userId: string,
+  noteId: string
+) {
+  const { data: draftNote, error: draftNoteError } = await supabase
+    .from('notes')
+    .select('id, deck_id, fields, tags, draft_conflict, status, import_batch_id')
+    .eq('id', noteId)
+    .eq('user_id', userId)
+    .single()
+
+  if (draftNoteError || !draftNote) throw draftNoteError ?? new Error('Draft note not found')
+  if (draftNote.status !== 'draft') throw new Error('Only draft notes can be updated from a conflict')
+
+  const conflict = parseDraftConflict((draftNote as NoteRow & { draft_conflict?: unknown }).draft_conflict)
+  if (!conflict || conflict.resolution !== 'open') {
+    throw new Error('This draft note does not have an open similar-note conflict')
+  }
+
+  const { data: targetNote, error: targetNoteError } = await supabase
+    .from('notes')
+    .select('id, deck_id, fields, tags')
+    .eq('id', conflict.matchedNoteId)
+    .eq('user_id', userId)
+    .single()
+
+  if (targetNoteError || !targetNote) throw targetNoteError ?? new Error('Matched note not found')
+
+  const deck = await getOwnedDeckOrThrow(supabase, userId, targetNote.deck_id)
+  const normalizedFields = normalizeNoteFields(
+    (draftNote.fields as Record<string, unknown>) ?? {},
+    deck.language as Language
+  )
+  const mergedTags = normalizeNoteTags([
+    ...(((targetNote.tags as string[]) ?? [])),
+    ...(((draftNote.tags as string[]) ?? [])),
+  ])
+
+  const { error: updateError } = await supabase
+    .from('notes')
+    .update({
+      fields: normalizedFields,
+      tags: mergedTags,
+    })
+    .eq('id', targetNote.id)
+    .eq('user_id', userId)
+
+  if (updateError) throw updateError
+
+  await deleteDraftNoteForUser(supabase, userId, noteId)
+
+  revalidatePath(`/deck/${targetNote.deck_id}`)
+  revalidatePath(`/deck/${targetNote.deck_id}/drafts`)
+
+  return {
+    noteId,
+    updatedNoteId: targetNote.id,
+    deckId: targetNote.deck_id,
+    importBatchId: draftNote.import_batch_id,
+  }
 }
 
 export async function approveDraftNoteForUser(
@@ -274,6 +451,10 @@ export async function approveDraftNoteForUser(
 
   if (noteError || !note) throw noteError ?? new Error('Draft note not found')
   const typedNote = note as NoteRow
+  const conflict = parseDraftConflict((typedNote as NoteRow & { draft_conflict?: unknown }).draft_conflict)
+  if (conflict?.resolution === 'open') {
+    throw new Error('Resolve the similar-note conflict before approving this draft')
+  }
 
   const { data: updatedNote, error: updateError } = await supabase
     .from('notes')

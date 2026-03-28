@@ -37,6 +37,24 @@ export interface DuplicateCandidate {
   primaryText: string
 }
 
+export type DraftConflictResolution = 'open' | 'kept_separate' | 'ignored'
+
+export interface DraftConflictMetadata {
+  kind: 'similar_existing_note'
+  matchedNoteId: string
+  matchedPrimaryText: string
+  similarityScore: number
+  resolution: DraftConflictResolution
+  resolvedAt?: string
+}
+
+export interface SimilarDraftCandidate {
+  index: number
+  noteId: string
+  primaryText: string
+  similarityScore: number
+}
+
 function applyFieldAliases(
   language: Language,
   fields: Record<string, unknown>
@@ -101,6 +119,52 @@ function coerceEnumValue(options: readonly string[] | undefined, value: string):
   const normalizedValue = value.trim().toLowerCase()
   const match = options.find((option) => option.toLowerCase() === normalizedValue)
   return match ?? null
+}
+
+function normalizeComparableText(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+}
+
+function levenshteinDistance(left: string, right: string): number {
+  if (left === right) return 0
+  if (left.length === 0) return right.length
+  if (right.length === 0) return left.length
+
+  const previousRow = Array.from({ length: right.length + 1 }, (_, index) => index)
+
+  for (let i = 1; i <= left.length; i += 1) {
+    let previousDiagonal = previousRow[0]
+    previousRow[0] = i
+
+    for (let j = 1; j <= right.length; j += 1) {
+      const insertion = previousRow[j] + 1
+      const deletion = previousRow[j - 1] + 1
+      const substitution = previousDiagonal + (left[i - 1] === right[j - 1] ? 0 : 1)
+      previousDiagonal = previousRow[j]
+      previousRow[j] = Math.min(insertion, deletion, substitution)
+    }
+  }
+
+  return previousRow[right.length]
+}
+
+export function getDraftTextSimilarity(left: string, right: string): number {
+  const normalizedLeft = normalizeComparableText(left)
+  const normalizedRight = normalizeComparableText(right)
+
+  if (!normalizedLeft || !normalizedRight) return 0
+  if (normalizedLeft === normalizedRight) return 1
+
+  const distance = levenshteinDistance(normalizedLeft, normalizedRight)
+  const longestLength = Math.max(normalizedLeft.length, normalizedRight.length)
+
+  return Math.max(0, 1 - distance / longestLength)
 }
 
 export function getDraftFieldContract(language: Language) {
@@ -216,8 +280,9 @@ export function findDuplicateDraftCandidates(
 
   for (const note of existingNotes) {
     const primaryText = getNotePrimaryText(note.fields).trim()
-    if (!primaryText) continue
-    primaryMap.set(primaryText.toLowerCase(), {
+    const normalizedPrimaryText = normalizeComparableText(primaryText)
+    if (!normalizedPrimaryText) continue
+    primaryMap.set(normalizedPrimaryText, {
       noteId: note.id,
       primaryText,
     })
@@ -225,12 +290,15 @@ export function findDuplicateDraftCandidates(
 
   return candidates.flatMap((candidate, index) => {
     const primaryText = getNotePrimaryText(candidate.fields).trim()
-    const duplicate = primaryMap.get(primaryText.toLowerCase())
+    const normalizedPrimaryText = normalizeComparableText(primaryText)
+    const duplicate = primaryMap.get(normalizedPrimaryText)
     if (!duplicate) {
-      primaryMap.set(primaryText.toLowerCase(), {
-        noteId: `candidate-${index}`,
-        primaryText,
-      })
+      if (normalizedPrimaryText) {
+        primaryMap.set(normalizedPrimaryText, {
+          noteId: `candidate-${index}`,
+          primaryText,
+        })
+      }
       return []
     }
 
@@ -241,6 +309,76 @@ export function findDuplicateDraftCandidates(
       },
     ]
   })
+}
+
+export function findSimilarDraftCandidates(
+  existingNotes: Array<{ id: string; fields: Record<string, unknown> }>,
+  candidates: DraftCandidate[],
+  minimumSimilarity = 0.75
+): SimilarDraftCandidate[] {
+  const existingCandidates = existingNotes
+    .map((note) => {
+      const primaryText = getNotePrimaryText(note.fields).trim()
+      return {
+        id: note.id,
+        primaryText,
+        normalizedPrimaryText: normalizeComparableText(primaryText),
+      }
+    })
+    .filter((note) => note.normalizedPrimaryText.length > 0)
+
+  return candidates.flatMap((candidate, index) => {
+    const primaryText = getNotePrimaryText(candidate.fields).trim()
+    const normalizedPrimaryText = normalizeComparableText(primaryText)
+
+    if (!normalizedPrimaryText) return []
+
+    let bestMatch: SimilarDraftCandidate | null = null
+
+    for (const existingNote of existingCandidates) {
+      const similarityScore = getDraftTextSimilarity(primaryText, existingNote.primaryText)
+      if (similarityScore < minimumSimilarity || similarityScore >= 1) continue
+
+      if (
+        !bestMatch ||
+        similarityScore > bestMatch.similarityScore ||
+        (similarityScore === bestMatch.similarityScore &&
+          Math.abs(existingNote.primaryText.length - primaryText.length) <
+            Math.abs(bestMatch.primaryText.length - primaryText.length)) ||
+        (similarityScore === bestMatch.similarityScore &&
+          Math.abs(existingNote.primaryText.length - primaryText.length) ===
+            Math.abs(bestMatch.primaryText.length - primaryText.length) &&
+          existingNote.id < bestMatch.noteId)
+      ) {
+        bestMatch = {
+          index,
+          noteId: existingNote.id,
+          primaryText: existingNote.primaryText,
+          similarityScore,
+        }
+      }
+    }
+
+    return bestMatch ? [bestMatch] : []
+  })
+}
+
+export function createDraftConflictMetadata(
+  match: SimilarDraftCandidate
+): DraftConflictMetadata {
+  return {
+    kind: 'similar_existing_note',
+    matchedNoteId: match.noteId,
+    matchedPrimaryText: match.primaryText,
+    similarityScore: match.similarityScore,
+    resolution: 'open',
+  }
+}
+
+export function isOpenDraftConflict(
+  conflict: DraftConflictMetadata | null | undefined
+): conflict is DraftConflictMetadata {
+  return Boolean(conflict && conflict.resolution === 'open')
 }
 
 export function getImportBatchStatus(statuses: DraftNoteStatus[]): ImportBatchStatus {

@@ -209,6 +209,7 @@ export type Database = {
           fields: Json
           id: string
           import_batch_id: string | null
+          draft_conflict: Json | null
           source: string
           status: string
           tags: string[]
@@ -222,6 +223,7 @@ export type Database = {
           fields?: Json
           id?: string
           import_batch_id?: string | null
+          draft_conflict?: Json | null
           source?: string
           status?: string
           tags?: string[]
@@ -235,6 +237,7 @@ export type Database = {
           fields?: Json
           id?: string
           import_batch_id?: string | null
+          draft_conflict?: Json | null
           source?: string
           status?: string
           tags?: string[]

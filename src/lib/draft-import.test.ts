@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   canDeleteDraftBatch,
+  createDraftConflictMetadata,
   findDuplicateDraftCandidates,
+  findSimilarDraftCandidates,
   getDraftFieldContract,
+  getDraftTextSimilarity,
   getImportBatchStatus,
   validateDraftCandidate,
 } from '@/lib/draft-import'
@@ -188,6 +191,79 @@ describe('findDuplicateDraftCandidates', () => {
         primaryText: 'anchor',
       },
     ])
+  })
+})
+
+describe('findSimilarDraftCandidates', () => {
+  it('finds deterministic similar-note conflicts by primary text similarity', () => {
+    const matches = findSimilarDraftCandidates(
+      [
+        {
+          id: 'note-1',
+          fields: { word: 'anchor' },
+        },
+      ],
+      [
+        {
+          fields: { word: 'anchored', translation: 'закрепленный' },
+          tags: [],
+        },
+      ]
+    )
+
+    expect(matches).toEqual([
+      {
+        index: 0,
+        noteId: 'note-1',
+        primaryText: 'anchor',
+        similarityScore: expect.any(Number),
+      },
+    ])
+    expect(matches[0]?.similarityScore).toBeGreaterThanOrEqual(0.75)
+  })
+
+  it('ignores candidates that are not similar enough', () => {
+    const matches = findSimilarDraftCandidates(
+      [
+        {
+          id: 'note-1',
+          fields: { word: 'anchor' },
+        },
+      ],
+      [
+        {
+          fields: { word: 'banana', translation: 'банан' },
+          tags: [],
+        },
+      ]
+    )
+
+    expect(matches).toEqual([])
+  })
+})
+
+describe('getDraftTextSimilarity', () => {
+  it('normalizes punctuation, case, and accents before scoring', () => {
+    expect(getDraftTextSimilarity('Ánchor!', 'anchor')).toBe(1)
+  })
+})
+
+describe('createDraftConflictMetadata', () => {
+  it('creates an open conflict payload for the draft review flow', () => {
+    expect(
+      createDraftConflictMetadata({
+        index: 2,
+        noteId: 'note-1',
+        primaryText: 'anchor',
+        similarityScore: 0.82,
+      })
+    ).toEqual({
+      kind: 'similar_existing_note',
+      matchedNoteId: 'note-1',
+      matchedPrimaryText: 'anchor',
+      similarityScore: 0.82,
+      resolution: 'open',
+    })
   })
 })
 
