@@ -38,10 +38,27 @@ export interface SaveDraftNotesResult {
 }
 
 const IMPORT_BATCH_QUERY_CHUNK_SIZE = 100
+const DRAFT_CONFLICT_COLUMN = 'draft_conflict'
 
 export type DraftNoteListItem = Omit<NoteRow, 'draft_conflict'> & {
   deck_name?: string
   draft_conflict: DraftConflictMetadata | null
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function isMissingDraftConflictColumnError(error: unknown): boolean {
+  if (!isRecord(error)) return false
+
+  const code = typeof error.code === 'string' ? error.code : ''
+  const message = typeof error.message === 'string' ? error.message : ''
+  const details = typeof error.details === 'string' ? error.details : ''
+
+  if (code !== '42703') return false
+
+  return [message, details].some((value) => value.includes(DRAFT_CONFLICT_COLUMN))
 }
 
 async function getOwnedDeckOrThrow(
@@ -239,7 +256,7 @@ export async function saveDraftNotesForUser(
 
   const { data: existingNotes, error: existingNotesError } = await supabase
     .from('notes')
-    .select('id, fields, draft_conflict')
+    .select('id, fields')
     .eq('deck_id', deckId)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
@@ -325,23 +342,50 @@ export async function saveDraftNotesForUser(
   let createdNoteIds: string[] = []
 
   if (notesToInsert.length > 0) {
-    const { data: insertedNotes, error: insertError } = await supabase
+    const insertRows = notesToInsert.map((candidate) => ({
+      user_id: userId,
+      deck_id: deckId,
+      fields: candidate.fields,
+      tags: candidate.tags,
+      draft_conflict: candidate.draft_conflict,
+      status: 'draft' as const,
+      source: 'ai_import' as const,
+      import_batch_id: batch.id,
+    }))
+
+    let insertedNotes: Array<{ id: string }> | null = null
+
+    const { data: insertedNotesWithConflict, error: insertError } = await supabase
       .from('notes')
-      .insert(
-        notesToInsert.map((candidate) => ({
-          user_id: userId,
-          deck_id: deckId,
-          fields: candidate.fields,
-          tags: candidate.tags,
-          draft_conflict: candidate.draft_conflict,
-          status: 'draft',
-          source: 'ai_import',
-          import_batch_id: batch.id,
-        }))
-      )
+      .insert(insertRows)
       .select('id')
 
-    if (insertError) throw insertError
+    if (insertError) {
+      if (!isMissingDraftConflictColumnError(insertError)) {
+        throw insertError
+      }
+
+      warnings.push(
+        'Draft conflict metadata could not be stored because this Echo database is missing the notes.draft_conflict column. Similar-match warnings are still returned, but those drafts will be saved without conflict state until the migration is applied.'
+      )
+
+      const fallbackInsertRows = insertRows.map((row) => {
+        const nextRow = { ...row }
+        delete (nextRow as { draft_conflict?: DraftConflictMetadata | null }).draft_conflict
+        return nextRow
+      })
+
+      const { data: insertedNotesWithoutConflict, error: fallbackInsertError } = await supabase
+        .from('notes')
+        .insert(fallbackInsertRows)
+        .select('id')
+
+      if (fallbackInsertError) throw fallbackInsertError
+      insertedNotes = (insertedNotesWithoutConflict ?? []) as Array<{ id: string }>
+    } else {
+      insertedNotes = (insertedNotesWithConflict ?? []) as Array<{ id: string }>
+    }
+
     createdNoteIds = ((insertedNotes ?? []) as Array<{ id: string }>).map((note) => note.id)
   }
 
