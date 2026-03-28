@@ -33,9 +33,11 @@
 - When issuing WSL commands from PowerShell, do not pass multi-line scripts, heredocs, markdown, JSON payloads, or text with backticks through `wsl bash -lc '...'`.
 - For any non-trivial WSL shell script, pass the script through stdin into `/home/evgenii/bin/codex-wsl-script <cwd>`.
 - For PR creation with multi-line bodies, pass the body through stdin into `/home/evgenii/bin/codex-gh-pr-create <repo_dir> <base> <head> <title>`.
+- For `gh api` GraphQL queries/mutations or any multi-line JSON payload, use the same stdin-helper pattern instead of inline quoting through PowerShell.
 - Reserve `wsl bash -lc '...'` for short single-line commands without complex quoting.
 - Do not run `git commit` and `git push` in parallel. Commit first, then push, then verify the remote branch head before creating or updating a PR.
 - Before sharing local app or Storybook URLs, verify them from WSL with an HTTP request such as `curl -I`. If a process is listening but the page returns `5xx`, report that as a runtime error instead of calling the preview ready.
+- In a fresh WSL worktree, verify that `node_modules` is available before running `vitest`, `eslint`, `tsc`, or build commands. If the worktree does not have its own dependencies yet, install them there or attach the approved shared `node_modules` source first.
 
 ## UI / Storybook Execution Order
 
@@ -57,4 +59,5 @@
 - Before sharing a PR link, verify that the PR is open and that it corresponds to the current branch head. If the previous PR for the branch is merged or closed, create a new PR instead of reusing the old link.
 - If GitHub CLI PR editing fails, patch the PR via `gh api` and then re-check the live PR fields.
 - After the PR is created, move related Linear issues to the correct review state, add the PR link/reference, and leave a short implementation status comment.
+- If a review comment is fixed in a follow-up PR after the original PR is merged, add a backlink comment on the original PR and resolve the original review thread when repository permissions allow.
 - Do not leave temporary PR notes or helper files untracked in the branch after the PR is created.
