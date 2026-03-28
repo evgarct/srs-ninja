@@ -46,6 +46,7 @@
 - сохранение similar matches как draft notes с conflict metadata;
 - draft review actions для update existing / keep separate / ignore match.
 - auto-cleanup import batches once they no longer contain draft notes.
+- structured MCP error diagnostics for `save_draft_notes`, including `tool`, `deckId`, `itemCount`, and backend `code/details/hint` when available.
 
 ## Design Decision
 
@@ -84,6 +85,7 @@ MCP server даёт наружу только tools.
 - принять запрос из ChatGPT developer mode или другого MCP client;
 - вызвать продуктовый backend contract;
 - вернуть structured result;
+- вернуть structured error diagnostics on write failure instead of a generic opaque failure;
 - не хранить собственную business state model.
 
 Его обязанности не включают:
