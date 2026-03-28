@@ -9,6 +9,7 @@ import {
   findDuplicateDraftCandidates,
   findSimilarDraftCandidates,
   getImportBatchStatus,
+  shouldAutoDeleteImportBatch,
   validateDraftCandidate,
   type DraftConflictMetadata,
   type DraftNoteStatus,
@@ -57,7 +58,7 @@ async function getOwnedDeckOrThrow(
   return deck
 }
 
-async function syncImportBatchStatus(
+async function syncImportBatchState(
   supabase: SupabaseClient,
   batchId: string
 ) {
@@ -68,9 +69,19 @@ async function syncImportBatchStatus(
 
   if (error) throw error
 
-  const nextStatus = getImportBatchStatus(
-    ((notes ?? []) as Array<{ status: 'draft' | 'approved' }>).map((note) => note.status)
-  )
+  const statuses = ((notes ?? []) as Array<{ status: 'draft' | 'approved' }>).map((note) => note.status)
+
+  if (shouldAutoDeleteImportBatch(statuses)) {
+    const { error: deleteError } = await supabase
+      .from('import_batches')
+      .delete()
+      .eq('id', batchId)
+
+    if (deleteError) throw deleteError
+    return { deleted: true as const }
+  }
+
+  const nextStatus = getImportBatchStatus(statuses)
 
   const { error: updateError } = await supabase
     .from('import_batches')
@@ -78,6 +89,7 @@ async function syncImportBatchStatus(
     .eq('id', batchId)
 
   if (updateError) throw updateError
+  return { deleted: false as const, status: nextStatus }
 }
 
 async function deleteImportBatchIfEmpty(
@@ -99,6 +111,52 @@ async function deleteImportBatchIfEmpty(
 
   if (deleteError) throw deleteError
   return true
+}
+
+export async function cleanupEmptyImportBatchesForUser(
+  supabase: SupabaseClient,
+  userId: string
+) {
+  const { data: batches, error: batchesError } = await supabase
+    .from('import_batches')
+    .select('id')
+    .eq('user_id', userId)
+
+  if (batchesError) throw batchesError
+  if (!batches || batches.length === 0) return 0
+
+  const batchIds = batches.map((batch) => batch.id)
+  const { data: notes, error: notesError } = await supabase
+    .from('notes')
+    .select('import_batch_id, status')
+    .eq('user_id', userId)
+    .in('import_batch_id', batchIds)
+
+  if (notesError) throw notesError
+
+  const statusesByBatchId = new Map<string, DraftNoteStatus[]>()
+
+  for (const note of (notes ?? []) as Array<{ import_batch_id: string | null; status: DraftNoteStatus }>) {
+    if (!note.import_batch_id) continue
+    const statuses = statusesByBatchId.get(note.import_batch_id) ?? []
+    statuses.push(note.status)
+    statusesByBatchId.set(note.import_batch_id, statuses)
+  }
+
+  const batchIdsToDelete = batchIds.filter((batchId) =>
+    shouldAutoDeleteImportBatch(statusesByBatchId.get(batchId) ?? [])
+  )
+
+  if (batchIdsToDelete.length === 0) return 0
+
+  const { error: deleteError } = await supabase
+    .from('import_batches')
+    .delete()
+    .eq('user_id', userId)
+    .in('id', batchIdsToDelete)
+
+  if (deleteError) throw deleteError
+  return batchIdsToDelete.length
 }
 
 function parseDraftConflict(
@@ -474,11 +532,12 @@ export async function approveDraftNoteForUser(
   if (cardsError) throw cardsError
 
   if (updatedNote.import_batch_id) {
-    await syncImportBatchStatus(supabase, updatedNote.import_batch_id)
+    await syncImportBatchState(supabase, updatedNote.import_batch_id)
   }
 
   revalidatePath(`/deck/${updatedNote.deck_id}`)
   revalidatePath(`/deck/${updatedNote.deck_id}/drafts`)
+  revalidatePath('/import')
 
   return {
     noteId: updatedNote.id,
@@ -514,7 +573,7 @@ export async function deleteDraftNoteForUser(
   if (note.import_batch_id) {
     const deletedBatch = await deleteImportBatchIfEmpty(supabase, note.import_batch_id)
     if (!deletedBatch) {
-      await syncImportBatchStatus(supabase, note.import_batch_id)
+      await syncImportBatchState(supabase, note.import_batch_id)
     }
   }
 

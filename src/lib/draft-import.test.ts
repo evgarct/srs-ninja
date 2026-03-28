@@ -7,6 +7,7 @@ import {
   getDraftFieldContract,
   getDraftTextSimilarity,
   getImportBatchStatus,
+  shouldAutoDeleteImportBatch,
   validateDraftCandidate,
 } from '@/lib/draft-import'
 
@@ -290,5 +291,18 @@ describe('canDeleteDraftBatch', () => {
   it('blocks deleting batches once any note is approved', () => {
     expect(canDeleteDraftBatch(['draft', 'approved'])).toBe(false)
     expect(canDeleteDraftBatch(['approved'])).toBe(false)
+  })
+})
+
+describe('shouldAutoDeleteImportBatch', () => {
+  it('deletes batches with no remaining draft notes', () => {
+    expect(shouldAutoDeleteImportBatch([])).toBe(true)
+    expect(shouldAutoDeleteImportBatch(['approved'])).toBe(true)
+    expect(shouldAutoDeleteImportBatch(['approved', 'approved'])).toBe(true)
+  })
+
+  it('keeps batches that still have draft notes', () => {
+    expect(shouldAutoDeleteImportBatch(['draft'])).toBe(false)
+    expect(shouldAutoDeleteImportBatch(['draft', 'approved'])).toBe(false)
   })
 })

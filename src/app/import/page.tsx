@@ -1,14 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
-import Link from 'next/link'
 import { getDecks } from '@/lib/actions/decks'
 import { AnkiImporter } from '@/components/anki-importer'
-import { DeleteDraftBatchButton } from '@/components/delete-draft-batch-button'
+import { ImportReviewBatchCard } from '@/components/import-review-batch-card'
 import { McpConnectPanel } from '@/components/mcp-connect-panel'
-import { DraftStatusBadge } from '@/components/draft-status-badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { buttonVariants } from '@/lib/button-variants'
+import { cleanupEmptyImportBatchesForUser } from '@/lib/draft-import-service'
 import { buildMcpConnectionConfig, resolveAppOrigin } from '@/lib/mcp-connection'
 import type { Database } from '@/lib/supabase/database.types'
 
@@ -34,17 +32,43 @@ export default async function ImportPage() {
     sharedSecret: process.env.MCP_SHARED_SECRET,
     userId: process.env.MCP_USER_ID,
   })
+
+  await cleanupEmptyImportBatchesForUser(supabase, user.id)
+
   const { data: recentBatchesData } = await supabase
     .from('import_batches')
     .select('*, decks(name)')
     .eq('user_id', user.id)
+    .in('status', ['draft', 'partially_approved'])
     .order('created_at', { ascending: false })
     .limit(6)
 
-  const recentBatches = ((recentBatchesData ?? []) as RecentBatchRow[]).map((batch) => ({
+  const batchIds = ((recentBatchesData ?? []) as RecentBatchRow[]).map((batch) => batch.id)
+  const { data: draftNotesData } = batchIds.length
+    ? await supabase
+        .from('notes')
+        .select('import_batch_id')
+        .eq('user_id', user.id)
+        .eq('status', 'draft')
+        .in('import_batch_id', batchIds)
+    : { data: [] }
+
+  const draftCountsByBatchId = new Map<string, number>()
+  for (const note of (draftNotesData ?? []) as Array<{ import_batch_id: string | null }>) {
+    if (!note.import_batch_id) continue
+    draftCountsByBatchId.set(
+      note.import_batch_id,
+      (draftCountsByBatchId.get(note.import_batch_id) ?? 0) + 1
+    )
+  }
+
+  const recentBatches = ((recentBatchesData ?? []) as RecentBatchRow[])
+    .map((batch) => ({
     ...batch,
     deckName: Array.isArray(batch.decks) ? batch.decks[0]?.name ?? 'Deck' : batch.decks?.name ?? 'Deck',
-  }))
+      draftCount: draftCountsByBatchId.get(batch.id) ?? 0,
+    }))
+    .filter((batch) => batch.draftCount > 0)
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
@@ -78,50 +102,26 @@ export default async function ImportPage() {
         {recentBatches.length === 0 ? (
           <Card>
             <CardContent className="py-10 text-center text-muted-foreground">
-              No draft import batches yet. Connect ChatGPT above and save your first draft batch.
+              No imported draft batches need review right now. New AI draft batches will appear here until they are approved or cleared.
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {recentBatches.map((batch) => (
-              <Card key={batch.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between gap-3">
-                    <CardTitle className="text-base">{batch.deckName}</CardTitle>
-                    <DraftStatusBadge
-                      status={batch.status as 'draft' | 'partially_approved' | 'approved' | 'archived'}
-                    />
-                  </div>
-                  <CardDescription>
-                    {batch.topic?.trim() || `Batch created on ${batch.created_at.slice(0, 10)}`}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>{batch.notes_count} notes</p>
-                    {batch.model_name && <p>Model: {batch.model_name}</p>}
-                    <p>Source: {batch.source}</p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2">
-                    <Link
-                      href={`/deck/${batch.deck_id}/drafts?batchId=${batch.id}`}
-                      className={buttonVariants()}
-                    >
-                      Open Batch Review
-                    </Link>
-                    <Link
-                      href={`/deck/${batch.deck_id}/drafts`}
-                      className={buttonVariants({ variant: 'outline' })}
-                    >
-                      Open Deck Drafts
-                    </Link>
-                    {batch.status === 'draft' && (
-                      <DeleteDraftBatchButton batchId={batch.id} />
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <ImportReviewBatchCard
+                key={batch.id}
+                id={batch.id}
+                deckId={batch.deck_id}
+                deckName={batch.deckName}
+                topic={batch.topic}
+                createdAt={batch.created_at}
+                updatedAt={batch.updated_at}
+                source={batch.source}
+                modelName={batch.model_name}
+                draftCount={batch.draftCount}
+                status={batch.status as 'draft' | 'partially_approved' | 'approved' | 'archived'}
+                showDelete={batch.status === 'draft'}
+              />
             ))}
           </div>
         )}

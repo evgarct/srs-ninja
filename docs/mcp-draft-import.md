@@ -45,6 +45,7 @@
 - deterministic similar-note conflict detection;
 - сохранение similar matches как draft notes с conflict metadata;
 - draft review actions для update existing / keep separate / ignore match.
+- auto-cleanup import batches once they no longer contain draft notes.
 
 ## Design Decision
 
