@@ -11,6 +11,7 @@
 | [deck-audio-playback.md](./deck-audio-playback.md) | Deck page audio playback: Play-кнопка в списке нотов и в edit mode, мгновенное появление после генерации/регенерации |
 | [elevenlabs-tts.md](./elevenlabs-tts.md) | ElevenLabs TTS pipeline: single-note и batch generation, Storage upload, `audio_cache` и language-aware guards for supported decks |
 | [deck-table-view.md](./deck-table-view.md) | Deck table view: full-width таблица колоды, dropdown multi-select filters, preview на реальном Flashcard и batch audio по текущему filtered subset |
+| [czech-note-schema.md](./czech-note-schema.md) | Canonical Czech note contract: Russian-first Czech learning fields, verb metadata, examples_html, and removal of legacy Czech keys |
 | [english-note-schema.md](./english-note-schema.md) | Canonical English note contract: shared field schema, legacy normalization, and alignment across forms, flashcards, and MCP |
 | [extra-study.md](./extra-study.md) | Фича Extra Study: адаптивный подбор карточек, URL-параметры, поведение FSRS при досрочном повторении |
 | [home-responsive-layout.md](./home-responsive-layout.md) | Responsive-first Home layout: compact nav, calmer summary/streak hierarchy, and one shared mobile-to-desktop composition |

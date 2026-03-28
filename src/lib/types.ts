@@ -27,8 +27,18 @@ export const LEVEL_COLORS: Record<CEFRLevel, string> = {
 
 // Parts of speech
 export const PARTS_OF_SPEECH_CZECH = [
-  'podstatné jméno', 'sloveso', 'přídavné jméno', 'příslovce',
-  'zájmeno', 'předložka', 'spojka', 'částice', 'citoslovce', 'číslovka',
+  'существительное',
+  'глагол',
+  'прилагательное',
+  'наречие',
+  'местоимение',
+  'предлог',
+  'союз',
+  'частица',
+  'междометие',
+  'числительное',
+  'фраза',
+  'идиома',
 ] as const
 
 export const PARTS_OF_SPEECH_ENGLISH = [
@@ -50,3 +60,24 @@ export const STYLE_EMOJI: Record<string, string> = {
 
 // Gender (Czech only)
 export const GENDERS_CZECH = ['mužský', 'ženský', 'střední', '—'] as const
+
+export const CEFR_LEVELS_CZECH = ['A2', 'B1', 'B2', 'C1', 'C2'] as const
+
+export const STYLE_REGISTERS_CZECH = [
+  'нейтральный',
+  'разговорный',
+  'формальный',
+  'книжный',
+  'просторечный',
+  'жаргонный',
+  'технический',
+] as const
+
+export const GENDERS_CZECH_RU = [
+  'мужской одушевлённый',
+  'мужской неодушевлённый',
+  'женский',
+  'средний',
+] as const
+
+export const CZECH_VERB_CLASSES = ['-at', '-it/-et/-ět', '-ovat', 'неправильный'] as const
