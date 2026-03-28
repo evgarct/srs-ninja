@@ -388,6 +388,10 @@ export function getImportBatchStatus(statuses: DraftNoteStatus[]): ImportBatchSt
   return 'draft'
 }
 
+export function shouldAutoDeleteImportBatch(statuses: DraftNoteStatus[]): boolean {
+  return statuses.every((status) => status !== 'draft')
+}
+
 export function canDeleteDraftBatch(statuses: DraftNoteStatus[]): boolean {
   return statuses.every((status) => status === 'draft')
 }
