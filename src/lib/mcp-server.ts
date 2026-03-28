@@ -278,6 +278,17 @@ export function createSrsNinjaMcpServer({
             tags: z.array(z.string()),
             fields: z.record(z.string(), z.unknown()),
             created_at: z.string(),
+            draft_conflict: z
+              .object({
+                kind: z.literal('similar_existing_note'),
+                matchedNoteId: z.string(),
+                matchedPrimaryText: z.string(),
+                similarityScore: z.number(),
+                resolution: z.enum(['open', 'kept_separate', 'ignored']),
+                resolvedAt: z.string().optional(),
+              })
+              .nullable()
+              .optional(),
           })
         ),
       },
@@ -295,6 +306,7 @@ export function createSrsNinjaMcpServer({
             tags: note.tags ?? [],
             fields: note.fields as Record<string, unknown>,
             created_at: note.created_at,
+            draft_conflict: note.draft_conflict ?? null,
           })),
         }
       )

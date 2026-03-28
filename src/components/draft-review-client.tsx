@@ -11,21 +11,45 @@ import { DraftStatusBadge } from '@/components/draft-status-badge'
 import { ApproveDraftButton } from '@/components/approve-draft-button'
 import { DeleteDraftBatchButton } from '@/components/delete-draft-batch-button'
 import { DeleteDraftNoteButton } from '@/components/delete-draft-note-button'
+import { DraftConflictPanel } from '@/components/draft-conflict-panel'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
+import { applyDraftConflictToExistingNote, resolveDraftConflict } from '@/lib/actions/drafts'
+import { isOpenDraftConflict } from '@/lib/draft-import'
 import { getDraftNoteDisplayState } from '@/lib/draft-note-display'
 import { getNotePrimaryText } from '@/lib/note-fields'
+import type { DraftNoteListItem } from '@/lib/draft-import-service'
+import { toast } from 'sonner'
 import type { Language } from '@/lib/types'
 import type { Database } from '@/lib/supabase/database.types'
 
 type ImportBatchRow = Database['public']['Tables']['import_batches']['Row']
-type NoteRow = Database['public']['Tables']['notes']['Row']
+type DraftConflict = {
+  kind: 'similar_existing_note'
+  matchedNoteId: string
+  matchedPrimaryText: string
+  similarityScore: number
+  resolution: 'open' | 'kept_separate' | 'ignored'
+  resolvedAt?: string
+}
+
+type ConflictNoteRow = {
+  id: string
+  fields: Record<string, unknown>
+  tags: string[]
+}
+
+type DraftReviewNote = Omit<DraftNoteListItem, 'fields' | 'draft_conflict'> & {
+  fields: Record<string, unknown>
+  draft_conflict: DraftConflict | null
+}
 
 interface DraftReviewClientProps {
   deckId: string
   deckName: string
   language: Language
   initialBatches: ImportBatchRow[]
-  initialDraftNotes: NoteRow[]
+  initialDraftNotes: DraftNoteListItem[]
+  initialConflictNotes: ConflictNoteRow[]
   initialSelectedBatchId?: string
 }
 
@@ -35,15 +59,31 @@ export function DraftReviewClient({
   language,
   initialBatches,
   initialDraftNotes,
+  initialConflictNotes,
   initialSelectedBatchId,
 }: DraftReviewClientProps) {
   const [batches, setBatches] = useState(initialBatches)
-  const [notes, setNotes] = useState(
+  const [notes, setNotes] = useState<DraftReviewNote[]>(
     initialDraftNotes.map((note) => ({
       ...note,
       fields: note.fields as Record<string, unknown>,
       tags: note.tags ?? [],
+      draft_conflict: (note.draft_conflict as DraftConflict | null) ?? null,
     }))
+  )
+  const conflictNotesById = useMemo(
+    () =>
+      new Map(
+        initialConflictNotes.map((note) => [
+          note.id,
+          {
+            ...note,
+            fields: note.fields as Record<string, unknown>,
+            tags: note.tags ?? [],
+          },
+        ])
+      ),
+    [initialConflictNotes]
   )
   const [selectedBatchId, setSelectedBatchId] = useState<string>(
     initialSelectedBatchId && initialBatches.some((batch) => batch.id === initialSelectedBatchId)
@@ -100,6 +140,42 @@ export function DraftReviewClient({
         note.id === noteId ? { ...note, fields: updatedFields, tags: updatedTags } : note
       )
     )
+  }
+
+  async function handleUpdateExistingFromConflict(noteId: string) {
+    try {
+      await applyDraftConflictToExistingNote(noteId)
+      toast.success('Existing note updated')
+      handleDraftDeleted(noteId)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update existing note')
+    }
+  }
+
+  async function handleResolveConflict(
+    noteId: string,
+    resolution: 'kept_separate' | 'ignored'
+  ) {
+    try {
+      await resolveDraftConflict(noteId, resolution)
+      setNotes((prev) =>
+        prev.map((note) =>
+          note.id === noteId && note.draft_conflict
+            ? {
+                ...note,
+                draft_conflict: {
+                  ...note.draft_conflict,
+                  resolution,
+                  resolvedAt: new Date().toISOString(),
+                },
+              }
+            : note
+        )
+      )
+      toast.success(resolution === 'kept_separate' ? 'Draft kept separate' : 'Conflict ignored')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to resolve conflict')
+    }
   }
 
   function handleDraftDeleted(noteId: string) {
@@ -223,6 +299,11 @@ export function DraftReviewClient({
               ? note.fields.translation
               : ''
             const displayState = getDraftNoteDisplayState(note.fields, language)
+            const conflict = note.draft_conflict
+            const hasOpenConflict = isOpenDraftConflict(conflict)
+            const matchedConflictNote = conflict?.matchedNoteId
+              ? conflictNotesById.get(conflict.matchedNoteId)
+              : null
 
             return (
               <Card key={note.id}>
@@ -260,11 +341,37 @@ export function DraftReviewClient({
                         noteId={note.id}
                         onDeleted={handleDraftDeleted}
                       />
-                      <ApproveDraftButton noteId={note.id} onApproved={handleApproved} />
+                      <ApproveDraftButton
+                        noteId={note.id}
+                        disabled={hasOpenConflict}
+                        disabledLabel="Resolve conflict first"
+                        onApproved={handleApproved}
+                      />
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
+                  {conflict?.resolution === 'open' && (
+                    <DraftConflictPanel
+                      conflict={conflict}
+                      matchedNote={matchedConflictNote}
+                      language={language}
+                      onUpdateExisting={() => handleUpdateExistingFromConflict(note.id)}
+                      onKeepSeparate={() => handleResolveConflict(note.id, 'kept_separate')}
+                      onIgnoreMatch={() => handleResolveConflict(note.id, 'ignored')}
+                    />
+                  )}
+
+                  {conflict && conflict.resolution !== 'open' && (
+                    <div className="rounded-lg border border-dashed bg-muted/20 p-3 text-sm text-muted-foreground">
+                      Conflict resolved as{' '}
+                      <span className="font-medium text-foreground">
+                        {conflict.resolution === 'kept_separate' ? 'kept separate' : 'ignored'}
+                      </span>
+                      .
+                    </div>
+                  )}
+
                   {note.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {note.tags.map((tag) => (

@@ -1,7 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getDraftBatches, getDraftNotes } from '@/lib/actions/drafts'
+import { isOpenDraftConflict } from '@/lib/draft-import'
 import { DraftReviewClient } from '@/components/draft-review-client'
+
+type ConflictNoteRow = {
+  id: string
+  fields: Record<string, unknown>
+  tags: string[]
+}
 
 export default async function DeckDraftsPage({
   params,
@@ -33,6 +40,25 @@ export default async function DeckDraftsPage({
     getDraftNotes({ deckId: id }),
   ])
 
+  const conflictNoteIds = notes
+    .filter((note) => isOpenDraftConflict(note.draft_conflict))
+    .map((note) => note.draft_conflict!.matchedNoteId)
+
+  const conflictNotesData = conflictNoteIds.length > 0
+    ? (await supabase
+        .from('notes')
+        .select('id, fields, tags')
+        .eq('deck_id', id)
+        .in('id', conflictNoteIds)
+        .eq('user_id', user.id)).data
+    : []
+
+  const conflictNotes = ((conflictNotesData ?? []) as ConflictNoteRow[]).map((note) => ({
+    ...note,
+    fields: note.fields ?? {},
+    tags: note.tags ?? [],
+  }))
+
   return (
     <DraftReviewClient
       deckId={id}
@@ -40,6 +66,7 @@ export default async function DeckDraftsPage({
       language={deck.language}
       initialBatches={batches}
       initialDraftNotes={notes}
+      initialConflictNotes={conflictNotes}
       initialSelectedBatchId={batchId}
     />
   )

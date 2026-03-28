@@ -2,11 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import {
+  applyDraftConflictToExistingNoteForUser,
   approveDraftNoteForUser,
   deleteDraftBatchForUser,
   deleteDraftNoteForUser,
   listDraftBatchesForUser,
   listDraftNotesForUser,
+  resolveDraftConflictForUser,
   saveDraftNotesForUser,
   type DraftBatchMetadata,
 } from '@/lib/draft-import-service'
@@ -80,4 +82,29 @@ export async function deleteDraftBatch(batchId: string) {
   if (!user) throw new Error('Not authenticated')
 
   return deleteDraftBatchForUser(supabase, user.id, batchId)
+}
+
+export async function resolveDraftConflict(
+  noteId: string,
+  resolution: 'kept_separate' | 'ignored'
+) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Not authenticated')
+
+  return resolveDraftConflictForUser(supabase, user.id, noteId, resolution)
+}
+
+export async function applyDraftConflictToExistingNote(noteId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Not authenticated')
+
+  return applyDraftConflictToExistingNoteForUser(supabase, user.id, noteId)
 }

@@ -8,9 +8,13 @@ import { approveDraftNote } from '@/lib/actions/drafts'
 
 export function ApproveDraftButton({
   noteId,
+  disabled = false,
+  disabledLabel,
   onApproved,
 }: {
   noteId: string
+  disabled?: boolean
+  disabledLabel?: string
   onApproved?: (noteId: string) => void
 }) {
   const [isPending, setIsPending] = useState(false)
@@ -37,10 +41,10 @@ export function ApproveDraftButton({
       onClick={() => {
         void handleApprove()
       }}
-      disabled={isPending}
+      disabled={isPending || disabled}
     >
       <Check className="size-4" />
-      {isPending ? 'Approving...' : 'Approve'}
+      {isPending ? 'Approving...' : disabled && disabledLabel ? disabledLabel : 'Approve'}
     </Button>
   )
 }
