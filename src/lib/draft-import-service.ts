@@ -37,6 +37,8 @@ export interface SaveDraftNotesResult {
   warnings: string[]
 }
 
+const IMPORT_BATCH_QUERY_CHUNK_SIZE = 100
+
 export type DraftNoteListItem = Omit<NoteRow, 'draft_conflict'> & {
   deck_name?: string
   draft_conflict: DraftConflictMetadata | null
@@ -113,6 +115,16 @@ async function deleteImportBatchIfEmpty(
   return true
 }
 
+function chunkItems<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = []
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size))
+  }
+
+  return chunks
+}
+
 export async function cleanupEmptyImportBatchesForUser(
   supabase: SupabaseClient,
   userId: string
@@ -126,21 +138,24 @@ export async function cleanupEmptyImportBatchesForUser(
   if (!batches || batches.length === 0) return 0
 
   const batchIds = batches.map((batch) => batch.id)
-  const { data: notes, error: notesError } = await supabase
-    .from('notes')
-    .select('import_batch_id, status')
-    .eq('user_id', userId)
-    .in('import_batch_id', batchIds)
-
-  if (notesError) throw notesError
 
   const statusesByBatchId = new Map<string, DraftNoteStatus[]>()
 
-  for (const note of (notes ?? []) as Array<{ import_batch_id: string | null; status: DraftNoteStatus }>) {
-    if (!note.import_batch_id) continue
-    const statuses = statusesByBatchId.get(note.import_batch_id) ?? []
-    statuses.push(note.status)
-    statusesByBatchId.set(note.import_batch_id, statuses)
+  for (const batchIdChunk of chunkItems(batchIds, IMPORT_BATCH_QUERY_CHUNK_SIZE)) {
+    const { data: notes, error: notesError } = await supabase
+      .from('notes')
+      .select('import_batch_id, status')
+      .eq('user_id', userId)
+      .in('import_batch_id', batchIdChunk)
+
+    if (notesError) throw notesError
+
+    for (const note of (notes ?? []) as Array<{ import_batch_id: string | null; status: DraftNoteStatus }>) {
+      if (!note.import_batch_id) continue
+      const statuses = statusesByBatchId.get(note.import_batch_id) ?? []
+      statuses.push(note.status)
+      statusesByBatchId.set(note.import_batch_id, statuses)
+    }
   }
 
   const batchIdsToDelete = batchIds.filter((batchId) =>
@@ -149,13 +164,16 @@ export async function cleanupEmptyImportBatchesForUser(
 
   if (batchIdsToDelete.length === 0) return 0
 
-  const { error: deleteError } = await supabase
-    .from('import_batches')
-    .delete()
-    .eq('user_id', userId)
-    .in('id', batchIdsToDelete)
+  for (const batchIdChunk of chunkItems(batchIdsToDelete, IMPORT_BATCH_QUERY_CHUNK_SIZE)) {
+    const { error: deleteError } = await supabase
+      .from('import_batches')
+      .delete()
+      .eq('user_id', userId)
+      .in('id', batchIdChunk)
 
-  if (deleteError) throw deleteError
+    if (deleteError) throw deleteError
+  }
+
   return batchIdsToDelete.length
 }
 
