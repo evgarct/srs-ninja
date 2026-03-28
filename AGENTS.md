@@ -30,6 +30,12 @@
 - At the end of each implementation task that results in a PR or status-bearing delivery, call the `$product-manager` skill to capture the shipped scope, current status, and any follow-up context in Linear.
 - After creating a PR, call the `$product-manager` skill to update the related Linear issue(s), sync the current implementation status, and add the PR link/reference in Linear.
 - For this repository, always use WSL as the default execution environment for git, gh, npm, Node, lint, test, build, and dev-server commands. Do not use Windows-side tooling for this repo unless the user explicitly asks for it.
+- When issuing WSL commands from PowerShell, do not pass multi-line scripts, heredocs, markdown, JSON payloads, or text with backticks through `wsl bash -lc '...'`.
+- For any non-trivial WSL shell script, pass the script through stdin into `/home/evgenii/bin/codex-wsl-script <cwd>`.
+- For PR creation with multi-line bodies, pass the body through stdin into `/home/evgenii/bin/codex-gh-pr-create <repo_dir> <base> <head> <title>`.
+- Reserve `wsl bash -lc '...'` for short single-line commands without complex quoting.
+- Do not run `git commit` and `git push` in parallel. Commit first, then push, then verify the remote branch head before creating or updating a PR.
+- Before sharing local app or Storybook URLs, verify them from WSL with an HTTP request such as `curl -I`. If a process is listening but the page returns `5xx`, report that as a runtime error instead of calling the preview ready.
 
 ## UI / Storybook Execution Order
 
@@ -47,6 +53,7 @@
 - Create the branch PR only after verification passes locally for the touched area.
 - Do not wait for separate user approval to open the branch PR once the implementation is ready locally; create it proactively and continue iterating on the same PR as follow-up changes land.
 - PRs must start with the final title and a complete description; immediately verify the created PR title/body instead of assuming the CLI request succeeded.
+- Prefer creating PRs through `/home/evgenii/bin/codex-gh-pr-create` when the description is multi-line or generated from markdown content, instead of assembling shell heredocs inline through PowerShell.
 - Before sharing a PR link, verify that the PR is open and that it corresponds to the current branch head. If the previous PR for the branch is merged or closed, create a new PR instead of reusing the old link.
 - If GitHub CLI PR editing fails, patch the PR via `gh api` and then re-check the live PR fields.
 - After the PR is created, move related Linear issues to the correct review state, add the PR link/reference, and leave a short implementation status comment.
