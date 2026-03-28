@@ -1,4 +1,4 @@
-# SRS Ninja — Документация разработки
+# Echo — Документация разработки
 
 Этот раздел содержит документацию по реализованным фичам, архитектурным решениям и рабочим паттернам проекта.
 
@@ -29,6 +29,7 @@
 | [review-queue-pacing.md](./review-queue-pacing.md) | Review queue pacing: 200-card due-session limit, separate new-card cap и delayed requeue windows for difficult cards |
 | [tooling-hygiene.md](./tooling-hygiene.md) | Runtime and tooling hygiene: WSL-first CLI resolution, lint ignores for generated assets, and Next.js `proxy.ts` entrypoint |
 | [weekly-activity-widget.md](./weekly-activity-widget.md) | Weekly Activity Widget: 7-дневная активность, streak, masteredWords и tooltip-поведение |
+| [branding.md](./branding.md) | Branding architecture: single source of truth for product naming, metadata, MCP labeling and generated app icons |
 
 ---
 

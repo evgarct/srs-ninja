@@ -1,8 +1,8 @@
-# SRS Ninja — Feature: Flashcard Component
+# Echo — Feature: Flashcard Component
 
 ## Context
 
-SRS Ninja is a spaced repetition app (Next.js + Supabase + shadcn/ui + Storybook).
+Echo is a spaced repetition app (Next.js + Supabase + shadcn/ui + Storybook).
 Phase 0 is done: project scaffolded, auth working, DB schema deployed.
 
 This task: build the **Flashcard** component — the core UI element for card review sessions.

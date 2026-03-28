@@ -1,4 +1,4 @@
-# SRS Ninja — Czech Note Schema Alignment
+# Echo — Czech Note Schema Alignment
 
 ## Goal
 

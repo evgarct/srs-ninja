@@ -1,4 +1,4 @@
-# SRS Ninja - Feature: Review Completion Summary
+# Echo - Feature: Review Completion Summary
 
 ## Context
 

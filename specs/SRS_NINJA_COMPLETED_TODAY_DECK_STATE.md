@@ -1,4 +1,4 @@
-# SRS Ninja - Feature: Completed-Today Deck State
+# Echo - Feature: Completed-Today Deck State
 
 ## Context
 

@@ -1,4 +1,4 @@
-# SRS Ninja - Feature: Review Queue Pacing
+# Echo - Feature: Review Queue Pacing
 
 ## Context
 

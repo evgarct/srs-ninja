@@ -12,6 +12,7 @@ import {
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database.types'
 import type { Language } from '@/lib/types'
+import { brand } from '@/lib/brand'
 
 type TypedSupabaseClient = SupabaseClient<Database>
 type DeckContractRow = Pick<Database['public']['Tables']['decks']['Row'], 'id' | 'name' | 'language' | 'description'>
@@ -40,7 +41,7 @@ function toToolError(message: string) {
   }
 }
 
-export function createSrsNinjaMcpServer({
+export function createEchoMcpServer({
   supabase,
   userId,
 }: {
@@ -48,7 +49,7 @@ export function createSrsNinjaMcpServer({
   userId: string
 }) {
   const server = new McpServer({
-    name: 'SRS Ninja MCP',
+    name: brand.mcp.serverName,
     version: '0.1.0',
   })
 
@@ -56,7 +57,7 @@ export function createSrsNinjaMcpServer({
     'list_decks',
     {
       title: 'List Decks',
-      description: 'List decks available to the current SRS Ninja user.',
+      description: `List decks available to the current ${brand.mcp.agentProductName} user.`,
       annotations: { readOnlyHint: true },
       outputSchema: {
         decks: z.array(
@@ -353,7 +354,7 @@ export async function handleMcpRequest(
     userId: string
   }
 ) {
-  const server = createSrsNinjaMcpServer({ supabase, userId })
+  const server = createEchoMcpServer({ supabase, userId })
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,

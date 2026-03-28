@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: Note Editor
+# Echo — Feature: Note Editor
 
 ## Overview
 Возможность редактировать любую ноту (карточку) прямо со страницы колоды (Deck View) и во время сессии повторения (Review Session). Включает перегенерацию аудио через ElevenLabs, если текст карточки изменился.

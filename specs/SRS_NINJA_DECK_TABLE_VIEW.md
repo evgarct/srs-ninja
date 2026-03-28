@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: Deck Table View and Focused Manual Review
+# Echo — Feature: Deck Table View and Focused Manual Review
 
 ## Context
 

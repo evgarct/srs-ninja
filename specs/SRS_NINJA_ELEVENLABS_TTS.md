@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: ElevenLabs TTS Audio Generation
+# Echo — Feature: ElevenLabs TTS Audio Generation
 
 ## Context
 

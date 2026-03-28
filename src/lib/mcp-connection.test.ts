@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { buildMcpConnectionConfig, resolveAppOrigin } from '@/lib/mcp-connection'
+import { brand } from '@/lib/brand'
 
 describe('resolveAppOrigin', () => {
   it('prefers explicit env origin', () => {
     expect(
       resolveAppOrigin({
-        envOrigin: 'https://srs.example.com/',
+        envOrigin: `https://${brand.exampleDomain}/`,
         forwardedProto: 'http',
         forwardedHost: 'localhost:3000',
       })
-    ).toBe('https://srs.example.com')
+    ).toBe(`https://${brand.exampleDomain}`)
   })
 
   it('builds origin from forwarded headers', () => {

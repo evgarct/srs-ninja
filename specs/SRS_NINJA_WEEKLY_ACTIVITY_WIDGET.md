@@ -1,4 +1,4 @@
-# SRS Ninja --- Feature: Weekly Activity Widget
+# Echo --- Feature: Weekly Activity Widget
 
 ## Context
 

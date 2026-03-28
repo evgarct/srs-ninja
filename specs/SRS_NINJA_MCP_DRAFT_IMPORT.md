@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: MCP Draft Note Import Pipeline
+# Echo — Feature: MCP Draft Note Import Pipeline
 
 ## Context
 
