@@ -43,6 +43,8 @@ function applyFieldAliases(
 ): Record<string, unknown> {
   const normalized = { ...fields }
 
+  if (language === 'czech') return normalized
+
   if (!normalized.word) {
     if (typeof normalized.expression === 'string' && normalized.expression.trim()) {
       normalized.word = normalized.expression
@@ -50,8 +52,6 @@ function applyFieldAliases(
       normalized.word = normalized.term
     }
   }
-
-  if (language === 'czech') return normalized
 
   return normalized
 }

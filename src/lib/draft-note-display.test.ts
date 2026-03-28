@@ -39,25 +39,45 @@ describe('getDraftNoteDisplayState', () => {
     ])
   })
 
-  it('falls back to generic key-value display for non-english drafts', () => {
+  it('formats czech drafts into structured sections', () => {
     const state = getDraftNoteDisplayState(
       {
-        word: 'konev',
-        translation: 'лейка',
-        example_sentence: 'Na zahradě jsme použili <b>konev</b>.',
-        note: 'ч. мн.: konve',
+        word: 'běžet',
+        translation: 'бежать',
+        level: 'B1',
+        part_of_speech: 'глагол',
+        popularity: 8,
+        style: 'разговорный',
+        gender: 'женский',
+        verb_class: '-it/-et/-ět',
+        verb_irregular: 'běžím, běžíš',
+        synonyms: ['utíkat'],
+        antonyms: ['stát'],
+        examples_html: '<ul><li>Ráno <b>běžím</b>.</li><li>Pes <b>běží</b>.</li></ul>',
+        note: 'Нужно различать с utíkat.',
       },
       'czech'
     )
 
-    expect(state.meta).toEqual([])
-    expect(state.lists).toEqual([])
-    expect(state.examples).toEqual([])
+    expect(state.meta).toEqual([
+      { key: 'level', label: 'Уровень', value: 'B1' },
+      { key: 'part_of_speech', label: 'Тип', value: 'глагол' },
+      { key: 'popularity', label: 'Популярность', value: '8/10' },
+      { key: 'style', label: 'Стиль', value: 'разговорный' },
+      { key: 'gender', label: 'Род', value: 'женский' },
+      { key: 'verb_class', label: 'Спряжение', value: '-it/-et/-ět' },
+    ])
+    expect(state.lists).toEqual([
+      { key: 'synonyms', label: 'Синонимы', values: ['utíkat'] },
+      { key: 'antonyms', label: 'Антонимы', values: ['stát'] },
+    ])
+    expect(state.examples).toEqual(['Ráno <b>běžím</b>.', 'Pes <b>běží</b>.'])
     expect(state.fallback).toEqual([
-      { key: 'word', label: 'Слово (чешский)', value: 'konev' },
-      { key: 'translation', label: 'Перевод (рус/англ)', value: 'лейка' },
-      { key: 'example_sentence', label: 'Пример (чешский)', value: 'Na zahradě jsme použili <b>konev</b>.' },
-      { key: 'note', label: 'Заметка', value: 'ч. мн.: konve' },
+      {
+        key: 'note',
+        label: 'Примечание',
+        value: 'Спряжение: -it/-et/-ět • Исключения: běžím, běžíš • Нужно различать с utíkat.',
+      },
     ])
   })
 })

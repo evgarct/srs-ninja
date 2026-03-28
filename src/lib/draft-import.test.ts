@@ -23,9 +23,10 @@ describe('getDraftFieldContract', () => {
 
     expect(contract.keys).toContain('gender')
     expect(contract.keys).toContain('popularity')
-    expect(contract.keys).toContain('image_url')
+    expect(contract.keys).toContain('examples_html')
+    expect(contract.keys).toContain('verb_class')
     expect(contract.keys).toContain('note')
-    expect(contract.keys).not.toContain('notes')
+    expect(contract.keys).not.toContain('image_url')
   })
 })
 
@@ -99,12 +100,21 @@ describe('validateDraftCandidate', () => {
     expect(result.candidate?.fields.popularity).toBeUndefined()
   })
 
-  it('normalizes czech legacy note field into canonical note', () => {
+  it('keeps only canonical czech fields and warns on dropped legacy keys', () => {
     const result = validateDraftCandidate('czech', {
       fields: {
         word: 'kniha',
         translation: 'книга',
-        notes: 'Базовое существительное.',
+        level: 'b2',
+        part_of_speech: 'существительное',
+        popularity: '10',
+        style: 'нейтральный',
+        gender: 'женский',
+        examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
+        synonyms: ['том'],
+        antonyms: ['журнал'],
+        note: 'Базовое существительное.',
+        notes: 'legacy note',
         frequency: '10',
       },
     })
@@ -113,6 +123,15 @@ describe('validateDraftCandidate', () => {
       fields: {
         word: 'kniha',
         translation: 'книга',
+        level: 'B2',
+        part_of_speech: 'существительное',
+        popularity: 10,
+        style: 'нейтральный',
+        gender: 'женский',
+        examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
+        synonyms: ['том'],
+        antonyms: ['журнал'],
+        note: 'Базовое существительное.',
       },
       tags: [],
     })

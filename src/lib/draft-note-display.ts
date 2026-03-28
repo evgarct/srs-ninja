@@ -4,6 +4,7 @@ import {
   getPopularityDisplay,
   getPopularityValue,
 } from '@/lib/english-note-schema'
+import { buildCzechFlashcardNote, formatCzechNoteMeta } from '@/lib/czech-note-schema'
 import { getFields, normalizeNoteFields } from '@/lib/note-fields'
 import type { Language } from '@/lib/types'
 
@@ -144,18 +145,72 @@ export function getDraftNoteDisplayState(
     }
   }
 
-  const fallback = Object.entries(normalizedFields)
-    .map(([key, value]) => ({
+  const meta = formatCzechNoteMeta(normalizedFields).map((item) => ({
+    ...item,
+    label: labelMap.get(item.key) ?? item.key,
+  }))
+  const lists: DraftNoteDisplayListItem[] = []
+  const examples = extractExamplesFromHtml(normalizedFields.examples_html ?? '')
+  const fallback: DraftNoteDisplayMetaItem[] = []
+
+  const synonyms = normalizeListValue(normalizedFields.synonyms)
+  if (synonyms.length > 0) {
+    lists.push({
+      key: 'synonyms',
+      label: labelMap.get('synonyms') ?? 'Синонимы',
+      values: synonyms,
+    })
+  }
+
+  const antonyms = normalizeListValue(normalizedFields.antonyms)
+  if (antonyms.length > 0) {
+    lists.push({
+      key: 'antonyms',
+      label: labelMap.get('antonyms') ?? 'Антонимы',
+      values: antonyms,
+    })
+  }
+
+  const handledKeys = new Set([
+    'word',
+    'translation',
+    'examples_html',
+    'level',
+    'part_of_speech',
+    'popularity',
+    'style',
+    'synonyms',
+    'antonyms',
+    'gender',
+    'verb_class',
+    'verb_irregular',
+    'note',
+  ])
+
+  const note = buildCzechFlashcardNote(normalizedFields)
+  if (note) {
+    fallback.push({
+      key: 'note',
+      label: labelMap.get('note') ?? 'Примечание',
+      value: note,
+    })
+  }
+
+  for (const [key, rawValue] of Object.entries(normalizedFields)) {
+    if (handledKeys.has(key)) continue
+    const value = normalizeTextValue(rawValue)
+    if (!value) continue
+    fallback.push({
       key,
       label: labelMap.get(key) ?? key,
-      value: normalizeTextValue(value),
-    }))
-    .filter((item) => item.value)
+      value,
+    })
+  }
 
   return {
-    meta: [],
-    lists: [],
-    examples: [],
+    meta,
+    lists,
+    examples,
     fallback,
   }
 }

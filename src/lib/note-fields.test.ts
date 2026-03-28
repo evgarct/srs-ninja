@@ -20,32 +20,28 @@ describe('getNotePrimaryText', () => {
 })
 
 describe('normalizeNoteFields', () => {
-  it('copies canonical primary text into legacy keys when they exist', () => {
+  it('keeps legacy primary keys readable via getNotePrimaryText', () => {
     expect(
-      normalizeNoteFields({
+      getNotePrimaryText({
         word: 'at the root of sth',
         expression: 'at the root of smth',
         term: 'outdated term',
-        translation: 'u korne',
       })
-    ).toEqual({
-      word: 'at the root of sth',
-      expression: 'at the root of sth',
-      term: 'at the root of sth',
-      translation: 'u korne',
-    })
+    ).toBe('at the root of sth')
   })
 
-  it('keeps unrelated fields intact and backfills word from legacy keys', () => {
+  it('normalizes english notes with legacy input into the canonical schema', () => {
     expect(
-      normalizeNoteFields({
-        expression: 'carry on',
-        translation: 'prodolzhat',
-      })
+      normalizeNoteFields(
+        {
+          expression: 'carry on',
+          translation: 'продолжать',
+        },
+        'english'
+      )
     ).toEqual({
       word: 'carry on',
-      expression: 'carry on',
-      translation: 'prodolzhat',
+      translation: 'продолжать',
     })
   })
 
@@ -77,21 +73,42 @@ describe('normalizeNoteFields', () => {
     })
   })
 
-  it('normalizes czech legacy fields into the canonical schema', () => {
+  it('normalizes czech notes into the new canonical schema and drops legacy keys', () => {
     expect(
       normalizeNoteFields(
         {
-          expression: 'kniha',
+          word: 'kniha',
           translation: 'книга',
-          notes: 'Базовое существительное.',
-          frequency: '11',
+          level: 'B1',
+          part_of_speech: 'существительное',
+          popularity: '11',
+          style: 'нейтральный',
+          synonyms: 'том, издание',
+          antonyms: ['журнал'],
+          examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
+          gender: 'женский',
+          verb_class: '-at',
+          verb_irregular: 'legacy should stay only if filled',
+          note: 'Базовое существительное.',
+          frequency: '4',
+          example_sentence: 'old example',
         },
         'czech'
       )
     ).toEqual({
       word: 'kniha',
-      expression: 'kniha',
       translation: 'книга',
+      level: 'B1',
+      part_of_speech: 'существительное',
+      popularity: 10,
+      style: 'нейтральный',
+      synonyms: ['том', 'издание'],
+      antonyms: ['журнал'],
+      examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
+      gender: 'женский',
+      verb_class: '-at',
+      verb_irregular: 'legacy should stay only if filled',
+      note: 'Базовое существительное.',
     })
   })
 })
@@ -118,6 +135,39 @@ describe('getNoteFormValues', () => {
       synonyms: 'hook\nmooring',
       antonyms: 'drift',
       examples_html: '<ul><li>Drop the <b>anchor</b>.</li><li>The <b>anchor</b> held.</li></ul>',
+    })
+  })
+
+  it('projects czech stored fields into editor values', () => {
+    expect(
+      getNoteFormValues('czech', {
+        word: 'běžet',
+        translation: 'бежать',
+        level: 'B1',
+        part_of_speech: 'глагол',
+        popularity: 8,
+        style: 'разговорный',
+        synonyms: ['utíkat', 'klusat'],
+        antonyms: ['stát'],
+        examples_html: '<ul><li>Ráno <b>běžím</b> do práce.</li><li>Pes <b>běží</b> za míčem.</li></ul>',
+        verb_class: '-it/-et/-ět',
+        verb_irregular: 'běžím, běžíš',
+        note: 'Часто используется в разговорной речи.',
+      })
+    ).toEqual({
+      word: 'běžet',
+      translation: 'бежать',
+      level: 'B1',
+      part_of_speech: 'глагол',
+      popularity: '8',
+      style: 'разговорный',
+      synonyms: 'utíkat\nklusat',
+      antonyms: 'stát',
+      examples_html: '<ul><li>Ráno <b>běžím</b> do práce.</li><li>Pes <b>běží</b> za míčem.</li></ul>',
+      gender: '',
+      verb_class: '-it/-et/-ět',
+      verb_irregular: 'běžím, běžíš',
+      note: 'Часто используется в разговорной речи.',
     })
   })
 })

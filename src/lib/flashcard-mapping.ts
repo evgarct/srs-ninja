@@ -1,4 +1,5 @@
 import { getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
+import { buildCzechFlashcardNote } from '@/lib/czech-note-schema'
 import {
   extractExamplesFromHtml,
   formatEnglishStyleLabel,
@@ -15,8 +16,7 @@ export function mapFieldsToFlashcard(
   const translation = String(normalizedFields.translation ?? '—')
   const examples = language === 'english'
     ? extractExamplesFromHtml(normalizedFields.examples_html ?? fields.collocations ?? '')
-    : [normalizedFields.example_sentence, normalizedFields.example_translation]
-      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    : extractExamplesFromHtml(normalizedFields.examples_html ?? '')
 
   const validLevels: CEFRLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
   const rawLevel = String(normalizedFields.level ?? '')
@@ -26,13 +26,17 @@ export function mapFieldsToFlashcard(
 
   const frequency = language === 'english'
     ? getPopularityValue(normalizedFields)
-    : Math.min(10, Math.max(1, Math.round(Number(normalizedFields.popularity ?? normalizedFields.frequency ?? 5))))
+    : Math.min(10, Math.max(1, Math.round(Number(normalizedFields.popularity ?? 5))))
   const style = language === 'english'
     ? formatEnglishStyleLabel(normalizedFields.style)
     : String(normalizedFields.style ?? '')
   const partOfSpeech = String(normalizedFields.part_of_speech ?? '')
   const gender = language === 'czech' ? (normalizedFields.gender ? String(normalizedFields.gender) : undefined) : undefined
-  const note = normalizedFields.note ? String(normalizedFields.note) : undefined
+  const note = language === 'czech'
+    ? buildCzechFlashcardNote(normalizedFields)
+    : normalizedFields.note
+      ? String(normalizedFields.note)
+      : undefined
   const imageUrl =
     normalizedFields.image_url || fields.image_url ? String(normalizedFields.image_url ?? fields.image_url) : undefined
 
