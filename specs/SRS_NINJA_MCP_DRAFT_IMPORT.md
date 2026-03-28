@@ -81,6 +81,8 @@ MCP не должен писать в БД в обход прикладной л
 
 Если сохранение падает, клиент должен получить диагностическую ошибку с контекстом deck / item count и доступными backend details.
 
+Если runtime БД ещё не получила колонку `notes.draft_conflict`, импорт draft notes не должен падать целиком: notes сохраняются без conflict metadata, а клиент получает warning о том, что similar-match state временно не сохранён.
+
 ### Flow B. Review and Approve Drafts on the Website
 
 1. Пользователь открывает draft list или draft batch.

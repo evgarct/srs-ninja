@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { cleanupEmptyImportBatchesForUser } from '@/lib/draft-import-service'
+import { cleanupEmptyImportBatchesForUser, saveDraftNotesForUser } from '@/lib/draft-import-service'
+
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+}))
 
 type DraftStatus = 'draft' | 'approved'
 
@@ -121,5 +125,138 @@ describe('cleanupEmptyImportBatchesForUser', () => {
     expect(deleteChunkCalls).toHaveLength(3)
     expect(deleteChunkCalls.map((chunk) => chunk.length)).toEqual([100, 100, 4])
     expect(deleteChunkCalls.flat()).not.toContain('batch-1')
+  })
+})
+
+type SaveDraftNotesMockInput = {
+  userId: string
+  deckId: string
+}
+
+function createSaveDraftNotesSupabaseMock(input: SaveDraftNotesMockInput) {
+  let noteInsertAttempt = 0
+
+  const client = {
+    from(table: string) {
+      if (table === 'decks') {
+        return {
+          select() {
+            return {
+              eq() {
+                return this
+              },
+              single: async () => ({
+                data: {
+                  id: input.deckId,
+                  user_id: input.userId,
+                  language: 'english',
+                  name: 'English',
+                },
+                error: null,
+              }),
+            }
+          },
+        }
+      }
+
+      if (table === 'import_batches') {
+        return {
+          insert() {
+            return {
+              select() {
+                return {
+                  single: async () => ({
+                    data: { id: 'batch-1' },
+                    error: null,
+                  }),
+                }
+              },
+            }
+          },
+        }
+      }
+
+      if (table === 'notes') {
+        return {
+          select(selection?: string) {
+            if (selection === 'id, fields') {
+              return {
+                eq() {
+                  return this
+                },
+                order: async () => ({
+                  data: [],
+                  error: null,
+                }),
+              }
+            }
+
+            throw new Error(`Unexpected notes select: ${selection}`)
+          },
+          insert(rows: Array<Record<string, unknown>>) {
+            noteInsertAttempt += 1
+
+            return {
+              select: async () => {
+                if (noteInsertAttempt === 1) {
+                  expect(rows[0]).toHaveProperty('draft_conflict')
+                  return {
+                    data: null,
+                    error: {
+                      code: '42703',
+                      message: 'column notes.draft_conflict does not exist',
+                    },
+                  }
+                }
+
+                expect(rows[0]).not.toHaveProperty('draft_conflict')
+
+                return {
+                  data: [{ id: 'note-1' }],
+                  error: null,
+                }
+              },
+            }
+          },
+        }
+      }
+
+      throw new Error(`Unexpected table ${table}`)
+    },
+  } as unknown as SupabaseClient
+
+  return { client }
+}
+
+describe('saveDraftNotesForUser', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('falls back when the runtime database is missing notes.draft_conflict', async () => {
+    const { client } = createSaveDraftNotesSupabaseMock({
+      userId: 'user-1',
+      deckId: 'deck-1',
+    })
+
+    const result = await saveDraftNotesForUser(
+      client,
+      'user-1',
+      'deck-1',
+      [
+        {
+          fields: {
+            word: 'hello',
+            translation: 'ahoj',
+          },
+        },
+      ],
+      { modelName: 'GPT-5.4' }
+    )
+
+    expect(result.createdNoteIds).toEqual(['note-1'])
+    expect(result.warnings).toContain(
+      'Draft conflict metadata could not be stored because this Echo database is missing the notes.draft_conflict column. Similar-match warnings are still returned, but those drafts will be saved without conflict state until the migration is applied.'
+    )
   })
 })

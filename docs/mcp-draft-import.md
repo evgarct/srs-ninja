@@ -47,6 +47,7 @@
 - draft review actions для update existing / keep separate / ignore match.
 - auto-cleanup import batches once they no longer contain draft notes.
 - structured MCP error diagnostics for `save_draft_notes`, including `tool`, `deckId`, `itemCount`, and backend `code/details/hint` when available.
+- backward-compatible `save_draft_notes` fallback when the runtime database has not yet received the `notes.draft_conflict` migration: drafts are still saved, but similar-match conflict state is omitted and returned as a warning.
 
 ## Design Decision
 
