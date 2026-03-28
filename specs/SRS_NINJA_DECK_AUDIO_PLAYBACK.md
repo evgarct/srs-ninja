@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: Deck Page Audio Playback and Instant Audio Refresh
+# Echo — Feature: Deck Page Audio Playback and Instant Audio Refresh
 
 ## Context
 

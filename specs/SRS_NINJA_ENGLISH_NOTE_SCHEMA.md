@@ -1,4 +1,4 @@
-# SRS Ninja — English Note Schema Cleanup
+# Echo — English Note Schema Cleanup
 
 ## Context
 

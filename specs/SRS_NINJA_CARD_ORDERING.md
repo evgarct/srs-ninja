@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: Smart Card Ordering
+# Echo — Feature: Smart Card Ordering
 
 ## Problem
 

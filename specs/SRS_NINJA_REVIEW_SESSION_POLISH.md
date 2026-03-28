@@ -1,4 +1,4 @@
-# SRS Ninja - Feature: Review Session Polish
+# Echo - Feature: Review Session Polish
 
 ## Context
 

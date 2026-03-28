@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: Review Session Prefetch and Instant Progression
+# Echo — Feature: Review Session Prefetch and Instant Progression
 
 ## Context
 

@@ -1,0 +1,31 @@
+{
+  "name": "Echo",
+  "shortName": "Echo",
+  "tagline": "Personal spaced repetition for English and Czech.",
+  "themeColor": "#171717",
+  "backgroundColor": "#f6f4ee",
+  "exampleDomain": "echo.example.com",
+  "assets": {
+    "faviconSvg": "/favicon.svg",
+    "faviconIco": "/favicon.ico",
+    "favicon16": "/favicon-16x16.png",
+    "favicon32": "/favicon-32x32.png",
+    "appleTouchIcon": "/icon-180.png",
+    "icon192": "/icon-192.png",
+    "icon512": "/icon-512.png",
+    "safariPinnedTab": "/safari-pinned-tab.svg",
+    "browserConfig": "/browserconfig.xml",
+    "openGraphImage": "/opengraph-image",
+    "twitterImage": "/twitter-image"
+  },
+  "logo": {
+    "lightStroke": "#171717",
+    "darkStroke": "#F6F4EE",
+    "lightFill": "#FFFFFF",
+    "darkFill": "#171717"
+  },
+  "mcp": {
+    "serverName": "Echo MCP",
+    "agentProductName": "Echo"
+  }
+}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactElement } from 'react'
 import { useRouter } from 'next/navigation'
 import { createDeck } from '@/lib/actions/decks'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Language } from '@/lib/types'
 
-export function CreateDeckDialog() {
+interface CreateDeckDialogProps {
+  trigger?: ReactElement
+}
+
+export function CreateDeckDialog({ trigger }: CreateDeckDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [language, setLanguage] = useState<Language>('czech')
@@ -35,7 +39,7 @@ export function CreateDeckDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button />}>+ Новая колода</DialogTrigger>
+      <DialogTrigger render={trigger ?? <Button />}>+ Новая колода</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Создать колоду</DialogTitle>

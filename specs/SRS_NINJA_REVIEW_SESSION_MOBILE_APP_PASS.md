@@ -1,4 +1,4 @@
-# SRS Ninja - Feature: Review Session UI Reset
+# Echo - Feature: Review Session UI Reset
 
 ## Context
 

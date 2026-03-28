@@ -1,4 +1,4 @@
-# SRS Ninja - Feature: Responsive-First Home Layout
+# Echo - Feature: Responsive-First Home Layout
 
 ## Context
 

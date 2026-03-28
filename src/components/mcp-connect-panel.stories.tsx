@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 
 import { McpConnectPanel } from './mcp-connect-panel'
+import { brand } from '@/lib/brand'
 
 const meta: Meta<typeof McpConnectPanel> = {
   title: 'Import/McpConnectPanel',
@@ -17,9 +18,9 @@ type Story = StoryObj<typeof McpConnectPanel>
 
 export const Ready: Story = {
   args: {
-    appOrigin: 'https://srs.example.com',
-    endpointUrl: 'https://srs.example.com/api/mcp',
-    connectionUrl: 'https://srs.example.com/api/mcp?token=secret-value',
+    appOrigin: `https://${brand.exampleDomain}`,
+    endpointUrl: `https://${brand.exampleDomain}/api/mcp`,
+    connectionUrl: `https://${brand.exampleDomain}/api/mcp?token=secret-value`,
     hasPersonalConfig: true,
     missingEnv: [],
     requiresPublicOrigin: false,

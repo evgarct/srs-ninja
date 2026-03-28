@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { BrandLogo } from '@/components/brand/brand-logo'
+import { brand } from '@/lib/brand'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -66,7 +68,10 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>SRS Ninja</CardTitle>
+          <div className="mb-2">
+            <BrandLogo iconClassName="size-10" labelClassName="text-2xl" />
+          </div>
+          <CardTitle className="sr-only">{brand.name}</CardTitle>
           <CardDescription>
             {isSignUp ? 'Create your account' : 'Sign in to your account'}
           </CardDescription>

@@ -1,4 +1,4 @@
-# SRS Ninja — Feature: Review Learning Loop and Same-Day Extra Study UX
+# Echo — Feature: Review Learning Loop and Same-Day Extra Study UX
 
 ## Context
 

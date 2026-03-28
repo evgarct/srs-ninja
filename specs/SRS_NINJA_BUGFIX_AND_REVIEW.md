@@ -1,4 +1,4 @@
-# SRS Ninja — Bug Fix: Cards display dashes instead of text + Review Page
+# Echo — Bug Fix: Cards display dashes instead of text + Review Page
 
 ## Bug Report
 

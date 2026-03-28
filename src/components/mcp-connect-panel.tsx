@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { brand } from '@/lib/brand'
 
 interface McpConnectPanelProps {
   appOrigin: string | null
@@ -118,7 +119,7 @@ export function McpConnectPanel({
         <CardHeader>
           <CardTitle>AI Agents</CardTitle>
           <CardDescription>
-            Choose where you want to connect SRS Ninja draft import.
+            Choose where you want to connect {brand.mcp.agentProductName} draft import.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -166,7 +167,7 @@ export function McpConnectPanel({
             )}
           </div>
           <CardDescription>
-            Connect ChatGPT to the remote MCP server, generate draft notes, then review and approve them inside SRS Ninja.
+            Connect ChatGPT to the remote MCP server, generate draft notes, then review and approve them inside {brand.mcp.agentProductName}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -236,7 +237,7 @@ export function McpConnectPanel({
                     <li>1. Open ChatGPT and add a custom MCP server.</li>
                     <li>2. Paste the connection URL from this page.</li>
                     <li>3. Ask ChatGPT to list decks and fetch the deck contract.</li>
-                    <li>4. Save candidate notes as drafts, then review them in SRS Ninja.</li>
+                    <li>4. Save candidate notes as drafts, then review them in {brand.mcp.agentProductName}.</li>
                   </ol>
                 </div>
 

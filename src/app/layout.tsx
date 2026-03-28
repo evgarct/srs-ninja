@@ -1,17 +1,14 @@
 export const dynamic = 'force-dynamic'
 
-import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Nav } from '@/components/nav'
 import { Toaster } from '@/components/ui/sonner'
+import { buildBrandMetadata, brandViewport } from '@/lib/brand'
 
 const inter = Inter({ subsets: ['latin', 'latin-ext', 'cyrillic'] })
-
-export const metadata: Metadata = {
-  title: 'SRS Ninja',
-  description: 'Personal spaced repetition for English and Czech',
-}
+export const metadata = buildBrandMetadata()
+export const viewport = brandViewport
 
 export default function RootLayout({
   children,
