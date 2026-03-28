@@ -54,20 +54,30 @@ export interface SimilarDraftCandidate {
   primaryText: string
   similarityScore: number
 }
-
 function applyFieldAliases(
   language: Language,
   fields: Record<string, unknown>
 ): Record<string, unknown> {
   const normalized = { ...fields }
 
-  if (language === 'czech') return normalized
-
   if (!normalized.word) {
     if (typeof normalized.expression === 'string' && normalized.expression.trim()) {
       normalized.word = normalized.expression
     } else if (typeof normalized.term === 'string' && normalized.term.trim()) {
       normalized.word = normalized.term
+    }
+  }
+
+  if (language === 'czech') {
+    if (!normalized.note && typeof normalized.notes === 'string' && normalized.notes.trim()) {
+      normalized.note = normalized.notes
+    }
+
+    if (
+      normalized.popularity === undefined &&
+      (typeof normalized.frequency === 'string' || typeof normalized.frequency === 'number')
+    ) {
+      normalized.popularity = normalized.frequency
     }
   }
 

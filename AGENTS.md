@@ -7,9 +7,9 @@
 - Treat `docs/` as technical documentation: how the feature works and is implemented.
 - Follow the existing design system and component patterns already used in the repository; do not introduce a parallel visual language for new UI work.
 - Prefer extending or composing the current shared UI primitives and established styling patterns instead of inventing one-off controls.
-- When designing new interactive UI, prefer using or adapting components and interaction patterns from Magic UI to create a more alive, expressive visual language, while still matching the repository's existing design system and product tone.
+- When designing new interactive UI, prefer using or adapting components and interaction patterns from Magic UI, Animate UI, or React Bits to create a more alive, expressive visual language, while still matching the repository's existing design system and product tone.
 - If the user says not to change a specific area, treat it as a hard constraint. Do not alter that area indirectly through content, hierarchy, visibility, or progressive disclosure unless the user explicitly reopens that scope.
-- If the user explicitly asks to use a component from Magic UI or React Bits, use the actual component implementation or a clearly vendored local copy. Do not approximate it with a custom recreation unless the user agrees.
+- If the user explicitly asks to use a component from Magic UI, Animate UI, or React Bits, use the actual component implementation or a clearly vendored local copy. Do not approximate it with a custom recreation unless the user agrees.
 - For product UI, optimize for focus first and delight second; improve clarity, hierarchy, and motivation without adding decorative noise.
 - Prefer improving spacing, emphasis, feedback, and perceived responsiveness before adding new visual treatment.
 - Use motion only when it improves comprehension or feedback, such as hover and tap states, layout transitions, progress updates, answer reveal, and card transitions.
@@ -38,6 +38,17 @@
 - Do not run `git commit` and `git push` in parallel. Commit first, then push, then verify the remote branch head before creating or updating a PR.
 - Before sharing local app or Storybook URLs, verify them from WSL with an HTTP request such as `curl -I`. If a process is listening but the page returns `5xx`, report that as a runtime error instead of calling the preview ready.
 - In a fresh WSL worktree, verify that `node_modules` is available before running `vitest`, `eslint`, `tsc`, or build commands. If the worktree does not have its own dependencies yet, install them there or attach the approved shared `node_modules` source first.
+
+## Default UI Libraries
+
+| Library | Relationship to shadcn | Default use in this repo |
+| --- | --- | --- |
+| Magic UI | shadcn/Tailwind-compatible, but not just a thin shadcn layer | Use for expressive UI patterns when they still fit the existing product language |
+| Animate UI | shadcn registry-based and the most natural external fit for this codebase | Prefer first for motion-aware components that should stay close to existing shadcn/shared primitives |
+| React Bits | separate React pattern library, not a shadcn layer | Use selectively for isolated interactions or effects, not as a new base visual system |
+
+- When choosing among external UI libraries by default, check Animate UI first, then Magic UI, then React Bits.
+- Keep shadcn/shared repository primitives as the base layer; external libraries should extend that layer, not replace it.
 
 ## UI / Storybook Execution Order
 

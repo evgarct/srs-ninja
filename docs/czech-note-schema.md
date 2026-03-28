@@ -67,7 +67,21 @@ Review и preview берут Czech данные так:
 - `notes`
 - `frequency`
 
-Если такие ключи приходят в draft import, они считаются неизвестными и не попадают в сохранённый payload.
+## Legacy Compatibility
+
+Канонический stored payload остаётся новым, но normalization/read/import path теперь терпит часть старых ключей, чтобы не ломать исторические данные и старые импортные payload'ы:
+
+- `expression` и `term` читаются как fallback для `word`;
+- `notes` читается как fallback для `note`;
+- `frequency` читается как fallback для `popularity`.
+
+После нормализации такие данные всё равно сохраняются уже в канонических ключах:
+
+- `word`
+- `note`
+- `popularity`
+
+Остальные legacy ключи по-прежнему не считаются частью текущего Czech contract.
 
 ## Audio
 

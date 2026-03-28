@@ -31,6 +31,7 @@ describe('getDraftFieldContract', () => {
     expect(contract.keys).toContain('verb_class')
     expect(contract.keys).toContain('note')
     expect(contract.keys).not.toContain('image_url')
+    expect(contract.keys).not.toContain('notes')
   })
 })
 
@@ -117,7 +118,6 @@ describe('validateDraftCandidate', () => {
         examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
         synonyms: ['том'],
         antonyms: ['журнал'],
-        note: 'Базовое существительное.',
         notes: 'legacy note',
         frequency: '10',
       },
@@ -135,7 +135,7 @@ describe('validateDraftCandidate', () => {
         examples_html: '<ul><li>Čtu <b>knihu</b>.</li><li>Ta <b>kniha</b> je nová.</li></ul>',
         synonyms: ['том'],
         antonyms: ['журнал'],
-        note: 'Базовое существительное.',
+        note: 'legacy note',
       },
       tags: [],
     })

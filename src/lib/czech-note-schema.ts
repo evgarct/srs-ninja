@@ -150,7 +150,7 @@ function buildExamplesHtml(value: unknown): string {
 }
 
 function getPrimaryText(fields: Record<string, unknown>): string {
-  return trimString(fields.word)
+  return trimString(fields.word) || trimString(fields.expression) || trimString(fields.term)
 }
 
 export function normalizeCzechNoteFields(fields: Record<string, unknown>): Record<string, unknown> {
@@ -162,12 +162,12 @@ export function normalizeCzechNoteFields(fields: Record<string, unknown>): Recor
   const gender = normalizeEnumValue(GENDERS_CZECH_RU, fields.gender)
   const verbClass = normalizeEnumValue(CZECH_VERB_CLASSES, fields.verb_class)
   const verbIrregular = trimString(fields.verb_irregular)
-  const note = trimString(fields.note)
+  const note = trimString(fields.note) || trimString(fields.notes)
   const examplesHtml = buildExamplesHtml(fields.examples_html)
   const synonyms = dedupeList(splitListValue(fields.synonyms))
   const antonyms = dedupeList(splitListValue(fields.antonyms))
 
-  const popularityRaw = trimString(fields.popularity)
+  const popularityRaw = trimString(fields.popularity) || trimString(fields.frequency)
   const popularityNumber = popularityRaw
     ? Math.max(1, Math.min(10, Math.round(Number(popularityRaw))))
     : undefined
