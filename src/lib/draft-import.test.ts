@@ -142,6 +142,32 @@ describe('validateDraftCandidate', () => {
     expect(result.warnings.some((warning) => warning.field === 'notes')).toBe(true)
     expect(result.warnings.some((warning) => warning.field === 'frequency')).toBe(true)
   })
+
+  it('uses legacy notes when canonical note is blank', () => {
+    const result = validateDraftCandidate('czech', {
+      fields: {
+        word: 'kniha',
+        translation: 'книга',
+        note: '   ',
+        notes: 'legacy note',
+      },
+    })
+
+    expect(result.candidate?.fields.note).toBe('legacy note')
+  })
+
+  it('uses legacy frequency when canonical popularity is blank', () => {
+    const result = validateDraftCandidate('czech', {
+      fields: {
+        word: 'kniha',
+        translation: 'книга',
+        popularity: ' ',
+        frequency: '8',
+      },
+    })
+
+    expect(result.candidate?.fields.popularity).toBe(8)
+  })
 })
 
 describe('findDuplicateDraftCandidates', () => {

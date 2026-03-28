@@ -54,6 +54,12 @@ export interface SimilarDraftCandidate {
   primaryText: string
   similarityScore: number
 }
+
+function hasMeaningfulValue(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim().length > 0
+  return value !== undefined && value !== null
+}
+
 function applyFieldAliases(
   language: Language,
   fields: Record<string, unknown>
@@ -69,12 +75,12 @@ function applyFieldAliases(
   }
 
   if (language === 'czech') {
-    if (!normalized.note && typeof normalized.notes === 'string' && normalized.notes.trim()) {
+    if (!hasMeaningfulValue(normalized.note) && typeof normalized.notes === 'string' && normalized.notes.trim()) {
       normalized.note = normalized.notes
     }
 
     if (
-      normalized.popularity === undefined &&
+      !hasMeaningfulValue(normalized.popularity) &&
       (typeof normalized.frequency === 'string' || typeof normalized.frequency === 'number')
     ) {
       normalized.popularity = normalized.frequency
