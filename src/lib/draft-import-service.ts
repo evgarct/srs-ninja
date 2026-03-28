@@ -55,10 +55,11 @@ function isMissingDraftConflictColumnError(error: unknown): boolean {
   const code = typeof error.code === 'string' ? error.code : ''
   const message = typeof error.message === 'string' ? error.message : ''
   const details = typeof error.details === 'string' ? error.details : ''
+  const hint = typeof error.hint === 'string' ? error.hint : ''
 
-  if (code !== '42703') return false
+  if (code !== '42703' && code !== 'PGRST204') return false
 
-  return [message, details].some((value) => value.includes(DRAFT_CONFLICT_COLUMN))
+  return [message, details, hint].some((value) => value.includes(DRAFT_CONFLICT_COLUMN))
 }
 
 async function getOwnedDeckOrThrow(

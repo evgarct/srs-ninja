@@ -131,6 +131,12 @@ describe('cleanupEmptyImportBatchesForUser', () => {
 type SaveDraftNotesMockInput = {
   userId: string
   deckId: string
+  firstInsertError?: {
+    code: string
+    message: string
+    details?: string
+    hint?: string
+  }
 }
 
 function createSaveDraftNotesSupabaseMock(input: SaveDraftNotesMockInput) {
@@ -202,10 +208,11 @@ function createSaveDraftNotesSupabaseMock(input: SaveDraftNotesMockInput) {
                   expect(rows[0]).toHaveProperty('draft_conflict')
                   return {
                     data: null,
-                    error: {
-                      code: '42703',
-                      message: 'column notes.draft_conflict does not exist',
-                    },
+                    error:
+                      input.firstInsertError ?? {
+                        code: '42703',
+                        message: 'column notes.draft_conflict does not exist',
+                      },
                   }
                 }
 
@@ -252,6 +259,36 @@ describe('saveDraftNotesForUser', () => {
         },
       ],
       { modelName: 'GPT-5.4' }
+    )
+
+    expect(result.createdNoteIds).toEqual(['note-1'])
+    expect(result.warnings).toContain(
+      'Draft conflict metadata could not be stored because this Echo database is missing the notes.draft_conflict column. Similar-match warnings are still returned, but those drafts will be saved without conflict state until the migration is applied.'
+    )
+  })
+
+  it('falls back when PostgREST schema cache does not know notes.draft_conflict yet', async () => {
+    const { client } = createSaveDraftNotesSupabaseMock({
+      userId: 'user-1',
+      deckId: 'deck-1',
+      firstInsertError: {
+        code: 'PGRST204',
+        message: "Could not find the 'draft_conflict' column of 'notes' in the schema cache",
+      },
+    })
+
+    const result = await saveDraftNotesForUser(
+      client,
+      'user-1',
+      'deck-1',
+      [
+        {
+          fields: {
+            word: 'cat',
+            translation: 'kot; kocka',
+          },
+        },
+      ]
     )
 
     expect(result.createdNoteIds).toEqual(['note-1'])
