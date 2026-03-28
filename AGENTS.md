@@ -37,6 +37,7 @@
 - For `gh api` GraphQL queries/mutations or any multi-line JSON payload, use the same stdin-helper pattern instead of inline quoting through PowerShell.
 - Reserve `wsl bash -lc '...'` for short single-line commands without complex quoting.
 - Do not run `git commit` and `git push` in parallel. Commit first, then push, then verify the remote branch head before creating or updating a PR.
+- When running `git commit -m` for this WSL repo from PowerShell, avoid nested quote patterns that can truncate the commit subject. Prefer a simple single-line message, a temporary message file, or a stdin/helper-based script when the message contains punctuation that needs escaping.
 - Before sharing local app or Storybook URLs, verify them from WSL with an HTTP request such as `curl -I`. If a process is listening but the page returns `5xx`, report that as a runtime error instead of calling the preview ready.
 - In a fresh WSL worktree, verify that `node_modules` is available before running `vitest`, `eslint`, `tsc`, or build commands. If the worktree does not have its own dependencies yet, install them there or attach the approved shared `node_modules` source first.
 - If `git merge --autostash` or `git pull --autostash` leaves conflicts behind, do not consider the sync finished until the conflict set is resolved or explicitly handed back to the user with the affected files listed.

@@ -55,6 +55,18 @@ AI может помогать подготовить note, но не долже
 
 MCP не должен писать в БД в обход прикладной логики приложения.
 
+### 6. MCP Write Failures Must Be Diagnosable
+
+Если `save_draft_notes` не сохранил import, MCP должен вернуть не только факт ошибки, но и диагностический контекст, достаточный для следующей попытки без чтения серверных логов.
+
+Минимально ошибка должна включать:
+
+- tool name
+- target `deckId`
+- item count
+- backend message
+- backend `code`, `details`, `hint`, если они доступны
+
 ## Primary User Flows
 
 ### Flow A. Create Drafts From a Word List
@@ -66,6 +78,8 @@ MCP не должен писать в БД в обход прикладной л
 5. Система создаёт import batch.
 6. Все notes из batch сохраняются как `draft`.
 7. Эти notes становятся видны на сайте в draft-review flow.
+
+Если сохранение падает, клиент должен получить диагностическую ошибку с контекстом deck / item count и доступными backend details.
 
 ### Flow B. Review and Approve Drafts on the Website
 

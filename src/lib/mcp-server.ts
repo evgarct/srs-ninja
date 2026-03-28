@@ -29,7 +29,18 @@ function toTextResult(text: string, structuredContent?: Record<string, unknown>)
   }
 }
 
-function toToolError(message: string) {
+type ToolErrorDiagnostic = {
+  message: string
+  errorType?: string
+  code?: string
+  details?: string
+  hint?: string
+  tool?: string
+  deckId?: string
+  itemCount?: number
+}
+
+function toToolError(message: string, structuredContent?: Record<string, unknown>) {
   return {
     content: [
       {
@@ -38,7 +49,62 @@ function toToolError(message: string) {
       },
     ],
     isError: true,
+    structuredContent,
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+export function buildToolErrorDiagnostic(
+  error: unknown,
+  fallbackMessage: string,
+  context: Omit<ToolErrorDiagnostic, 'message' | 'errorType' | 'code' | 'details' | 'hint'> = {}
+): ToolErrorDiagnostic {
+  const diagnostic: ToolErrorDiagnostic = {
+    message: fallbackMessage,
+    ...context,
+  }
+
+  if (error instanceof Error) {
+    diagnostic.message = error.message || fallbackMessage
+    diagnostic.errorType = error.name
+  }
+
+  if (isRecord(error)) {
+    if (typeof error.message === 'string' && error.message.trim()) {
+      diagnostic.message = error.message
+    }
+    if (typeof error.code === 'string' && error.code.trim()) {
+      diagnostic.code = error.code
+    }
+    if (typeof error.details === 'string' && error.details.trim()) {
+      diagnostic.details = error.details
+    }
+    if (typeof error.hint === 'string' && error.hint.trim()) {
+      diagnostic.hint = error.hint
+    }
+    if (!diagnostic.errorType && typeof error.name === 'string' && error.name.trim()) {
+      diagnostic.errorType = error.name
+    }
+  }
+
+  return diagnostic
+}
+
+function formatToolErrorText(diagnostic: ToolErrorDiagnostic) {
+  const lines = [diagnostic.message]
+
+  if (diagnostic.tool) lines.push(`Tool: ${diagnostic.tool}`)
+  if (diagnostic.deckId) lines.push(`Deck ID: ${diagnostic.deckId}`)
+  if (typeof diagnostic.itemCount === 'number') lines.push(`Items: ${diagnostic.itemCount}`)
+  if (diagnostic.code) lines.push(`Code: ${diagnostic.code}`)
+  if (diagnostic.details) lines.push(`Details: ${diagnostic.details}`)
+  if (diagnostic.hint) lines.push(`Hint: ${diagnostic.hint}`)
+  if (diagnostic.errorType) lines.push(`Error type: ${diagnostic.errorType}`)
+
+  return lines.join('\n')
 }
 
 export function createEchoMcpServer({
@@ -212,7 +278,13 @@ export function createEchoMcpServer({
           }
         )
       } catch (error) {
-        return toToolError(error instanceof Error ? error.message : 'Failed to save draft notes.')
+        const diagnostic = buildToolErrorDiagnostic(error, 'Failed to save draft notes.', {
+          tool: 'save_draft_notes',
+          deckId,
+          itemCount: items.length,
+        })
+
+        return toToolError(formatToolErrorText(diagnostic), diagnostic as Record<string, unknown>)
       }
     }
   )
