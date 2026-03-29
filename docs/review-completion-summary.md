@@ -16,9 +16,11 @@ It provides:
 
 ## Files
 
+- `src/app/review/shared-review-page.tsx`
 - `src/components/review-session-complete.tsx`
 - `src/components/review-session-complete.stories.tsx`
 - `src/components/review-session.tsx`
+- `src/lib/review-session-route.ts`
 
 ## Session Stats Model
 
@@ -36,6 +38,8 @@ This allows the done screen to explain both outcome and difficulty, not just acc
 `ReviewSession` stores the final session summary in browser `sessionStorage` and marks the active review URL with `completed=1` when the last card is rated.
 
 If a server refresh happens after the final review submission, the review pages render a small restore wrapper that rehydrates `ReviewSessionComplete` from this stored state. This prevents the route-level "no cards due" screen from replacing the summary that the user just earned.
+
+All review entry points now flow through the same route parser and shared server page renderer. Due review, manual review, and extra study therefore reuse the same completion-restore logic, empty-state selection, and `sessionMode` semantics instead of maintaining route-specific branches.
 
 ### Due review
 

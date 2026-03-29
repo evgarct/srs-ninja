@@ -9,9 +9,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/lib/button-variants'
+import type { ReviewSessionMode } from '@/lib/review-session-completion-state'
 import { cn } from '@/lib/utils'
-
-type SessionMode = 'due' | 'manual' | 'extra'
 
 export interface ReviewSessionStats {
   total: number
@@ -27,7 +26,7 @@ export interface ReviewSessionStats {
 
 interface ReviewSessionCompleteProps {
   deckId: string
-  sessionMode: SessionMode
+  sessionMode: ReviewSessionMode
   pendingReviewCount: number
   syncError: string | null
   stats: ReviewSessionStats
@@ -54,7 +53,7 @@ function formatDuration(durationMs: number) {
   return `${minutes}m ${seconds}s`
 }
 
-function getCompletionCopy(sessionMode: SessionMode) {
+function getCompletionCopy(sessionMode: ReviewSessionMode) {
   if (sessionMode === 'manual') {
     return {
       badge: 'Manual review',
