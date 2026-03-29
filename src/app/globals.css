@@ -152,3 +152,10 @@
   animation-iteration-count: infinite;
   will-change: transform, opacity;
 }
+
+@supports (-webkit-touch-callout: none) {
+  html,
+  body {
+    min-height: 100%;
+  }
+}

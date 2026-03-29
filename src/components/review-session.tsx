@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { submitReview } from '@/lib/actions/cards'
@@ -27,12 +27,21 @@ import {
   type ReviewSessionMode,
 } from '@/lib/review-session-completion-state'
 import { getReviewRatingMotion } from '@/lib/review-rating-motion'
+import {
+  clampReviewSwipeOffset,
+  getReviewSwipeAnchorX,
+  getReviewSwipeRating,
+} from '@/lib/review-swipe'
 import { RatingButtons } from '@/components/flashcard/RatingButtons'
 
 function getSessionLabel(sessionMode: ReviewSessionMode) {
   if (sessionMode === 'manual') return 'Manual review'
   if (sessionMode === 'extra') return ''
   return 'Review'
+}
+
+function getTimestamp() {
+  return Date.now()
 }
 
 export function ReviewSession({
@@ -68,6 +77,13 @@ export function ReviewSession({
   const [syncError, setSyncError] = useState<string | null>(null)
   const [cardExitDirection, setCardExitDirection] = useState<'left' | 'right' | null>(null)
   const [burstState, setBurstState] = useState<{ id: number; rating: Rating; anchorX: number; emoji: string } | null>(null)
+  const [swipeOffsetX, setSwipeOffsetX] = useState(0)
+  const swipeGestureRef = useRef<{
+    pointerId: number
+    startX: number
+    startY: number
+    isTracking: boolean
+  } | null>(null)
   const startTimeRef = useRef<number>(0)
   const hasAutoPlayedRef = useRef(false)
   const warmedAudioRef = useRef(new Set<string>())
@@ -102,6 +118,7 @@ export function ReviewSession({
   const isRecognition = currentPrepared?.direction === 'recognition'
   const audioUrl = currentPrepared?.audioUrl
   const currentStep = Math.min(completedReviews + 1, projectedTotal || total)
+  const isSwipeEnabled = revealed && !done
 
   function handleSaveSuccess(
     updatedFields: Record<string, unknown>,
@@ -138,10 +155,11 @@ export function ReviewSession({
   // Reset autoplay flag when the card changes
   useEffect(() => {
     hasAutoPlayedRef.current = false
+    swipeGestureRef.current = null
   }, [current?.id])
 
   useEffect(() => {
-    startTimeRef.current = Date.now()
+    startTimeRef.current = getTimestamp()
   }, [])
 
   useEffect(() => {
@@ -175,6 +193,27 @@ export function ReviewSession({
       warmedAudioRef.current.add(url)
     }
   }, [preparedQueue])
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || done) return
+    if (!window.matchMedia('(max-width: 767px)').matches) return
+
+    const htmlStyle = document.documentElement.style
+    const bodyStyle = document.body.style
+    const previousHtmlOverscroll = htmlStyle.overscrollBehaviorY
+    const previousBodyOverscroll = bodyStyle.overscrollBehaviorY
+    const previousBodyOverflow = bodyStyle.overflow
+
+    htmlStyle.overscrollBehaviorY = 'none'
+    bodyStyle.overscrollBehaviorY = 'none'
+    bodyStyle.overflow = 'hidden'
+
+    return () => {
+      htmlStyle.overscrollBehaviorY = previousHtmlOverscroll
+      bodyStyle.overscrollBehaviorY = previousBodyOverscroll
+      bodyStyle.overflow = previousBodyOverflow
+    }
+  }, [done])
 
   useEffect(() => {
     if (!done || sessionMode === 'manual') return
@@ -220,14 +259,8 @@ export function ReviewSession({
     router.push(`/deck/${deckId}`)
   }
 
-  function handleRatingPress(rating: Rating, button: HTMLButtonElement) {
+  function triggerRatingBurst(rating: Rating, anchorX: number) {
     if (shouldReduceMotion) return
-
-    const containerRect = actionBarRef.current?.getBoundingClientRect()
-    const buttonRect = button.getBoundingClientRect()
-    const anchorX = containerRect
-      ? (buttonRect.left + buttonRect.width / 2 - containerRect.left) / containerRect.width
-      : 0.5
 
     const motionPreset = getReviewRatingMotion(rating)
     const emoji =
@@ -243,13 +276,24 @@ export function ReviewSession({
     })
   }
 
+  function handleRatingPress(rating: Rating, button: HTMLButtonElement) {
+    const containerRect = actionBarRef.current?.getBoundingClientRect()
+    const buttonRect = button.getBoundingClientRect()
+    const anchorX = containerRect
+      ? (buttonRect.left + buttonRect.width / 2 - containerRect.left) / containerRect.width
+      : 0.5
+
+    triggerRatingBurst(rating, anchorX)
+  }
+
   function handleRating(rating: Rating) {
     if (!current) return
 
+    resetSwipeGesture()
     setCardExitDirection(rating <= 2 ? 'left' : 'right')
 
     const currentCardId = current.id
-    const durationMs = Date.now() - startTimeRef.current
+    const durationMs = getTimestamp() - startTimeRef.current
     const nextStats: ReviewSessionStats = {
       total: sessionStats.total + 1,
       correct: sessionStats.correct + (rating >= 3 ? 1 : 0),
@@ -273,7 +317,7 @@ export function ReviewSession({
     } else {
       setQueue(nextQueue)
       setRevealed(false)
-      startTimeRef.current = Date.now()
+      startTimeRef.current = getTimestamp()
     }
 
     setPendingReviewCount((count) => count + 1)
@@ -284,6 +328,75 @@ export function ReviewSession({
       .finally(() => {
         setPendingReviewCount((count) => Math.max(0, count - 1))
       })
+  }
+
+  function handleCardPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!isSwipeEnabled || event.pointerType !== 'touch') return
+
+    event.currentTarget.setPointerCapture(event.pointerId)
+
+    swipeGestureRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      isTracking: false,
+    }
+  }
+
+  function handleCardPointerMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const gesture = swipeGestureRef.current
+    if (!gesture || gesture.pointerId !== event.pointerId || event.pointerType !== 'touch') return
+
+    const deltaX = event.clientX - gesture.startX
+    const deltaY = event.clientY - gesture.startY
+
+    if (!gesture.isTracking) {
+      if (Math.abs(deltaX) < 10) return
+      if (Math.abs(deltaX) <= Math.abs(deltaY)) {
+        swipeGestureRef.current = null
+        setSwipeOffsetX(0)
+        return
+      }
+
+      gesture.isTracking = true
+    }
+
+    setSwipeOffsetX(clampReviewSwipeOffset(deltaX))
+  }
+
+  function resetSwipeGesture() {
+    swipeGestureRef.current = null
+    setSwipeOffsetX(0)
+  }
+
+  function handleCardPointerEnd(event: ReactPointerEvent<HTMLDivElement>) {
+    const gesture = swipeGestureRef.current
+    if (!gesture || gesture.pointerId !== event.pointerId) return
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    const committedOffset = clampReviewSwipeOffset(event.clientX - gesture.startX)
+    const swipeRating = getReviewSwipeRating(committedOffset)
+
+    resetSwipeGesture()
+
+    if (swipeRating === null) return
+
+    triggerRatingBurst(swipeRating, getReviewSwipeAnchorX(committedOffset))
+    handleRating(swipeRating)
+  }
+
+  function handleCardPointerCancel(event: ReactPointerEvent<HTMLDivElement>) {
+    const gesture = swipeGestureRef.current
+    if (!gesture || gesture.pointerId !== event.pointerId) return
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
+
+    resetSwipeGesture()
   }
 
   // ── Session complete ─────────────────────────────────────────────────────
@@ -366,7 +479,10 @@ export function ReviewSession({
   )
 
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden bg-[#f4f1ec]">
+    <div
+      className="relative min-h-0 flex-1 overflow-hidden bg-[#f4f1ec]"
+      style={{ overscrollBehaviorY: done ? 'auto' : 'none' }}
+    >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.62)_0%,rgba(255,255,255,0.22)_32%,rgba(244,241,236,0.94)_74%,rgba(244,241,236,1)_100%)]" />
       </div>
@@ -421,10 +537,27 @@ export function ReviewSession({
                   custom={cardExitDirection}
                   variants={cardVariants}
                   initial={false}
-                  animate="animate"
+                  animate={
+                    isSwipeEnabled && swipeOffsetX !== 0
+                      ? {
+                          opacity: Math.max(0.74, 1 - Math.abs(swipeOffsetX) / 340),
+                          x: swipeOffsetX,
+                          y: 0,
+                          scale: 1,
+                          rotate: swipeOffsetX / 20,
+                        }
+                      : 'animate'
+                  }
                   exit="exit"
                   transition={{ type: 'spring', stiffness: 230, damping: 24, mass: 0.88 }}
                   className="relative z-10 w-full"
+                  style={{
+                    touchAction: done ? 'auto' : isSwipeEnabled ? 'none' : 'manipulation',
+                  }}
+                  onPointerDown={handleCardPointerDown}
+                  onPointerMove={handleCardPointerMove}
+                  onPointerUp={handleCardPointerEnd}
+                  onPointerCancel={handleCardPointerCancel}
                 >
                   {actualFlashcard}
                 </motion.div>
