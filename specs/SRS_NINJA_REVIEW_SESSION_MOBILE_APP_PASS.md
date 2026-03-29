@@ -80,6 +80,30 @@ The new presentation should apply consistently wherever the shared review surfac
 
 Review logic and FSRS behavior remain unchanged.
 
+### 8. Mobile gesture containment
+
+During the active mobile review card flow, the viewport itself should not rubber-band or drift vertically because of iOS overscroll behavior.
+
+Allowed:
+
+- internal scrolling inside explicit post-review surfaces such as the completion summary;
+- intentional card motion tied to horizontal swipe rating.
+
+Avoid:
+
+- the page shifting a few pixels up or down while the user is trying to review;
+- browser-level bounce competing with the card gesture.
+
+### 9. Mobile swipe shortcuts
+
+On mobile, the revealed card should support horizontal swipe grading:
+
+- swipe left maps to `Again` / `Совсем не знаю`;
+- swipe right maps to `Easy` / `Знаю очень хорошо`;
+- the committed swipe should reuse the same directional card-dismiss motion and the same emoji burst feedback family as the matching button press.
+
+Short or ambiguous drags must snap back without grading.
+
 ## Acceptance Criteria
 
 - [ ] The review session no longer uses the current stack component for active-card presentation.
@@ -94,5 +118,8 @@ Review logic and FSRS behavior remain unchanged.
 - [ ] The review background uses an active centered treatment while preserving text and card readability.
 - [ ] The updated presentation works in both mobile and web layouts.
 - [ ] Review mechanics remain aligned across regular review, manual review, and extra study.
+- [ ] On active mobile review, the viewport no longer rubber-bands vertically because of iOS overscroll.
+- [ ] Revealed cards on mobile support swipe-left = `Again` and swipe-right = `Easy`.
+- [ ] Swipe grading reuses the same directional exit treatment and emoji burst semantics as the matching rating buttons.
 - [ ] Storybook reflects the touched reusable review UI states when practical.
 - [ ] `docs/` and `specs/` are updated before PR creation to match shipped behavior.

@@ -32,6 +32,7 @@ The shell now provides:
 - `Extra study` intentionally removes the centered session label block;
 - one animated live-card surface over the full-page pillar background;
 - a floating bottom action row that appears only after reveal.
+- mobile viewport bounce is suppressed during the active card loop so iOS does not rubber-band the full-screen review shell.
 
 The old stack illusion is no longer the primary interaction model.
 
@@ -58,6 +59,17 @@ The burst:
 - ignores pointer events;
 - is disabled for reduced-motion users;
 - persists briefly even after the session advances to the next card.
+
+## Mobile Swipe Rating
+
+On touch devices, the revealed review card now supports horizontal swipe shortcuts:
+
+- swipe left commits the same `Again` outcome as the leftmost low-confidence rating;
+- swipe right commits the same `Easy` outcome as the strongest-known rating;
+- committed swipes reuse the same directional card exit and the same emoji burst preset family as the matching rating buttons;
+- short drags snap back without grading.
+
+This keeps the mobile flow aligned with the existing review mechanics instead of adding a separate gesture-only outcome model.
 
 ## Background Treatment
 
