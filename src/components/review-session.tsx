@@ -24,6 +24,7 @@ import {
   clearReviewSessionCompletionState,
   persistCompletionUrl,
   saveReviewSessionCompletionState,
+  shouldResetReviewSessionCompletionState,
   type ReviewSessionMode,
 } from '@/lib/review-session-completion-state'
 import { getReviewRatingMotion } from '@/lib/review-rating-motion'
@@ -88,6 +89,7 @@ export function ReviewSession({
   const hasAutoPlayedRef = useRef(false)
   const warmedAudioRef = useRef(new Set<string>())
   const hasPersistedCompletionRef = useRef(false)
+  const isCompletingRef = useRef(false)
   const actionBarRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const pathname = usePathname()
@@ -173,7 +175,11 @@ export function ReviewSession({
   }, [burstState])
 
   useEffect(() => {
-    if (done) return
+    if (!shouldResetReviewSessionCompletionState(done, isCompletingRef.current)) return
+
+    // Clear stale restore state only when an active session boots up.
+    // The completion transition itself mutates the URL with `completed=1`,
+    // and this effect must not immediately undo that flag mid-transition.
     clearReviewSessionCompletionState(deckId, sessionMode)
     persistCompletionUrl(pathname, searchParams.toString(), false)
   }, [deckId, done, pathname, searchParams, sessionMode])
@@ -311,6 +317,7 @@ export function ReviewSession({
     const nextQueue = applyReviewQueueOutcome(queue, rating)
 
     if (nextQueue.length === 0) {
+      isCompletingRef.current = true
       saveReviewSessionCompletionState(deckId, sessionMode, nextStats)
       persistCompletionUrl(pathname, searchParams.toString(), true)
       setDone(true)

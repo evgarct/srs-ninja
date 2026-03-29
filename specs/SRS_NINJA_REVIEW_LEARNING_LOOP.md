@@ -72,7 +72,8 @@ Done-screen должен показываться только когда:
 
 - более нейтральный текст;
 - отсутствие агрессивного prompt-а “Готовы к новым словам?” после уже состоявшейся учёбы;
-- `+10 / +20` остаются доступными, но не навязываются.
+- запуск extra study на Home не должен происходить мгновенно по одному tap без выбора размера;
+- `+10 / +20` остаются доступными как единый способ запуска extra study.
 
 ## Storybook Requirement
 
@@ -84,7 +85,7 @@ Done-screen должен показываться только когда:
 
 - requeue logic для `Again / Hard / Good / Easy`;
 - одинаковое поведение queue helper для любых review-session inputs;
-- same-day extra study presentation helper, если он вынесен в чистую функцию.
+- shared extra-study route helper, если логика сборки URL или размера вынесена в чистую функцию.
 
 ## Acceptance Criteria
 

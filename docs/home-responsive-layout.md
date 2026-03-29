@@ -65,6 +65,6 @@ Weekly streak временно скрыт с Home и будет возвраще
 
 Home больше не показывает raw red due-count как основной смысл карточки. Вместо этого chip и CTA описывают следующее действие на языке пользователя: `Done today`, `N to study`, `Ready to start`.
 
-Для idle-состояний `ExtraStudyBox` сохраняет existing extra-study behavior, но без отдельного helper text. Если deck уже завершен на сегодня и visible due work нет, extra-study menu показывает только `+10` и `+20`.
+Для idle-состояний `ExtraStudyBox` использует один и тот же compact dropdown без отдельного helper text. Если visible due work нет, extra-study menu показывает только `+10` и `+20`.
 Если deck уже завершен на сегодня, но due cards снова появились, chip `Done today` остается видимым, а primary CTA возвращается к прямому due-review path вместо extra-study dropdown.
-Если deck еще не был начат сегодня, Home не показывает extra-study choice. Вместо этого primary CTA сразу запускает стартовую learning session одним действием.
+Если deck еще не был начат сегодня, Home все равно не автозапускает extra session: пользователь сначала выбирает размер `+10` или `+20`.

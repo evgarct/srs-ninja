@@ -143,7 +143,7 @@ export function HomeDeckCard({
             </Link>
           </div>
         ) : (
-          <ExtraStudyBox deckId={deck.id} mode={completedToday ? 'menu' : 'direct'} />
+          <ExtraStudyBox deckId={deck.id} />
         )}
       </CardContent>
     </Card>
