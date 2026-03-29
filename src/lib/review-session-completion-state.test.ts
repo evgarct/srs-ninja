@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildCompletionUrl } from '@/lib/review-session-completion-state'
+import {
+  buildCompletionUrl,
+  shouldResetReviewSessionCompletionState,
+} from '@/lib/review-session-completion-state'
 
 describe('buildCompletionUrl', () => {
   it('adds completed flag while preserving existing params', () => {
@@ -16,5 +19,16 @@ describe('buildCompletionUrl', () => {
   it('returns pathname when there are no params left', () => {
     expect(buildCompletionUrl('/review/deck-1', 'completed=1', false))
       .toBe('/review/deck-1')
+  })
+})
+
+describe('shouldResetReviewSessionCompletionState', () => {
+  it('keeps stale completion cleanup enabled for active sessions', () => {
+    expect(shouldResetReviewSessionCompletionState(false, false)).toBe(true)
+  })
+
+  it('skips cleanup once the session completion transition has started', () => {
+    expect(shouldResetReviewSessionCompletionState(false, true)).toBe(false)
+    expect(shouldResetReviewSessionCompletionState(true, false)).toBe(false)
   })
 })

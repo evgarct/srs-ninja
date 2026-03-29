@@ -43,6 +43,13 @@ export function persistCompletionUrl(
   window.history.replaceState(window.history.state, '', nextUrl)
 }
 
+export function shouldResetReviewSessionCompletionState(
+  done: boolean,
+  completionTransitionInFlight: boolean
+) {
+  return !done && !completionTransitionInFlight
+}
+
 export function saveReviewSessionCompletionState(
   deckId: string,
   sessionMode: ReviewSessionMode,

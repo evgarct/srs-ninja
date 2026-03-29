@@ -74,9 +74,9 @@ Home не должен показывать raw red due-pressure, если он 
 - `Done today` и `Ready to start` не могут показываться вместе;
 - `Drafts` может сосуществовать с любым основным статусом;
 - chip-строка должна быть на одной линии с заголовком колоды и выровнена вправо.
-- если deck помечен как `Done today` и visible due work нет, primary CTA на Home открывает optional extra-study choice (`+10`, `+20`);
+- если visible due work нет, primary CTA на Home открывает optional extra-study choice (`+10`, `+20`);
 - если deck помечен как `Done today`, но visible due work снова появилось, Home сохраняет позитивный статус и все равно дает прямой due-review CTA;
-- если deck еще не был пройден сегодня, Home не показывает extra-study choice и дает один прямой стартовый CTA.
+- extra-study choice на Home должен вести себя одинаково независимо от `completedToday`; автозапуск extra session без выбора размера недопустим.
 
 ### 5. Desktop as a larger version of mobile
 
@@ -102,6 +102,6 @@ Home не должен показывать raw red due-pressure, если он 
 - [ ] Статус deck card передается через chips и не противоречит доступному CTA.
 - [ ] Home не показывает raw red due-count как тревожный сигнал, если это не соответствует user-facing next step.
 - [ ] Для `Done today` extra-study menu содержит только `+10` и `+20`.
-- [ ] Для deck без completed-today status Home показывает прямой CTA запуска без extra-study dropdown.
+- [ ] Для deck без visible due work Home всегда показывает один и тот же extra-study dropdown с `+10` и `+20`.
 - [ ] Weekly streak скрыт с Home до отдельного дизайн-решения.
 - [ ] Desktop остается той же самой страницей, а не отдельной dashboard-версией.
