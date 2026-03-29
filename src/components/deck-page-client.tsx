@@ -25,6 +25,7 @@ import {
   type FsrsState,
 } from '@/lib/deck-notes'
 import type { Language } from '@/lib/types'
+import { buildReviewSessionHref } from '@/lib/review-session-route'
 import { supportsTtsLanguage } from '@/lib/tts-config'
 
 type BatchResult = {
@@ -112,18 +113,12 @@ export function DeckPageClient({
   )
 
   const manualReviewHref = useMemo(() => {
-    const params = new URLSearchParams()
-    params.set('mode', 'manual')
-    if (activeTags.length > 0) {
-      params.set('tags', activeTags.join(','))
-    }
-    if (activeStates.length > 0) {
-      params.set('state', activeStates.join(','))
-    }
-    if (activeAudioFilter !== 'all') {
-      params.set('audio', activeAudioFilter)
-    }
-    return `/review/${deckId}?${params.toString()}`
+    return buildReviewSessionHref(deckId, {
+      mode: 'manual',
+      tags: activeTags,
+      states: activeStates,
+      audio: activeAudioFilter,
+    })
   }, [deckId, activeTags, activeStates, activeAudioFilter])
 
   function syncUrl(nextTags: string[], nextStates: FsrsState[], nextAudioFilter: AudioFilter) {
@@ -253,7 +248,7 @@ export function DeckPageClient({
             </Link>
           )}
           {dueCards > 0 && (
-            <Link href={`/review/${deckId}`} className={buttonVariants()}>
+            <Link href={buildReviewSessionHref(deckId)} className={buttonVariants()}>
               Учить ({dueCards})
             </Link>
           )}

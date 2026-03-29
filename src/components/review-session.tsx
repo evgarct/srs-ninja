@@ -24,11 +24,12 @@ import {
   clearReviewSessionCompletionState,
   persistCompletionUrl,
   saveReviewSessionCompletionState,
+  type ReviewSessionMode,
 } from '@/lib/review-session-completion-state'
 import { getReviewRatingMotion } from '@/lib/review-rating-motion'
 import { RatingButtons } from '@/components/flashcard/RatingButtons'
 
-function getSessionLabel(sessionMode: 'due' | 'manual' | 'extra') {
+function getSessionLabel(sessionMode: ReviewSessionMode) {
   if (sessionMode === 'manual') return 'Manual review'
   if (sessionMode === 'extra') return ''
   return 'Review'
@@ -46,7 +47,7 @@ export function ReviewSession({
   language: string
   /** noteId → public audio URL, pre-fetched server-side */
   audioMap?: Record<string, string>
-  sessionMode?: 'due' | 'manual' | 'extra'
+  sessionMode?: ReviewSessionMode
 }) {
   const [queue, setQueue] = useState(cards)
   const [dynamicAudio, setDynamicAudio] = useState<Record<string, string>>({})

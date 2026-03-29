@@ -81,6 +81,8 @@ If the review route refreshes after the last submitted rating:
 - the app must not replace that summary with a generic "no cards due" empty state;
 - this must hold for the session that was just completed, even if the underlying due queue is now empty on the server.
 
+The review route handling for due review, manual review, and extra study must share the same mode parsing and completion-restore mechanism so that one session type cannot drift into different end-of-session behavior.
+
 ## Acceptance Criteria
 
 - [ ] Regular due completion shows a richer summary than the current count + accuracy line.
@@ -88,6 +90,7 @@ If the review route refreshes after the last submitted rating:
 - [ ] The due-review completion state feels rewarding without becoming noisy.
 - [ ] Manual review and extra study use appropriate non-due messaging.
 - [ ] After the last review submission, the route must not fall back to the generic empty queue screen for that finished session.
+- [ ] Due review, manual review, and extra study reuse one shared route-level completion restore path.
 - [ ] On mobile, the completion surface remains scrollable even inside the fixed-height review shell.
 - [ ] On mobile, a return-to-home control is reachable near the top of the completion screen.
 - [ ] The completion surface works on desktop and mobile.

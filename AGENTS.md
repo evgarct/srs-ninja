@@ -39,6 +39,7 @@
 - Do not run `git commit` and `git push` in parallel. Commit first, then push, then verify the remote branch head before creating or updating a PR.
 - Before sharing local app or Storybook URLs, verify them from WSL with an HTTP request such as `curl -I`. If a process is listening but the page returns `5xx`, report that as a runtime error instead of calling the preview ready.
 - In a fresh WSL worktree, verify that `node_modules` is available before running `vitest`, `eslint`, `tsc`, or build commands. If the worktree does not have its own dependencies yet, install them there or attach the approved shared `node_modules` source first.
+- In this repo, the checked-in `vitest.config.ts` is Storybook-browser oriented and does not discover the `src/lib/**/*.test.ts` unit tests by default. When verifying library unit tests, run Vitest with a temporary/basic unit config or equivalent explicit config instead of assuming plain `vitest run` covers them.
 - If `git merge --autostash` or `git pull --autostash` leaves conflicts behind, do not consider the sync finished until the conflict set is resolved or explicitly handed back to the user with the affected files listed.
 
 ## Default UI Libraries

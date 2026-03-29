@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { buttonVariants } from '@/lib/button-variants'
+import { buildReviewSessionHref } from '@/lib/review-session-route'
 import { cn } from '@/lib/utils'
 
 export function ExtraStudyBox({
@@ -34,7 +35,7 @@ export function ExtraStudyBox({
   )
 
   const startExtra = (limit: number) => {
-    router.push(`/review/${deckId}?mode=extra&limit=${limit}`)
+    router.push(buildReviewSessionHref(deckId, { mode: 'extra', limit }))
   }
 
   return (
@@ -64,7 +65,7 @@ export function ExtraStudyBox({
           </DropdownMenu>
         ) : (
           <Link
-            href={`/review/${deckId}?mode=extra&limit=10`}
+            href={buildReviewSessionHref(deckId, { mode: 'extra', limit: 10 })}
             className={cn(primaryActionClassName, 'flex-1')}
           >
             <span>Continue learning</span>
