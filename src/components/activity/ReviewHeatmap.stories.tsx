@@ -15,6 +15,13 @@ const meta: Meta<typeof ReviewHeatmap> = {
   parameters: {
     layout: 'centered',
   },
+  decorators: [
+    (Story) => (
+      <div className="dark rounded-[28px] bg-[#080511] p-4">
+        <Story />
+      </div>
+    ),
+  ],
 }
 
 export default meta

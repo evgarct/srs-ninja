@@ -2,69 +2,58 @@
 
 ## Summary
 
-Home переведен к единому responsive-first контракту:
+Home теперь использует dark mobile-first shell с тем же visual language, что и обновленная `/stats`:
 
-- mobile layout стал базовой композицией для всех размеров экрана;
-- navigation стала компактнее и вынесла вторичные действия в overflow menu;
-- daily summary убран с Home, чтобы первый экран не выглядел как analytics dashboard;
-- weekly streak временно скрыт с Home до отдельного дизайн-решения;
-- deck list переведен в один основной вертикальный поток и стал главным actionable блоком;
-- desktop теперь выглядит как более просторная версия mobile home, а не как отдельный dashboard.
+- темный фон и glass/neon panels задаются на уровне app shell;
+- верхняя навигация стала компактной pill-панелью;
+- на mobile добавлена фиксированная bottom navigation с быстрым доступом к `Колоды`, `Статистика` и созданию колоды;
+- home открывается hero-блоком со статусом дня и короткими KPI;
+- deck list остается главным рабочим потоком, а не побочным блоком после analytics dashboard.
 
 ## Files
 
-- `src/app/page.tsx`
+- `src/app/globals.css`
+- `src/app/layout.tsx`
 - `src/components/nav.tsx`
+- `src/app/page.tsx`
 - `src/components/home-deck-card.tsx`
 - `src/components/extra-study-box.tsx`
-- `src/components/activity/WeeklyActivity.tsx`
 - `src/components/home-deck-card.stories.tsx`
 
-## Layout Contract
+## Shell Contract
 
-Home использует один и тот же порядок секций на всех размерах:
+Общий shell использует:
 
-1. top navigation
-2. page header
-3. deck list
+1. compact floating top navigation;
+2. mobile bottom navigation вне review-маршрутов;
+3. единый контейнер `app-shell`;
+4. reusable surface classes `app-panel`, `app-panel-muted`, `app-pill`.
 
-Ключевое правило: desktop не переосмысляет экран как отдельный dashboard. Вместо этого страница остается внутри ограниченного контейнера и меняет только spacing и visual breathing room.
-
-## Navigation
-
-`Nav` больше не держит полную строку `Главная / Статистика / Импорт / Выйти`.
-
-Теперь shell использует:
-
-- два видимых частых раздела: `Главная`, `Статистика`;
-- overflow menu для вторичных действий;
-- `Импорт` и `Выйти` внутри dropdown.
-
-Это снижает шум на мобильном и сохраняет прямой доступ к частым переходам без burger-first паттерна.
+Desktop остается расширенной версией mobile layout. Разница только в воздухе, размерах и плотности, а не в отдельной IA.
 
 ## Home Hierarchy
 
-`src/app/page.tsx` теперь собирает Home как одну вертикальную ленту:
+Home теперь состоит из:
 
-- header с названием страницы и CTA создания колоды;
-- deck list в одну колонку.
+1. hero/status блока;
+2. списка колод.
 
-Фоновый decorative `ReactBitsRibbons` убран с Home, чтобы не конкурировать с review-oriented поверхностью.
+Hero собирает:
 
-Daily stats больше не занимают первый экран: для Home важнее показать состояние колод и следующий шаг, чем обзорные метрики.
-Weekly streak временно скрыт с Home и будет возвращен отдельным pass после выбора финального visual pattern.
+- брендовый tag;
+- краткий заголовок про текущую study session;
+- агрегаты `due`, `done`, `drafts`.
+
+Это заменяет нейтральный dashboard-grid на более app-like first screen с одним визуальным центром.
 
 ## Deck Card Pattern
 
-`HomeDeckCard` теперь использует более жесткую иерархию:
+`HomeDeckCard` теперь:
 
-- row status chips в одной строке с названием колоды;
-- только user-facing states, без `cards total` и без отдельного helper copy в теле карточки;
-- primary CTA как доминирующий action;
-- `Open deck` как полноценный secondary button с иконкой и той же высотой.
+- использует dark glass panel с мягким accent glow по языку колоды;
+- показывает крупный `due` counter отдельным status capsule;
+- держит короткий explanatory line вместо dashboard copy;
+- сохраняет один primary CTA и один secondary CTA;
+- использует compact chips для состояний `Done today`, `N to study`, `Ready to start`, `Drafts`.
 
-Home больше не показывает raw red due-count как основной смысл карточки. Вместо этого chip и CTA описывают следующее действие на языке пользователя: `Done today`, `N to study`, `Ready to start`.
-
-Для idle-состояний `ExtraStudyBox` использует один и тот же compact dropdown без отдельного helper text. Если visible due work нет, extra-study menu показывает только `+10` и `+20`.
-Если deck уже завершен на сегодня, но due cards снова появились, chip `Done today` остается видимым, а primary CTA возвращается к прямому due-review path вместо extra-study dropdown.
-Если deck еще не был начат сегодня, Home все равно не автозапускает extra session: пользователь сначала выбирает размер `+10` или `+20`.
+`ExtraStudyBox` остался тем же по поведению, но приведен к тому же button language.

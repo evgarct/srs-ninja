@@ -2,9 +2,12 @@
 
 ## Summary
 
-`Review Heatmap` отображается на странице статистики и показывает review activity пользователя на более длинном historical window, чем домашний streak widget.
+`ReviewHeatmap` остался статистическим historical surface, но получил новый dark visual contract:
 
-Это не chart library и не внешний виджет. Компонент реализован локально как shadcn-style primitive, чтобы он оставался визуально совместимым с текущей design system.
+- блок рендерится внутри page-owned panel, а не внутри собственного `Card`;
+- intensity palette смещена в violet-to-lime диапазон;
+- подписи и grid подстроены под dark shell;
+- mobile и desktop по-прежнему используют разные окна истории.
 
 ## Files
 
@@ -16,36 +19,21 @@
 
 ## Data Flow
 
-1. `/stats` читает timezone пользователя из `x-vercel-ip-timezone` с fallback в `UTC`.
-2. `getReviewStats(280)` загружает raw review history.
-3. `buildReviewHeatmapWeeks(reviews, timeZone, { weeks: 39 })` агрегирует данные в Monday-first weekly grid.
-4. `ReviewHeatmap` выбирает:
-   - desktop window: 9 месяцев;
-   - mobile window: 4 месяца.
-5. `HeatmapCalendar` рендерит grid, month labels и tooltips.
+1. `/stats` вычисляет timezone пользователя.
+2. `getReviewStats(280)` читает сырые reviews.
+3. `buildReviewHeatmapWeeks(..., { weeks: 39 })` агрегирует данные в Monday-first weeks.
+4. `ReviewHeatmap` передает агрегаты в `HeatmapCalendar`.
 
-## Heatmap Behavior
+## Visual Contract
 
-- week starts on Monday;
-- первый неполный месяц в окне не рендерится;
-- дни будущего внутри текущей недели не попадают в activity data;
-- intensity зависит от числа `reviews` за день;
-- heatmap центрируется внутри карточки;
-- mobile и desktop используют разные history windows, но один и тот же visual language.
-
-## Visual Rules
-
-- блок использует стандартный `Card` container;
-- заголовок секции вынесен на уровень страницы, как у остальных stats blocks;
+- mobile показывает около 4 месяцев;
+- desktop показывает около 9 месяцев;
 - weekday labels скрыты;
 - legend скрыт;
-- cells intentionally крупные и scan-friendly;
-- tooltips показывают дату, число review и `masteredWords`.
+- пустые клетки читаются как muted dark cells;
+- высокие уровни активности уходят в lime accent;
+- tooltip по-прежнему показывает дату, число review и `masteredWords`.
 
 ## Layout Stability
 
-Чтобы избежать прыжка layout при загрузке:
-
-- `ReviewHeatmap` не измеряет контейнер после mount;
-- mobile и desktop переключаются только через CSS breakpoints;
-- размер клеток фиксирован внутри выбранного варианта.
+Компонент не измеряет контейнер после mount. Переключение mobile/desktop происходит только через CSS breakpoints, поэтому heatmap не должен дергать layout во время загрузки.

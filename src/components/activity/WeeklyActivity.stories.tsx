@@ -6,6 +6,13 @@ const meta: Meta<typeof WeeklyActivity> = {
   component: WeeklyActivity,
   tags: ['autodocs'],
   parameters: { layout: 'centered' },
+  decorators: [
+    (Story) => (
+      <div className="dark w-[22rem] rounded-[28px] bg-[#080511] p-4 sm:w-[32rem]">
+        <Story />
+      </div>
+    ),
+  ],
 }
 
 export default meta

@@ -25,11 +25,11 @@ export function ExtraStudyBox({
   const router = useRouter()
   const primaryActionClassName = cn(
     buttonVariants({ size: 'lg' }),
-    'min-h-12 justify-between rounded-xl px-4 py-3 text-left text-sm font-medium'
+    'min-h-12 justify-between rounded-2xl px-4 py-3 text-left text-sm font-medium shadow-[0_18px_40px_-28px_rgba(244,255,120,0.95)]'
   )
   const secondaryActionClassName = cn(
     buttonVariants({ variant: 'outline', size: 'lg' }),
-    'min-h-12 justify-center gap-2 rounded-xl px-4 py-3 text-center text-sm font-medium'
+    'min-h-12 justify-center gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm font-medium text-white hover:bg-white/[0.08]'
   )
 
   const startExtra = (limit: number) => {

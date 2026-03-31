@@ -9,7 +9,7 @@ const meta: Meta<typeof HomeDeckCard> = {
   parameters: { layout: 'centered' },
   decorators: [
     (Story) => (
-      <div className="w-[22rem] max-w-full p-4 sm:w-[32rem]">
+      <div className="dark w-[22rem] max-w-full bg-[#080511] p-4 sm:w-[32rem]">
         <Story />
       </div>
     ),

@@ -1,110 +1,36 @@
-# Echo --- Feature: Review Heatmap
+# Echo - Feature: Review Heatmap
 
-## Context
+## Goal
 
-На странице статистики нужен более репрезентативный индикатор review activity, чем простой список квадратов за последние 30 дней.
+Сохранить `Review Heatmap` как long-range activity surface на `/stats`, но привести его к новому dark app shell.
 
-Компонент должен помогать быстро считывать:
+## Product Rules
 
-- ритм повторений во времени;
-- периоды высокой и низкой активности;
-- текущую неделю в контексте более длинной истории.
+### 1. Placement
 
-------------------------------------------------------------------------
+`Review Heatmap` принадлежит странице `/stats` и рендерится внутри page-level section, а не как самостоятельная dashboard card с собственным header.
 
-## What to Build
+### 2. Visual contract
 
-### 1. Review Heatmap on Stats
+Heatmap должен:
 
-На `/stats` должен появиться `Review Heatmap`, который показывает history of review activity в виде Monday-first heatmap grid.
-
-### 2. Product Intent
-
-`Review Heatmap` не должен заменять Home streak widget.
-
-Роли разделены так:
-
-- Home = короткий motivator / recent streak
-- Stats = historical activity surface
-
-### 3. Visual Layout
-
-Блок должен:
-
-- использовать стандартный `Card` container;
-- иметь секционный заголовок на уровне страницы, а не внутри самой карточки;
-- центрировать heatmap внутри карточки;
+- использовать dark neutral empty cells;
+- использовать violet-to-lime intensity scale;
 - скрывать weekday labels;
 - скрывать legend;
-- показывать month labels только для полных месяцев;
-- использовать достаточно крупные day cells для комфортного desktop scan.
+- оставаться centered inside section.
 
-### 4. Window Rules
+### 3. Time window
 
-- desktop показывает примерно 9 месяцев истории;
-- mobile показывает примерно 4 месяца истории;
-- первый неполный месяц в окне не должен рендериться;
-- неделя начинается с понедельника.
-
-------------------------------------------------------------------------
-
-## Data Model
-
-Источником остается таблица `reviews`.
-
-Для heatmap нужны агрегаты по локальным дням пользователя:
-
-```sql
-SELECT reviewed_at, rating, state
-FROM reviews
-WHERE user_id = '{user_id}'
-  AND reviewed_at >= now() - interval '280 days'
-ORDER BY reviewed_at ASC;
-```
-
-Примечания:
-
-- агрегирование выполняется в приложении, а не в SQL;
-- timezone пользователя обязателен;
-- будущие даты не должны появляться как активные.
-
-------------------------------------------------------------------------
-
-## UI Components
-
-`src/components/activity/`
-- `ReviewHeatmap.tsx`
-- `ReviewHeatmap.stories.tsx`
-
-`src/components/ui/`
-- `calendar-heatmap.tsx`
-
-`src/lib/`
-- `activity.ts`
-
-------------------------------------------------------------------------
-
-## Behavior
-
-- 0 reviews = empty cell;
-- higher review counts = stronger intensity bucket;
-- tooltip по cell показывает:
-  - дату,
-  - число review,
-  - `masteredWords`;
-- heatmap не должен вызывать заметный layout shift при загрузке страницы;
-- mobile и desktop должны переключаться по breakpoint, а не через post-mount resize recalculation.
-
-------------------------------------------------------------------------
+- mobile: около 4 месяцев;
+- desktop: около 9 месяцев;
+- недели Monday-first;
+- первый неполный месяц не должен рендериться как отдельный label.
 
 ## Acceptance Criteria
 
-- [ ] `/stats` показывает `Review Heatmap`
-- [ ] heatmap использует Monday-first reading
-- [ ] первый неполный месяц в диапазоне не рендерится
-- [ ] desktop и mobile используют разные history windows
-- [ ] weekday labels скрыты
-- [ ] legend скрыт
-- [ ] day cells остаются крупными и читаемыми
-- [ ] блок не дергает layout при initial load
-- [ ] компонент остается визуально совместимым с текущей dashboard design system
+- [ ] `/stats` показывает heatmap в dark shell.
+- [ ] intensity scale совместима с lime/violet accent system.
+- [ ] mobile и desktop используют разные окна истории.
+- [ ] tooltip продолжает показывать дату, reviews и `masteredWords`.
+- [ ] компонент не вызывает layout shift после mount.
