@@ -487,17 +487,18 @@ export function ReviewSession({
 
   return (
     <div
-      className="relative min-h-0 flex-1 overflow-hidden bg-[#f4f1ec]"
+      className="relative min-h-0 flex-1 overflow-hidden bg-[#090511]"
       style={{ overscrollBehaviorY: done ? 'auto' : 'none' }}
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.62)_0%,rgba(255,255,255,0.22)_32%,rgba(244,241,236,0.94)_74%,rgba(244,241,236,1)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(159,92,255,0.22)_0%,transparent_32%),radial-gradient(circle_at_bottom,rgba(242,255,119,0.08)_0%,transparent_26%),linear-gradient(180deg,#090511_0%,#0b0714_45%,#08050f_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(0,0,0,0.34),transparent)]" />
       </div>
 
       <TooltipProvider delay={0} closeDelay={0}>
-        <div className="relative z-10 flex h-full min-h-0 flex-col pb-[calc(env(safe-area-inset-bottom)+7rem)] sm:pb-[calc(env(safe-area-inset-bottom)+8rem)]">
-          <div className="mx-auto flex w-full max-w-xl min-h-0 flex-1 flex-col px-2 pb-3 pt-3 sm:px-4 sm:pb-5 sm:pt-4">
-            <div className="flex items-center justify-between gap-3 pb-2 sm:pb-3">
+        <div className="relative z-10 flex h-full min-h-0 flex-col pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pb-[calc(env(safe-area-inset-bottom)+7rem)]">
+          <div className="mx-auto flex w-full max-w-[36rem] min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-5 sm:pt-4">
+            <div className="flex items-center justify-between gap-3 pb-3 sm:pb-4">
               <Tooltip>
                 <TooltipTrigger
                   render={
@@ -506,7 +507,7 @@ export function ReviewSession({
                       variant="ghost"
                       size="icon"
                       onClick={handleExitReview}
-                      className="h-10 w-10 rounded-full border border-white/35 bg-white/78 text-foreground/75 shadow-[0_12px_28px_-18px_rgba(15,23,42,0.38)] backdrop-blur-xl hover:bg-white/92 hover:text-foreground"
+                      className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.06] text-white/76 shadow-[0_18px_30px_-22px_rgba(0,0,0,0.72)] backdrop-blur-xl hover:bg-white/[0.12] hover:text-white"
                       aria-label="Exit review"
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -520,7 +521,7 @@ export function ReviewSession({
 
               <div className="min-w-0 text-center">
                 {showSessionHeader ? (
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-foreground/55 sm:text-xs">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/58 sm:text-xs">
                     {sessionLabel}
                   </div>
                 ) : null}
@@ -529,15 +530,15 @@ export function ReviewSession({
               <div className="shrink-0">
                 <AnimatedCircularProgressBar
                   value={progress}
-                  gaugePrimaryColor="rgb(16 185 129)"
-                  gaugeSecondaryColor="rgba(15, 23, 42, 0.08)"
-                  className="size-12 text-[10px] sm:size-14 sm:text-xs"
+                  gaugePrimaryColor="rgb(244 255 95)"
+                  gaugeSecondaryColor="rgba(255, 255, 255, 0.14)"
+                  className="size-12 text-[10px] text-white sm:size-14 sm:text-xs"
                   label={`${currentStep} / ${projectedTotal || total}`}
                 />
               </div>
             </div>
 
-            <div className="relative mx-auto flex min-h-0 w-full max-w-xl flex-1 items-center justify-center">
+            <div className="relative mx-auto flex min-h-0 w-full max-w-[36rem] flex-1 items-center justify-center pb-2 sm:pb-4">
               <AnimatePresence mode="wait" initial={false} custom={cardExitDirection}>
                 <motion.div
                   key={current.id}
@@ -579,11 +580,11 @@ export function ReviewSession({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 16 }}
                 transition={{ duration: 0.18, ease: 'easeOut' }}
-                className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-6 sm:px-4"
+                className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-6 sm:px-4"
               >
                 <div
                   ref={actionBarRef}
-                  className={`relative transition-opacity duration-150 ${revealed ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-100'}`}
+                  className={`relative rounded-full border border-white/10 bg-black/36 px-3 py-2 shadow-[0_28px_80px_-28px_rgba(0,0,0,0.82)] backdrop-blur-2xl transition-opacity duration-150 ${revealed ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-100'}`}
                 >
                   <AnimatePresence>
                     {burstState ? (

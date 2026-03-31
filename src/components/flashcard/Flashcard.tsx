@@ -139,7 +139,7 @@ export function Flashcard({
     <div
       className={cn(
         "flex flex-col gap-4 w-full mx-auto select-none",
-        previewMode ? "max-w-none" : "max-w-xl",
+        previewMode ? "max-w-none" : "max-w-[34rem]",
         className
       )}
     >
@@ -169,9 +169,9 @@ export function Flashcard({
             : undefined
         }
         className={[
-          "relative rounded-2xl border border-foreground/10",
-          "bg-card text-card-foreground",
-          "shadow-sm ring-1 ring-foreground/5",
+          "relative rounded-[28px] border border-white/10",
+          "bg-[rgba(20,16,33,0.96)] text-card-foreground",
+          "shadow-[0_28px_80px_-34px_rgba(0,0,0,0.86)] ring-1 ring-white/6",
           "touch-manipulation [webkit-tap-highlight-color:transparent] transition-[transform,box-shadow,ring-color,background-color] duration-150",
           !previewMode && !isRevealed
             ? "cursor-pointer hover:shadow-md hover:ring-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -179,7 +179,7 @@ export function Flashcard({
           isPressingReveal ? "scale-[0.995] shadow-xs ring-foreground/10" : "",
         ].join(" ")}
       >
-        <div className="flex flex-col gap-5 p-6 relative">
+        <div className="relative flex flex-col gap-5 p-6 sm:p-7">
           {/* Header action (e.g. NoteEditSheet trigger) */}
           {headerAction && (
             <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>

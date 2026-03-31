@@ -1,107 +1,63 @@
 # Echo - Feature: Responsive-First Home Layout
 
-## Context
-
-Главная страница со временем стала выглядеть как компактный dashboard:
-
-- верхняя навигация на мобильном читалась как сжатая desktop-строка;
-- summary и streak забирали слишком много внимания до того, как пользователь видел deck list;
-- deck cards смешивали статус, primary CTA и secondary navigation без достаточно ясной иерархии;
-- desktop и mobile начинали расходиться по ощущению, хотя продукту нужен один и тот же home surface.
-
-Для Home это ослабляет главный сценарий: пользователь должен сразу понимать, что делать дальше, а не разбирать конкурирующие блоки.
-
 ## Goal
 
-Сделать Home единым responsive-first экраном, где mobile layout является базовым шаблоном для всех размеров, а desktop выглядит как та же самая страница с более свободным контейнером и spacing.
+Сделать Home более похожим на mobile-native productivity surface:
+
+- темный визуальный язык по умолчанию;
+- компактный shell;
+- быстрый доступ к основным разделам;
+- deck list как основной рабочий поток.
 
 ## Product Rules
 
-### 1. One shared layout
+### 1. Unified dark shell
 
-Home должен использовать один и тот же порядок секций на mobile и desktop:
+Главный shell должен использовать один и тот же dark theme contract на Home и Stats:
 
-1. top navigation
-2. page header
-3. deck list
+- dark background;
+- glass panels;
+- lime/violet accents;
+- compact top navigation.
 
-Desktop не должен получать:
+### 2. Mobile navigation
 
-- отдельный sidebar;
-- отдельную dashboard-композицию;
-- новую IA;
-- другой navigation pattern.
+На mobile вне review-маршрутов должна существовать фиксированная bottom navigation:
 
-### 2. Mobile-first shell
+- `Колоды`
+- `Статистика`
+- быстрое создание колоды
 
-Навигация на mobile должна быть компактной и не конкурировать с контентом.
+### 3. Home hierarchy
 
-- Частые разделы могут оставаться видимыми.
-- Вторичные действия должны уходить в overflow menu.
-- `Выйти` не должен оставаться primary action в верхней строке.
+Home должен начинаться с hero/status surface, после которого сразу идет список колод.
 
-### 3. Deck list as main focus
+На Home допустимы:
 
-Deck list должен оставаться главным actionable контентом Home.
+- brand tag;
+- короткий status headline;
+- небольшие агрегаты дня.
 
-- analytics summary не должен занимать отдельный крупный блок на первом экране;
-- weekly streak может быть временно скрыт, если для него еще не выбран финальный visual pattern;
-- пользователь должен быстро увидеть хотя бы одну полноценную deck card;
-- deck cards должны использовать единый шаблон состояний.
+Недопустим отдельный тяжелый analytics dashboard перед списком колод.
 
-### 4. Deck action hierarchy
+### 4. Deck cards
 
-Каждая deck card должна иметь:
+Каждая deck card обязана иметь:
 
-- один явно доминирующий primary CTA для study flow;
-- один полноценный secondary CTA для перехода в deck;
-- compact status chips вместо body copy.
+- крупный status surface с `due`;
+- один dominant study CTA;
+- один secondary CTA для перехода в deck;
+- compact chips для состояния сессии.
 
-Нельзя делать `Continue learning` и `Open deck` одинаково тяжелыми по визуальному весу.
+### 5. Desktop behavior
 
-Home не должен показывать raw red due-pressure, если он не соответствует пользовательскому ощущению после completed session и не меняет следующий шаг внутри review flow.
-
-Допустимый status vocabulary:
-
-- `Done today`
-- `N to study`
-- `Ready to start`
-- `Drafts`
-
-Правила:
-
-- `Done today` и `N to study` не могут показываться вместе;
-- `Done today` и `Ready to start` не могут показываться вместе;
-- `Drafts` может сосуществовать с любым основным статусом;
-- chip-строка должна быть на одной линии с заголовком колоды и выровнена вправо.
-- если visible due work нет, primary CTA на Home открывает optional extra-study choice (`+10`, `+20`);
-- если deck помечен как `Done today`, но visible due work снова появилось, Home сохраняет позитивный статус и все равно дает прямой due-review CTA;
-- extra-study choice на Home должен вести себя одинаково независимо от `completedToday`; автозапуск extra session без выбора размера недопустим.
-
-### 5. Desktop as a larger version of mobile
-
-На больших экранах разрешено увеличивать:
-
-- максимальную ширину контейнера;
-- отступы;
-- размер типографики;
-- визуальный воздух между блоками.
-
-Нельзя перестраивать страницу в отдельный desktop-specific dashboard.
+Desktop не должен вводить отдельный sidebar или иную IA. Он остается расширенной версией mobile shell.
 
 ## Acceptance Criteria
 
-- [ ] Home использует один и тот же порядок секций на mobile и desktop.
-- [ ] Верхняя навигация на mobile больше не выглядит как длинная строка из desktop-пунктов.
-- [ ] `Выйти` убран из основной строки навигации и доступен как secondary action.
-- [ ] Deck list визуально читается как главный блок страницы.
-- [ ] Streak не вытесняет deck list слишком далеко вниз.
-- [ ] Home не содержит крупного daily stats блока между title и deck list.
-- [ ] Каждая deck card имеет один доминирующий primary CTA и один secondary CTA той же высоты.
-- [ ] Deck cards не показывают `cards total` и не содержат redundant helper text.
-- [ ] Статус deck card передается через chips и не противоречит доступному CTA.
-- [ ] Home не показывает raw red due-count как тревожный сигнал, если это не соответствует user-facing next step.
-- [ ] Для `Done today` extra-study menu содержит только `+10` и `+20`.
-- [ ] Для deck без visible due work Home всегда показывает один и тот же extra-study dropdown с `+10` и `+20`.
-- [ ] Weekly streak скрыт с Home до отдельного дизайн-решения.
-- [ ] Desktop остается той же самой страницей, а не отдельной dashboard-версией.
+- [ ] Home и Stats используют общий dark visual language.
+- [ ] На mobile есть fixed bottom navigation вне review screen.
+- [ ] Home начинается с hero/status блока.
+- [ ] Deck list остается первым главным actionable блоком после hero.
+- [ ] Каждая deck card имеет один primary и один secondary CTA.
+- [ ] Secondary actions не конкурируют с основным review flow.

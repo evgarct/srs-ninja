@@ -98,11 +98,20 @@ export function RatingButtons({
         role="group"
         aria-label="Rate your recall"
       >
-        {BUTTONS.map(({ rating, label, key, icon: Icon, sizeClass, shellClass, iconClass, hoverClass, intervalKey }) => {
+        {BUTTONS.map(({ rating, label, key, icon: Icon, shellClass, iconClass, hoverClass, intervalKey }) => {
           const ariaLabel = `${label} (key ${key})${intervals ? `, ${intervals[intervalKey]}` : ""}`
           const tooltipText = intervals ? `${label} · ${intervals[intervalKey]}` : label
 
           if (isFloating) {
+            const floatingToneClass =
+              rating === 1
+                ? "text-rose-300 hover:text-rose-200 hover:border-rose-300/28 hover:bg-rose-300/10"
+                : rating === 2
+                  ? "text-orange-300 hover:text-orange-200 hover:border-orange-300/28 hover:bg-orange-300/10"
+                  : rating === 3
+                    ? "text-sky-300 hover:text-sky-200 hover:border-sky-300/28 hover:bg-sky-300/10"
+                    : "text-emerald-300 hover:text-emerald-200 hover:border-emerald-300/28 hover:bg-emerald-300/10"
+
             return (
               <Tooltip key={rating}>
                 <TooltipTrigger
@@ -115,15 +124,15 @@ export function RatingButtons({
                       }}
                       aria-label={ariaLabel}
                       className={`
-                        ${sizeClass}
+                        h-[3.6rem] w-[3.6rem] sm:h-[3.9rem] sm:w-[3.9rem]
                         inline-flex items-center justify-center rounded-full
                         touch-manipulation [webkit-tap-highlight-color:transparent]
                         transition-all duration-200
-                        border border-white/80
+                        border border-white/10 bg-white/[0.04]
                         active:scale-95 active:translate-y-0.5
                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-                        ${shellClass}
-                        ${hoverClass}
+                        shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]
+                        ${floatingToneClass}
                       `}
                     >
                       <Icon className={iconClass} />
