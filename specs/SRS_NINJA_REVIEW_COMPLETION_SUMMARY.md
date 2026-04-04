@@ -60,6 +60,7 @@ The completion screen must stay inside the current design system:
 
 - use shared card/badge/button primitives;
 - support mobile layouts cleanly;
+- keep the same dark review-stage visual language as the active session instead of flipping to a light summary surface;
 - motion should be restrained and functional.
 - avoid excessive nested borders or card-inside-card noise on the completion summary.
 
@@ -94,4 +95,4 @@ The review route handling for due review, manual review, and extra study must sh
 - [ ] On mobile, the completion surface remains scrollable even inside the fixed-height review shell.
 - [ ] On mobile, a return-to-home control is reachable near the top of the completion screen.
 - [ ] The completion surface works on desktop and mobile.
-- [ ] Reusable user-visible UI is reflected in Storybook when practical.
+- [ ] The completion surface has a fullscreen Storybook story for desktop and mobile visual review without auth or live review state.
