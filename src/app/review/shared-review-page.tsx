@@ -118,7 +118,7 @@ export async function renderSharedReviewPage(
   }
 
   return (
-    <main className="mx-auto flex h-[100svh] w-full flex-col overflow-hidden bg-[#090511] px-0 pb-0 pt-0 md:h-[calc(100svh-3.5rem)]">
+    <main className="mx-auto flex h-[100svh] w-full flex-col overflow-hidden bg-[#090511] px-0 pb-0 pt-0">
       <ReviewSession
         cards={cards}
         deckId={deckId}
