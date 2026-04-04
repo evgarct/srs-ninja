@@ -105,18 +105,19 @@ export function ReviewSessionComplete({
   const difficultCount = stats.ratings.again + stats.ratings.hard
   const completionCopy = getCompletionCopy(sessionMode)
   const canRestartDue = sessionMode === 'due' && pendingReviewCount === 0
+  const shouldCelebrate = sessionMode === 'due' && !shouldReduceMotion && !syncError
   const secondaryLinkHref = canRestartDue ? `/decks/${deckId}/review` : `/deck/${deckId}`
   const secondaryLinkLabel = canRestartDue ? 'Повторить due-сессию' : 'К колоде'
 
   useEffect(() => {
-    if (shouldReduceMotion || syncError) return
+    if (!shouldCelebrate) return
 
     const intervalId = window.setInterval(() => {
       setCelebrationTick((current) => current + 1)
     }, 3000)
 
     return () => window.clearInterval(intervalId)
-  }, [shouldReduceMotion, syncError])
+  }, [shouldCelebrate])
 
   return (
     <div className="relative h-full overflow-y-auto overscroll-contain bg-[#090511] px-3 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pt-6">
@@ -125,7 +126,7 @@ export function ReviewSessionComplete({
         <div className="absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(0,0,0,0.42),transparent)]" />
       </div>
 
-      {!shouldReduceMotion && !syncError && celebrationTick > 0 && (
+      {shouldCelebrate && celebrationTick > 0 && (
         <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
           {PARTICLES.map((particle, index) => (
             <motion.div
