@@ -3,10 +3,18 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { ArrowLeft, CheckCheck, Clock3, Flame, RotateCcw, Sparkles, TrendingUp } from 'lucide-react'
+import {
+  ArrowLeft,
+  CheckCheck,
+  Clock3,
+  Flame,
+  RotateCcw,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/lib/button-variants'
 import type { ReviewSessionMode } from '@/lib/review-session-completion-state'
@@ -59,7 +67,7 @@ function getCompletionCopy(sessionMode: ReviewSessionMode) {
       badge: 'Manual review',
       title: 'Фильтр завершен',
       body: 'Вы прошли выбранный набор карточек. Можно вернуться к колоде или запустить новый фильтр.',
-      accent: 'bg-sky-500/10 text-sky-700',
+      accent: 'border-sky-400/18 bg-sky-400/10 text-sky-200',
       icon: <RotateCcw className="size-4" />,
     }
   }
@@ -69,7 +77,7 @@ function getCompletionCopy(sessionMode: ReviewSessionMode) {
       badge: 'Extra study',
       title: 'Экстра-практика завершена',
       body: 'Вы взяли дополнительные карточки сверх основной сессии. Это ускоряет темп, но не заменяет основной review.',
-      accent: 'bg-violet-500/10 text-violet-700',
+      accent: 'border-violet-400/18 bg-violet-400/10 text-violet-200',
       icon: <Sparkles className="size-4" />,
     }
   }
@@ -78,7 +86,7 @@ function getCompletionCopy(sessionMode: ReviewSessionMode) {
     badge: 'Done today',
     title: 'Сегодняшняя сессия завершена',
     body: 'Основной review на сегодня закрыт. Следующее повторение система подберет автоматически.',
-    accent: 'bg-emerald-500/10 text-emerald-700',
+    accent: 'border-emerald-400/18 bg-emerald-400/10 text-emerald-200',
     icon: <CheckCheck className="size-4" />,
   }
 }
@@ -111,7 +119,12 @@ export function ReviewSessionComplete({
   }, [shouldReduceMotion, syncError])
 
   return (
-    <div className="relative h-full overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-4 sm:pb-8 sm:pt-6">
+    <div className="relative h-full overflow-y-auto overscroll-contain bg-[#090511] px-3 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pt-6">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(159,92,255,0.18)_0%,transparent_34%),radial-gradient(circle_at_bottom,rgba(242,255,119,0.08)_0%,transparent_26%),linear-gradient(180deg,#090511_0%,#0b0714_45%,#08050f_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(0,0,0,0.42),transparent)]" />
+      </div>
+
       {!shouldReduceMotion && !syncError && celebrationTick > 0 && (
         <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
           {PARTICLES.map((particle, index) => (
@@ -134,34 +147,18 @@ export function ReviewSessionComplete({
         </div>
       )}
 
-      <div className="sticky top-0 z-20 -mx-3 mb-3 bg-[linear-gradient(to_bottom,rgba(244,241,236,0.98),rgba(244,241,236,0.88),rgba(244,241,236,0))] px-3 pb-3 pt-1 sm:-mx-4 sm:px-4">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 sm:flex-row sm:justify-between">
-          <Button onClick={onGoHome} disabled={pendingReviewCount > 0} className="min-h-11 sm:min-w-40">
-            <ArrowLeft className="size-4" />
-            На главную
-          </Button>
-          {pendingReviewCount > 0 ? (
-            <Button variant="outline" disabled className="min-h-11">
-              {secondaryLinkLabel}
-            </Button>
-          ) : (
-            <Link
-              href={secondaryLinkHref}
-              className={cn(buttonVariants({ variant: 'outline' }), 'min-h-11')}
-            >
-              {secondaryLinkLabel}
-            </Link>
-          )}
-        </div>
-      </div>
-
       <motion.div
-        initial={shouldReduceMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
+        initial={shouldReduceMotion ? undefined : { opacity: 0, y: 12, scale: 0.985 }}
         animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-        className="mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4"
+        className="relative mx-auto flex max-w-3xl flex-col gap-3 sm:gap-4"
       >
-        <Card className={cn('overflow-visible border-white/60 bg-white/88 shadow-[0_18px_60px_-28px_rgba(15,23,42,0.28)]', sessionMode === 'due' && 'ring-1 ring-emerald-500/12')}>
+        <Card
+          className={cn(
+            'overflow-visible border-white/10 bg-[rgba(20,16,33,0.94)] text-white shadow-[0_28px_80px_-34px_rgba(0,0,0,0.82)] ring-white/6',
+            sessionMode === 'due' && 'ring-1 ring-emerald-500/14'
+          )}
+        >
           <CardHeader className="gap-3 pb-1 text-center sm:gap-4">
             <motion.div
               initial={shouldReduceMotion ? undefined : { opacity: 0, y: 8 }}
@@ -169,40 +166,44 @@ export function ReviewSessionComplete({
               transition={{ delay: 0.05, duration: 0.28 }}
               className="flex justify-center"
             >
-              <Badge variant="secondary" className={cn('mx-auto gap-1.5', completionCopy.accent)}>
+              <Badge variant="outline" className={cn('mx-auto gap-1.5 border', completionCopy.accent)}>
                 {completionCopy.icon}
                 {completionCopy.badge}
               </Badge>
             </motion.div>
+
             <div className="space-y-1.5">
-              <CardTitle className="text-[1.75rem] leading-tight sm:text-3xl">{completionCopy.title}</CardTitle>
-              <p className="mx-auto max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
+              <CardTitle className="text-[1.75rem] leading-tight text-white sm:text-3xl">
+                {completionCopy.title}
+              </CardTitle>
+              <p className="mx-auto max-w-xl text-sm leading-6 text-white/64 sm:text-base">
                 {completionCopy.body}
               </p>
             </div>
           </CardHeader>
+
           <CardContent className="space-y-3 sm:space-y-4">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
                 {
                   label: 'Карточек',
                   value: String(stats.total),
-                  icon: <CheckCheck className="size-4 text-emerald-600" />,
+                  icon: <CheckCheck className="size-4 text-emerald-400" />,
                 },
                 {
                   label: 'Точность',
                   value: `${accuracy}%`,
-                  icon: <TrendingUp className="size-4 text-sky-600" />,
+                  icon: <TrendingUp className="size-4 text-sky-400" />,
                 },
                 {
                   label: 'Время',
                   value: formatDuration(stats.durationMs),
-                  icon: <Clock3 className="size-4 text-amber-600" />,
+                  icon: <Clock3 className="size-4 text-amber-400" />,
                 },
                 {
                   label: 'Сложных',
                   value: String(difficultCount),
-                  icon: <Flame className="size-4 text-rose-600" />,
+                  icon: <Flame className="size-4 text-rose-400" />,
                 },
               ].map((item, index) => (
                 <motion.div
@@ -210,13 +211,15 @@ export function ReviewSessionComplete({
                   initial={shouldReduceMotion ? undefined : { opacity: 0, y: 10 }}
                   animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                   transition={{ delay: 0.08 + index * 0.05, duration: 0.24 }}
-                  className="rounded-2xl bg-muted/35 px-3 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:px-4"
+                  className="rounded-2xl border border-white/8 bg-white/[0.06] px-3 py-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:px-4"
                 >
-                  <div className="mb-1.5 flex items-center gap-2 text-muted-foreground">
+                  <div className="mb-1.5 flex items-center gap-2 text-white/42">
                     {item.icon}
                     <span className="text-xs font-medium uppercase tracking-[0.12em]">{item.label}</span>
                   </div>
-                  <p className="text-xl font-semibold tabular-nums sm:text-2xl">{item.value}</p>
+                  <p className="text-xl font-semibold tabular-nums text-white sm:text-2xl">
+                    {item.value}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -225,34 +228,71 @@ export function ReviewSessionComplete({
               initial={shouldReduceMotion ? undefined : { opacity: 0, y: 10 }}
               animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
               transition={{ delay: 0.22, duration: 0.24 }}
-              className="grid grid-cols-2 gap-2 rounded-2xl bg-muted/28 p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] sm:grid-cols-4 sm:gap-3 sm:p-3"
+              className="grid grid-cols-2 gap-2 rounded-2xl border border-white/8 bg-white/[0.04] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-4 sm:gap-3 sm:p-3"
             >
               {[
                 { label: 'Again', value: stats.ratings.again, tone: 'text-destructive' },
-                { label: 'Hard', value: stats.ratings.hard, tone: 'text-orange-500' },
-                { label: 'Good', value: stats.ratings.good, tone: 'text-green-600' },
-                { label: 'Easy', value: stats.ratings.easy, tone: 'text-sky-600' },
+                { label: 'Hard', value: stats.ratings.hard, tone: 'text-orange-400' },
+                { label: 'Good', value: stats.ratings.good, tone: 'text-emerald-400' },
+                { label: 'Easy', value: stats.ratings.easy, tone: 'text-sky-400' },
               ].map((item) => (
-                <div key={item.label} className="rounded-xl bg-white/72 px-3 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.55)] sm:px-4 sm:py-3">
+                <div
+                  key={item.label}
+                  className="rounded-xl border border-white/8 bg-[#110d1d] px-3 py-2.5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] sm:px-4 sm:py-3"
+                >
                   <p className={cn('text-sm font-semibold', item.tone)}>{item.label}</p>
-                  <p className="mt-0.5 text-xl font-semibold tabular-nums sm:mt-1 sm:text-2xl">{item.value}</p>
+                  <p className="mt-0.5 text-xl font-semibold tabular-nums text-white sm:mt-1 sm:text-2xl">
+                    {item.value}
+                  </p>
                 </div>
               ))}
             </motion.div>
 
-            {pendingReviewCount > 0 && (
-              <p className="text-center text-sm text-muted-foreground">
+            {pendingReviewCount > 0 ? (
+              <p className="text-center text-sm text-white/56">
                 Сохраняем результаты... {pendingReviewCount}
               </p>
-            )}
-            {syncError && (
-              <p className="text-center text-sm text-destructive">
-                {syncError}
-              </p>
-            )}
+            ) : null}
+
+            {syncError ? (
+              <p className="text-center text-sm text-destructive">{syncError}</p>
+            ) : null}
           </CardContent>
         </Card>
       </motion.div>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-6 sm:px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,rgba(9,5,17,0),rgba(9,5,17,0.92)_42%,rgba(9,5,17,0.98))]" />
+        <div className="pointer-events-auto relative flex w-full max-w-3xl flex-col gap-2 sm:flex-row sm:justify-between">
+          <Button
+            onClick={onGoHome}
+            disabled={pendingReviewCount > 0}
+            className="min-h-11 sm:min-w-40"
+          >
+            <ArrowLeft className="size-4" />
+            На главную
+          </Button>
+          {pendingReviewCount > 0 ? (
+            <Button
+              variant="outline"
+              disabled
+              className="min-h-11 border-white/10 bg-white/[0.05] text-white/55"
+            >
+              {secondaryLinkLabel}
+            </Button>
+          ) : (
+            <Link
+              href={secondaryLinkHref}
+              className={cn(
+                buttonVariants({ variant: 'outline' }),
+                'min-h-11 border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:text-white'
+              )}
+            >
+              {secondaryLinkLabel}
+            </Link>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

@@ -4,14 +4,18 @@ import { fn } from 'storybook/test'
 import { ReviewSessionComplete } from './review-session-complete'
 
 const meta: Meta<typeof ReviewSessionComplete> = {
-  title: 'Review/ReviewSessionComplete',
+  title: 'Review/Screens/ReviewSessionComplete',
   component: ReviewSessionComplete,
   tags: ['autodocs'],
-  parameters: { layout: 'centered' },
+  parameters: {
+    layout: 'fullscreen',
+  },
   decorators: [
     (Story) => (
-      <div className="w-[min(56rem,calc(100vw-2rem))] p-4">
-        <Story />
+      <div className="min-h-screen bg-[#090511]">
+        <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col overflow-hidden bg-[#090511]">
+          <Story />
+        </main>
       </div>
     ),
   ],
@@ -22,14 +26,14 @@ const meta: Meta<typeof ReviewSessionComplete> = {
     syncError: null,
     onGoHome: fn(),
     stats: {
-      total: 48,
-      correct: 39,
-      durationMs: 329000,
+      total: 69,
+      correct: 40,
+      durationMs: 98000,
       ratings: {
-        again: 4,
-        hard: 5,
-        good: 27,
-        easy: 12,
+        again: 28,
+        hard: 1,
+        good: 0,
+        easy: 40,
       },
     },
   },
@@ -39,7 +43,15 @@ export default meta
 
 type Story = StoryObj<typeof ReviewSessionComplete>
 
-export const DueReview: Story = {}
+export const DesktopDueReview: Story = {}
+
+export const MobileDueReview: Story = {
+  parameters: {
+    viewport: {
+      defaultViewport: 'mobile1',
+    },
+  },
+}
 
 export const ManualReview: Story = {
   args: {
@@ -53,28 +65,6 @@ export const ExtraStudy: Story = {
   },
 }
 
-export const MobileExtraStudy: Story = {
-  args: {
-    sessionMode: 'extra',
-    stats: {
-      total: 4,
-      correct: 4,
-      durationMs: 4000,
-      ratings: {
-        again: 0,
-        hard: 0,
-        good: 3,
-        easy: 1,
-      },
-    },
-  },
-  parameters: {
-    viewport: {
-      defaultViewport: 'mobile1',
-    },
-  },
-}
-
 export const SyncPending: Story = {
   args: {
     pendingReviewCount: 2,
@@ -83,6 +73,7 @@ export const SyncPending: Story = {
 
 export const SyncError: Story = {
   args: {
-    syncError: 'Часть результатов не сохранилась. Лучше обновить страницу и проверить историю review.',
+    syncError:
+      'Часть результатов не сохранилась. Лучше обновить страницу и проверить историю review.',
   },
 }

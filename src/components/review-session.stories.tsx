@@ -83,8 +83,8 @@ type Story = StoryObj<typeof ReviewSession>
 
 export const Desktop: Story = {
   render: (args) => (
-    <div className="min-h-screen bg-[#dedede] p-4">
-      <main className="mx-auto flex h-[calc(100svh-2rem)] w-full flex-col overflow-hidden bg-[#dedede] px-3 pb-0 pt-0 sm:px-4">
+    <div className="min-h-screen bg-[#090511] p-4">
+      <main className="mx-auto flex h-[calc(100svh-2rem)] w-full flex-col overflow-hidden bg-[#090511] px-3 pb-0 pt-0 sm:px-4">
         <ReviewSession {...args} />
       </main>
     </div>

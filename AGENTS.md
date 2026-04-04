@@ -57,6 +57,8 @@
 ## UI / Storybook Execution Order
 
 - For user-visible UI work, first update the real app flow, then update Storybook, then manually sanity-check both before considering the task complete.
+- For every user-visible page or screen, create and maintain a page-level Storybook story so the full surface can be visually reviewed in isolation without depending on auth, live backend state, or business-logic entry conditions.
+- Prefer visual verification in isolated Storybook page stories before relying on the running app, especially when auth, routing, or server data would otherwise block fast iteration.
 - When a component uses `next/navigation`, App Router hooks, app-level fonts, or global Tailwind/shadcn styling, make Storybook mirror the app shell before debugging the component itself.
 - Storybook setup must include the app global CSS, Next App Router mode, and the same font setup used by the app whenever visual parity matters.
 - If a Storybook-rendered component throws a context error, first check missing providers, missing App Router setup, and missing environment assumptions before changing product code.
