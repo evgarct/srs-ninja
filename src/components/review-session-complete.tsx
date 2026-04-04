@@ -105,18 +105,19 @@ export function ReviewSessionComplete({
   const difficultCount = stats.ratings.again + stats.ratings.hard
   const completionCopy = getCompletionCopy(sessionMode)
   const canRestartDue = sessionMode === 'due' && pendingReviewCount === 0
+  const shouldCelebrate = sessionMode === 'due' && !shouldReduceMotion && !syncError
   const secondaryLinkHref = canRestartDue ? `/decks/${deckId}/review` : `/deck/${deckId}`
   const secondaryLinkLabel = canRestartDue ? 'Повторить due-сессию' : 'К колоде'
 
   useEffect(() => {
-    if (shouldReduceMotion || syncError) return
+    if (!shouldCelebrate) return
 
     const intervalId = window.setInterval(() => {
       setCelebrationTick((current) => current + 1)
     }, 3000)
 
     return () => window.clearInterval(intervalId)
-  }, [shouldReduceMotion, syncError])
+  }, [shouldCelebrate])
 
   return (
     <div className="relative h-full overflow-y-auto overscroll-contain bg-[#090511] px-3 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pt-6">
@@ -125,7 +126,7 @@ export function ReviewSessionComplete({
         <div className="absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(0,0,0,0.42),transparent)]" />
       </div>
 
-      {!shouldReduceMotion && !syncError && celebrationTick > 0 && (
+      {shouldCelebrate && celebrationTick > 0 && (
         <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
           {PARTICLES.map((particle, index) => (
             <motion.div
@@ -262,12 +263,12 @@ export function ReviewSessionComplete({
       </motion.div>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-6 sm:px-4">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,rgba(9,5,17,0),rgba(9,5,17,0.92)_42%,rgba(9,5,17,0.98))]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(180deg,rgba(9,5,17,0),rgba(9,5,17,0.18)_62%,rgba(9,5,17,0.28))]" />
         <div className="pointer-events-auto relative flex w-full max-w-3xl flex-col gap-2 sm:flex-row sm:justify-between">
           <Button
             onClick={onGoHome}
             disabled={pendingReviewCount > 0}
-            className="min-h-11 sm:min-w-40"
+            className="min-h-11 border border-[#f4ff5f]/80 bg-[#f4ff5f] text-[#16131f] shadow-[0_18px_40px_-28px_rgba(244,255,120,0.95)] hover:bg-[#eef75a] sm:min-w-40"
           >
             <ArrowLeft className="size-4" />
             На главную
