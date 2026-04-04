@@ -77,6 +77,7 @@ export async function renderSharedReviewPage(
     isExtra,
     isManual,
     orderCards,
+    sessionLimit: isExtra || isManual ? undefined : REGULAR_DUE_REVIEW_LIMIT,
   })
 
   let audioMap: Record<string, string> = {}

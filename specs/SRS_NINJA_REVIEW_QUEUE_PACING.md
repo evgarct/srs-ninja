@@ -2,79 +2,58 @@
 
 ## Context
 
-Regular due review currently feels artificially constrained and too repetitive:
+Users can feel that training words arrive in roughly the same order they were added, even though the queue already applies some in-session shuffling.
 
-- due-session launch fetches only a small fixed slice of due cards;
-- difficult cards return by a simple fixed near-front reinsertion pattern;
-- the queue can feel more mechanical than Anki-like.
+The main problem is upstream:
 
-This weakens trust in the review flow and makes difficult cards feel annoying instead of pedagogically useful.
+- regular due review trims the SQL result too early;
+- extra study takes the oldest new cards too literally;
+- the ordering layer does not get enough candidate variety to build a natural-feeling session.
 
 ## Goal
 
-Make the regular due-review session feel closer to Anki's daily review behavior without cloning Anki UI:
-
-- use an Anki-like daily review limit instead of the current tiny-feeling launch cap;
-- keep failed and difficult cards inside the active learning loop;
-- bring those cards back later with breathing room instead of almost immediately;
-- preserve fast session flow and alignment with the existing FSRS scheduler.
+Make review sessions feel more random and less insertion-ordered without breaking SRS scheduling rules.
 
 ## Product Rules
 
-### 1. Daily due-session limit
+### 1. Wider due candidate pool
+
+Regular due review must fetch a wider candidate pool than the visible due-session limit.
+
+The product may still keep a visible session cap, but ordering should run before the final trim.
+
+### 2. Final trim happens after ordering
 
 For regular due review:
 
-- session launch should support up to `200` due cards;
-- this is the product-level default maximum reviews/day behavior for now;
-- manual review and extra study do not inherit this cap automatically.
+- fetch candidate cards;
+- run tier ordering and sibling separation;
+- only then trim to the configured visible session size.
 
-### 2. New card limit
+### 3. Extra study should not feel insertion-ordered
 
-For regular due review:
+When extra study selects new cards, it should not simply take the first `N` by `created_at`.
 
-- new cards remain separately capped at `20` per session;
-- this cap is distinct from the due review limit.
+It may still anchor itself in older unseen cards first, but the final picked set should feel shuffled.
 
-### 3. Difficult-card reinsertion
+### 4. Scheduler integrity
 
-For any active review-session queue:
+This feature must not change the stored FSRS scheduling rules.
 
-- `Again` returns the current card later in the same queue;
-- `Hard` also returns the current card later in the same queue, and later than `Again`;
-- `Good` and `Easy` remove the card from the active queue.
+Allowed:
 
-The reinsertion should:
+- changing which due cards enter the current session;
+- changing how the current in-memory session queue is assembled.
 
-- avoid the current fixed offsets (`1` and `3`);
-- use a delayed reinsertion window based on remaining queue length;
-- allow slight bounded variation so the pattern is not deterministic and annoying;
-- still preserve the basic expectation that `Again` comes back sooner than `Hard`.
+Not allowed:
 
-### 4. Shared mechanics
-
-The learning-loop behavior must remain aligned across:
-
-- regular due review;
-- manual filtered review;
-- extra study.
-
-Session entry mode may still control which cards are gathered initially, but the in-session queue mechanics should not silently diverge.
-
-### 5. Scheduler integrity
-
-This feature must not rewrite or replace the existing FSRS scheduling engine.
-
-- `ts-fsrs` remains the source of truth for scheduling;
-- this task only changes queue policy and pacing around the active session.
+- changing interval computation;
+- changing how `submitReview()` persists ratings.
 
 ## Acceptance Criteria
 
-- [ ] Regular due review supports up to `200` due cards per session launch.
-- [ ] Regular due review still caps new cards at `20`.
-- [ ] `Again` returns a card later in the active queue without the current fixed near-front pattern.
-- [ ] `Hard` returns later than `Again`.
-- [ ] `Good` and `Easy` release the card from the active queue.
-- [ ] Queue pacing logic is covered by automated tests.
-- [ ] Manual review and extra study keep the same active learning-loop mechanics unless explicitly documented otherwise.
-- [ ] The FSRS scheduling engine remains unchanged.
+- [ ] Regular due review fetches a wider candidate pool than the visible session limit.
+- [ ] Regular due review trims only after ordering.
+- [ ] Extra study no longer feels strictly ordered by insertion time.
+- [ ] The FSRS scheduler remains unchanged.
+- [ ] Candidate-pool and final-trim behavior are covered by automated tests.

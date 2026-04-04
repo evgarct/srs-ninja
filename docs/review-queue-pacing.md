@@ -2,60 +2,65 @@
 
 ## Summary
 
-Regular due review now behaves more like an Anki-style daily review session:
+Regular due review now gathers a wider due-card candidate pool before the session is trimmed.
 
-- due-session launch supports up to `200` due cards;
-- new cards remain capped separately at `20`;
-- `Again` and `Hard` no longer come back by fixed offsets near the front of the queue;
-- difficult cards return through delayed reinsertion windows with slight bounded variation.
+That changes the feel of the queue without changing FSRS:
 
-This keeps the existing FSRS scheduler intact while making the active queue feel less repetitive and less artificially small.
+- the SQL query still starts from the oldest due cards;
+- the app now fetches a wider candidate window than the visible session limit;
+- card ordering and sibling separation run on that wider pool;
+- only then is the regular session trimmed back to the configured limit;
+- extra study also samples new cards from a wider oldest-first pool before shuffling them into the session.
+
+This reduces the "same order they were added" feeling while preserving scheduler integrity.
 
 ## Files
 
-- `src/lib/review-config.ts`
+- `src/lib/actions/cards.ts`
+- `src/lib/review-card-selection.ts`
 - `src/lib/card-ordering.ts`
-- `src/lib/review-loop.ts`
-- `src/lib/review-loop.test.ts`
-- `src/app/decks/[id]/review/page.tsx`
-- `src/app/review/[deckId]/page.tsx`
+- `src/app/review/shared-review-page.tsx`
+- `src/lib/review-card-selection.test.ts`
 
-## Due Session Sizing
+## Candidate Pool
 
-Regular due review uses `REGULAR_DUE_REVIEW_LIMIT = 200`.
+Regular due review still uses `REGULAR_DUE_REVIEW_LIMIT = 200` as the visible session size.
 
-This replaces the previous small fixed launch slice in the regular due routes and is intended to behave like a product-level maximum reviews/day default.
+The fetch step now expands that limit through `getReviewSessionCandidateLimit()`:
 
-Manual review and extra study keep their own selection behavior.
+- session limit `200`;
+- candidate multiplier `4`;
+- fetched due-card window `800`.
 
-## New Card Limit
+This keeps the queue anchored in genuinely due cards, but gives the ordering layer enough room to produce a less mechanical sequence.
 
-Regular due review still keeps a separate `REGULAR_DUE_NEW_CARD_LIMIT = 20`.
+## Final Session Trim
 
-That means:
+`selectReviewSessionCards()` now owns the final trim for regular due review:
 
-- the overall due session can include up to `200` gathered due cards;
-- within that session, new cards are still intentionally capped to avoid overload.
+1. order the candidate pool;
+2. apply sibling separation and tier logic;
+3. slice the ordered result to the visible session limit.
 
-## Requeue Model
+Manual review and extra study still bypass the regular due ordering path.
 
-`applyReviewQueueOutcome()` still owns the active in-session learning loop, but its reinsertion policy changed:
+## Extra Study Sampling
 
-- `Good` / `Easy` remove the current card from the active queue;
-- `Again` requeues the card into an earlier delayed window;
-- `Hard` requeues the card into a later delayed window.
+Extra study no longer takes the first `N` new cards straight by `created_at`.
 
-The helper now derives a reinsertion range from the number of remaining cards and picks an insert position inside that window.
+Instead it:
 
-This preserves the learning-loop semantics while avoiding the old fixed pattern that caused difficult cards to reappear too predictably.
+1. fetches a wider oldest-first new-card pool;
+2. shuffles that pool locally;
+3. slices the requested extra-study size;
+4. tops up with upcoming scheduled cards only if needed.
 
-## Why This Is Not a Scheduler Rewrite
+That keeps extra study from feeling like a strict insertion-order drill.
 
-The queue pacing layer only decides when a difficult card reappears inside the **current session**.
+## Scheduler Integrity
 
-It does **not** replace the long-term scheduler:
+None of this rewrites FSRS:
 
-- `submitReview()` still persists the user rating;
-- `scheduleCard()` in `src/lib/fsrs.ts` still computes the actual FSRS update and future due date.
-
-So the user-visible queue feels more natural, while the memory model remains unchanged.
+- `submitReview()` still persists the rating exactly as before;
+- `scheduleCard()` still computes the next due date;
+- the widened candidate pool changes only which cards enter the current session, not how future intervals are scheduled.

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { selectReviewSessionCards } from './review-card-selection'
+import {
+  getReviewSessionCandidateLimit,
+  selectReviewSessionCards,
+} from './review-card-selection'
 
 type TestCard = {
   id: string
@@ -23,6 +26,7 @@ describe('selectReviewSessionCards', () => {
     const rawCards = buildNewCards(25)
     const ordered = selectReviewSessionCards(rawCards, {
       isManual: true,
+      sessionLimit: 20,
       orderCards: (cards) => cards.slice(0, 20),
     })
 
@@ -34,18 +38,27 @@ describe('selectReviewSessionCards', () => {
     const rawCards = buildNewCards(8)
     const ordered = selectReviewSessionCards(rawCards, {
       isExtra: true,
+      sessionLimit: 4,
       orderCards: () => [],
     })
 
     expect(ordered).toEqual(rawCards)
   })
 
-  it('still applies due-card ordering for normal review sessions', () => {
-    const rawCards = buildNewCards(25)
+  it('applies ordering before trimming the regular due session', () => {
+    const rawCards = buildNewCards(4)
     const ordered = selectReviewSessionCards(rawCards, {
-      orderCards: (cards) => cards.slice(0, 20),
+      sessionLimit: 2,
+      orderCards: (cards) => [...cards].reverse(),
     })
 
-    expect(ordered).toHaveLength(20)
+    expect(ordered).toEqual([rawCards[3], rawCards[2]])
+  })
+})
+
+describe('getReviewSessionCandidateLimit', () => {
+  it('expands the fetch window beyond the visible session limit', () => {
+    expect(getReviewSessionCandidateLimit(20)).toBe(80)
+    expect(getReviewSessionCandidateLimit(200)).toBe(800)
   })
 })

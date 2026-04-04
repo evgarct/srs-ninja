@@ -2,62 +2,46 @@
 
 ## Goal
 
-Сделать Home более похожим на mobile-native productivity surface:
-
-- темный визуальный язык по умолчанию;
-- компактный shell;
-- быстрый доступ к основным разделам;
-- deck list как основной рабочий поток.
+Keep Home focused on the next review action instead of dashboard decoration.
 
 ## Product Rules
 
-### 1. Unified dark shell
+### 1. One mobile navigation layer
 
-Главный shell должен использовать один и тот же dark theme contract на Home и Stats:
+On mobile, non-review screens must not show both a top navigation bar and a bottom navigation bar at the same time.
 
-- dark background;
-- glass panels;
-- lime/violet accents;
-- compact top navigation.
+Allowed:
 
-### 2. Mobile navigation
+- one fixed bottom navigation bar with the main destinations;
+- create and overflow actions inside that same mobile nav surface.
 
-На mobile вне review-маршрутов должна существовать фиксированная bottom navigation:
+### 2. Desktop shell remains separate
 
-- `Колоды`
-- `Статистика`
-- быстрое создание колоды
+Desktop may keep the floating top navigation shell.
 
-### 3. Home hierarchy
+This does not justify duplicating that shell on mobile.
 
-Home должен начинаться с hero/status surface, после которого сразу идет список колод.
+### 3. Home starts with decks, not copy
 
-На Home допустимы:
+Home should not open with a decorative `Home` heading, a subtitle like `What to study next`, or a hero/status block.
 
-- brand tag;
-- короткий status headline;
-- небольшие агрегаты дня.
+The first meaningful surface should be the deck list itself.
 
-Недопустим отдельный тяжелый analytics dashboard перед списком колод.
+### 4. Deck cards stay minimal
 
-### 4. Deck cards
+Each deck card must keep:
 
-Каждая deck card обязана иметь:
+- deck identity;
+- one due signal;
+- one primary review CTA;
+- one secondary open-deck CTA.
 
-- крупный status surface с `due`;
-- один dominant study CTA;
-- один secondary CTA для перехода в deck;
-- compact chips для состояния сессии.
-
-### 5. Desktop behavior
-
-Desktop не должен вводить отдельный sidebar или иную IA. Он остается расширенной версией mobile shell.
+Avoid adding section titles, dashboard KPIs, or duplicated status copy above those cards.
 
 ## Acceptance Criteria
 
-- [ ] Home и Stats используют общий dark visual language.
-- [ ] На mobile есть fixed bottom navigation вне review screen.
-- [ ] Home начинается с hero/status блока.
-- [ ] Deck list остается первым главным actionable блоком после hero.
-- [ ] Каждая deck card имеет один primary и один secondary CTA.
-- [ ] Secondary actions не конкурируют с основным review flow.
+- [ ] Mobile non-review routes use a single navigation layer.
+- [ ] Desktop keeps the floating top shell.
+- [ ] Review routes do not render the global shell navigation.
+- [ ] Home no longer shows the `Home / What to study next` heading block.
+- [ ] The deck grid is the first primary actionable surface on Home.
