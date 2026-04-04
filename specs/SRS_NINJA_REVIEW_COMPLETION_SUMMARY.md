@@ -66,11 +66,11 @@ The completion screen must stay inside the current design system:
 
 ### 4. Mobile escape hatch
 
-On mobile, the user must be able to leave the completion screen without needing to reach the bottom of a tall summary card.
+On mobile, the user must be able to leave the completion screen without needing to reach the top or bottom of a tall summary card.
 
 The completion surface must therefore provide:
 
-- an always-reachable return-to-home action near the top;
+- an always-reachable sticky bottom action bar for the main actions;
 - a compact enough summary that the surface does not feel trapped on phone-sized screens;
 - a scrollable completion container if the content still exceeds the viewport.
 
@@ -93,6 +93,6 @@ The review route handling for due review, manual review, and extra study must sh
 - [ ] After the last review submission, the route must not fall back to the generic empty queue screen for that finished session.
 - [ ] Due review, manual review, and extra study reuse one shared route-level completion restore path.
 - [ ] On mobile, the completion surface remains scrollable even inside the fixed-height review shell.
-- [ ] On mobile, a return-to-home control is reachable near the top of the completion screen.
+- [ ] On mobile, the completion screen keeps its primary actions in a sticky bottom action bar.
 - [ ] The completion surface works on desktop and mobile.
 - [ ] The completion surface has a fullscreen Storybook story for desktop and mobile visual review without auth or live review state.

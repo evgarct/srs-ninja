@@ -119,7 +119,7 @@ export function ReviewSessionComplete({
   }, [shouldReduceMotion, syncError])
 
   return (
-    <div className="relative h-full overflow-y-auto overscroll-contain bg-[#090511] px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-4 sm:pb-8 sm:pt-6">
+    <div className="relative h-full overflow-y-auto overscroll-contain bg-[#090511] px-3 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pt-6">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(159,92,255,0.18)_0%,transparent_34%),radial-gradient(circle_at_bottom,rgba(242,255,119,0.08)_0%,transparent_26%),linear-gradient(180deg,#090511_0%,#0b0714_45%,#08050f_100%)]" />
         <div className="absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(0,0,0,0.42),transparent)]" />
@@ -146,39 +146,6 @@ export function ReviewSessionComplete({
           ))}
         </div>
       )}
-
-      <div className="sticky top-0 z-20 -mx-3 mb-4 px-3 pb-3 pt-1 sm:-mx-4 sm:px-4">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(9,5,17,0.96),rgba(9,5,17,0.82),rgba(9,5,17,0))]" />
-        <div className="relative mx-auto flex w-full max-w-3xl flex-col gap-2 sm:flex-row sm:justify-between">
-          <Button
-            onClick={onGoHome}
-            disabled={pendingReviewCount > 0}
-            className="min-h-11 sm:min-w-40"
-          >
-            <ArrowLeft className="size-4" />
-            На главную
-          </Button>
-          {pendingReviewCount > 0 ? (
-            <Button
-              variant="outline"
-              disabled
-              className="min-h-11 border-white/10 bg-white/[0.05] text-white/55"
-            >
-              {secondaryLinkLabel}
-            </Button>
-          ) : (
-            <Link
-              href={secondaryLinkHref}
-              className={cn(
-                buttonVariants({ variant: 'outline' }),
-                'min-h-11 border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:text-white'
-              )}
-            >
-              {secondaryLinkLabel}
-            </Link>
-          )}
-        </div>
-      </div>
 
       <motion.div
         initial={shouldReduceMotion ? undefined : { opacity: 0, y: 12, scale: 0.985 }}
@@ -293,6 +260,39 @@ export function ReviewSessionComplete({
           </CardContent>
         </Card>
       </motion.div>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-30 flex justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+0.85rem)] pt-6 sm:px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-[linear-gradient(180deg,rgba(9,5,17,0),rgba(9,5,17,0.92)_42%,rgba(9,5,17,0.98))]" />
+        <div className="pointer-events-auto relative flex w-full max-w-3xl flex-col gap-2 sm:flex-row sm:justify-between">
+          <Button
+            onClick={onGoHome}
+            disabled={pendingReviewCount > 0}
+            className="min-h-11 sm:min-w-40"
+          >
+            <ArrowLeft className="size-4" />
+            На главную
+          </Button>
+          {pendingReviewCount > 0 ? (
+            <Button
+              variant="outline"
+              disabled
+              className="min-h-11 border-white/10 bg-white/[0.05] text-white/55"
+            >
+              {secondaryLinkLabel}
+            </Button>
+          ) : (
+            <Link
+              href={secondaryLinkHref}
+              className={cn(
+                buttonVariants({ variant: 'outline' }),
+                'min-h-11 border-white/10 bg-white/[0.05] text-white hover:bg-white/[0.08] hover:text-white'
+              )}
+            >
+              {secondaryLinkLabel}
+            </Link>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

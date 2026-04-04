@@ -12,7 +12,7 @@ It provides:
 - session-specific explanatory copy;
 - a restrained completion animation for the regular due-review ritual;
 - a dark completion shell that matches the active review surface instead of switching to a light summary card;
-- a mobile-safe scrollable completion surface with the main exit controls available at the top;
+- a mobile-safe scrollable completion surface with the main actions anchored in a sticky bottom bar;
 - a fullscreen Storybook screen story so the full completion page can be visually checked without auth or live review state;
 - resilience against post-submit route refreshes, so the user keeps seeing the completed-session summary instead of a generic empty-state fallback.
 
@@ -77,11 +77,11 @@ The animation remains short, non-blocking, and mobile-safe.
 
 This prevents the previous mobile trap where the summary card could become taller than the viewport while the parent review page stayed `overflow-hidden`.
 
-The action row sits in a sticky top area so the user can always:
+The action row now sits in a sticky bottom area so the user can always:
 
 - go back home;
 - jump to the deck or restart due review;
-- avoid needing to scroll to the bottom just to leave the screen.
+- hit the primary actions inside the phone reach zone instead of the status-bar area.
 
 The sticky top strip and the summary card now both use the same dark review-stage language as the active session. This avoids the previous washed-out state where a light completion card inherited dark-theme text colors and became difficult to read.
 
