@@ -58,3 +58,10 @@ export function applyReviewQueueOutcome<T>(
   nextQueue.splice(insertIndex, 0, current)
   return nextQueue
 }
+
+export function excludeCurrentReviewCard<T>(queue: T[]) {
+  if (queue.length === 0) return queue
+
+  const [, ...remaining] = queue
+  return remaining
+}

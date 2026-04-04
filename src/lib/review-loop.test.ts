@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { applyReviewQueueOutcome, getReviewRequeueWindow } from './review-loop'
+import { applyReviewQueueOutcome, excludeCurrentReviewCard, getReviewRequeueWindow } from './review-loop'
 
 describe('getReviewRequeueWindow', () => {
   it('requeues Again sooner than Hard and releases Good/Easy', () => {
@@ -53,5 +53,12 @@ describe('applyReviewQueueOutcome', () => {
   it('removes Good and Easy cards from the active queue', () => {
     expect(applyReviewQueueOutcome(['a', 'b', 'c'], 3)).toEqual(['b', 'c'])
     expect(applyReviewQueueOutcome(['a', 'b', 'c'], 4)).toEqual(['b', 'c'])
+  })
+})
+
+describe('excludeCurrentReviewCard', () => {
+  it('drops the current card without requeueing or touching the rest of the session', () => {
+    expect(excludeCurrentReviewCard(['a', 'b', 'c'])).toEqual(['b', 'c'])
+    expect(excludeCurrentReviewCard(['a'])).toEqual([])
   })
 })

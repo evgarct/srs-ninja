@@ -10,7 +10,7 @@ import { AnimatedCircularProgressBar } from '@/components/ui/animated-circular-p
 import { Flashcard } from '@/components/flashcard'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
 import { ReviewRatingBurst } from '@/components/review-rating-burst'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, EyeOff, Pencil } from 'lucide-react'
 import type { Language, Rating } from '@/lib/types'
 import {
   getReviewPrefetchAudioUrls,
@@ -18,6 +18,7 @@ import {
   type ReviewSessionCard,
 } from '@/lib/review-session'
 import { applyReviewQueueOutcome } from '@/lib/review-loop'
+import { excludeCurrentReviewCard } from '@/lib/review-loop'
 import { markReviewSessionCompleted } from '@/lib/actions/decks'
 import { ReviewSessionComplete, type ReviewSessionStats } from '@/components/review-session-complete'
 import {
@@ -34,6 +35,7 @@ import {
   getReviewSwipeRating,
 } from '@/lib/review-swipe'
 import { RatingButtons } from '@/components/flashcard/RatingButtons'
+import { toast } from 'sonner'
 
 function getSessionLabel(sessionMode: ReviewSessionMode) {
   if (sessionMode === 'manual') return 'Manual review'
@@ -63,6 +65,7 @@ export function ReviewSession({
   const [dynamicAudio, setDynamicAudio] = useState<Record<string, string>>({})
   const [revealed, setRevealed] = useState(false)
   const [done, setDone] = useState(false)
+  const [didCompleteQueue, setDidCompleteQueue] = useState(false)
   const [sessionStats, setSessionStats] = useState<ReviewSessionStats>({
     total: 0,
     correct: 0,
@@ -222,7 +225,7 @@ export function ReviewSession({
   }, [done])
 
   useEffect(() => {
-    if (!done || sessionMode === 'manual') return
+    if (!done || !didCompleteQueue || sessionMode === 'manual') return
     if (pendingReviewCount > 0 || syncError) return
     if (hasPersistedCompletionRef.current) return
 
@@ -230,7 +233,7 @@ export function ReviewSession({
     void markReviewSessionCompleted(deckId, sessionMode).catch(() => {
       hasPersistedCompletionRef.current = false
     })
-  }, [deckId, done, pendingReviewCount, sessionMode, syncError])
+  }, [deckId, didCompleteQueue, done, pendingReviewCount, sessionMode, syncError])
 
   // Autoplay logic:
   // - Recognition front: play when card first appears
@@ -317,6 +320,7 @@ export function ReviewSession({
     const nextQueue = applyReviewQueueOutcome(queue, rating)
 
     if (nextQueue.length === 0) {
+      setDidCompleteQueue(true)
       isCompletingRef.current = true
       saveReviewSessionCompletionState(deckId, sessionMode, nextStats)
       persistCompletionUrl(pathname, searchParams.toString(), true)
@@ -335,6 +339,24 @@ export function ReviewSession({
       .finally(() => {
         setPendingReviewCount((count) => Math.max(0, count - 1))
       })
+  }
+
+  function handleHideCurrentCard() {
+    if (!current) return
+
+    resetSwipeGesture()
+
+    const nextQueue = excludeCurrentReviewCard(queue)
+
+    if (nextQueue.length === 0) {
+      setDone(true)
+    } else {
+      setQueue(nextQueue)
+      setRevealed(false)
+      startTimeRef.current = getTimestamp()
+    }
+
+    toast('Card hidden for this session')
   }
 
   function handleCardPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
@@ -450,19 +472,35 @@ export function ReviewSession({
   }
 
   const sharedHeaderAction = (
-    <NoteEditSheet
-      noteId={current.note_id}
-      deckId={deckId}
-      language={lang}
-      initialFields={(currentPrepared?.noteFields ?? {}) as Record<string, string>}
-      initialTags={current.notes?.tags ?? []}
-      onSaveSuccess={handleSaveSuccess}
-      trigger={
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors" title="Edit Note">
-          <Pencil className="w-4 h-4" />
-        </Button>
-      }
-    />
+    <div className="flex items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+        title="Hide for this session"
+        onClick={handleHideCurrentCard}
+      >
+        <EyeOff className="h-4 w-4" />
+      </Button>
+      <NoteEditSheet
+        noteId={current.note_id}
+        deckId={deckId}
+        language={lang}
+        initialFields={(currentPrepared?.noteFields ?? {}) as Record<string, string>}
+        initialTags={current.notes?.tags ?? []}
+        onSaveSuccess={handleSaveSuccess}
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            title="Edit Note"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+        }
+      />
+    </div>
   )
 
   const actualFlashcard = (
