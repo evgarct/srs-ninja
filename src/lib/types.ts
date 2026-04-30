@@ -61,7 +61,7 @@ export const STYLE_EMOJI: Record<string, string> = {
 // Gender (Czech only)
 export const GENDERS_CZECH = ['mužský', 'ženský', 'střední', '—'] as const
 
-export const CEFR_LEVELS_CZECH = ['A2', 'B1', 'B2', 'C1', 'C2'] as const
+export const CEFR_LEVELS_CZECH = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
 
 export const STYLE_REGISTERS_CZECH = [
   'neutrální',

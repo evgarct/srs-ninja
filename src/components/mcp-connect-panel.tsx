@@ -82,7 +82,7 @@ Required fields:
 - translation
 
 Optional fields:
-- level: A2 | B1 | B2 | C1 | C2
+- level: A1 | A2 | B1 | B2 | C1 | C2
 - part_of_speech: podstatné jméno | sloveso | přídavné jméno | příslovce | zájmeno | předložka | spojka | částice | citoslovce | číslovka | fráze | idiom
 - popularity: integer 1..10
 - style: neutrální | hovorový | formální | knižní | obecná čeština | slangový | odborný
