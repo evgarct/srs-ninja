@@ -75,24 +75,40 @@ Before saving, call get_deck_contract and match the returned field contract exac
 
 const CZECH_IMPORT_PROMPT = `When importing into a Czech deck, always use the canonical Czech note schema.
 
+id: deck/69b0bf5f-38e0-4fa1-8c44-0922cb403661
+
 Required fields:
 - word
 - translation
 
 Optional fields:
-- pronunciation: IPA string
-- gender: mužský | ženský | střední | —
-- part_of_speech: podstatné jméno | sloveso | přídavné jméno | příslovce | zájmeno | předložka | spojka | částice | citoslovce | číslovka
-- level: A1 | A2 | B1 | B2 | C1 | C2
-- style: informal | neutral | formal | everyday | technical | academic | narrative | slang | poetic
+- level: A2 | B1 | B2 | C1 | C2
+- part_of_speech: podstatné jméno | sloveso | přídavné jméno | příslovce | zájmeno | předložka | spojka | částice | citoslovce | číslovka | fráze | idiom
 - popularity: integer 1..10
-- example_sentence: Czech example sentence
-- example_translation: translation of the example sentence
-- note: short grammar or usage note
-- image_url: absolute URL
+- style: neutrální | hovorový | formální | knižní | obecná čeština | slangový | odborný
+- gender: mužský životný | mužský neživotný | ženský | střední — only for nouns
+- verb_class: -at | -it/-et/-ět | -ovat | nepravidelný — only for verbs
+- verb_irregular: string
+- synonyms: string[]
+- antonyms: string[]
+- examples_html: HTML <ul> with exactly 2 <li> examples in Czech, studied word wrapped in <b>
+- note: string
 - tags: string[] stored separately from fields
 
-Use only the returned Czech contract keys. Do not rely on legacy Czech aliases.
+Language rules:
+- word, synonyms, antonyms, examples_html, verb_irregular, note — Czech only
+- translation — Russian only
+- enum values — use exact values from contract as listed above
+
+Do not use legacy Czech fields like expression, term, pronunciation, example_sentence, example_translation, frequency, or image_url for new notes.
+
+Use the Czech tag system consistently. Recommended tag families:
+- CZECH::topic.*
+- CZECH::style.*
+- CZECH::level.*
+- CZECH::grammar.*
+- CZECH::source.*
+- CZECH::set.*
 
 When calling save_draft_notes:
 - put note tags into item.tags
