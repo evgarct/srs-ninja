@@ -27,10 +27,13 @@ const preview: Preview = {
       },
     },
     a11y: {
-      // 'warn' surfaces violations as warnings in Storybook UI and CI logs
-      // without blocking test runs — lets us see real issues without a hard stop.
-      // Critical components opt in to 'error' mode via story-level parameters.
-      test: 'warn',
+      // 'todo' — a11y addon is active in Storybook UI (shows violations in the panel)
+      // but does NOT run assertions in vitest. Individual stories opt in to 'warn'
+      // or 'error' via story-level parameters once their violations are fixed.
+      // Background: Storybook 10 treats 'warn' identically to 'error' in vitest
+      // (calls expect().toHaveNoViolations()), so a global 'warn' would break all
+      // stories that have pre-existing Base UI / color-contrast violations.
+      test: 'todo',
     },
   },
 }

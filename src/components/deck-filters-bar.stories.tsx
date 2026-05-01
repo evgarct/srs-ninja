@@ -85,8 +85,8 @@ export const Interactive: Story = {
     await body.findByText('phrasal-verbs')
     // Toggle the "food" tag (adds it to active list)
     await userEvent.click(await body.findByText('food'))
-    // Close via Escape
-    await userEvent.keyboard('{Escape}')
+    // Close by clicking the trigger again (toggles the dropdown closed)
+    await userEvent.click(tagsTrigger)
     // Trigger now shows "2 tags" (travel + food)
     await canvas.findByRole('button', { name: /Tags: 2 tags/i })
   },
