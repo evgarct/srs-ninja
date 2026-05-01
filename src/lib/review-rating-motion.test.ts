@@ -23,7 +23,7 @@ describe('getReviewRatingMotion', () => {
 
   it('keeps all ratings burst-enabled with matching emoji payloads', () => {
     expect(getReviewRatingMotion(1).shouldBurst).toBe(true)
-    expect(getReviewRatingMotion(2).burstEmojis).toContain('🤔')
+    expect(getReviewRatingMotion(2).burstEmojis).toContain('😬')
     expect(getReviewRatingMotion(3).burstEmojis).toContain('✨')
     expect(getReviewRatingMotion(4).burstEmojis).toContain('🚀')
   })

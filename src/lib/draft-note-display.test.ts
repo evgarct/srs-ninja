@@ -45,10 +45,10 @@ describe('getDraftNoteDisplayState', () => {
         word: 'běžet',
         translation: 'бежать',
         level: 'B1',
-        part_of_speech: 'глагол',
+        part_of_speech: 'sloveso',
         popularity: 8,
-        style: 'разговорный',
-        gender: 'женский',
+        style: 'hovorový',
+        gender: 'ženský',
         verb_class: '-it/-et/-ět',
         verb_irregular: 'běžím, běžíš',
         synonyms: ['utíkat'],
@@ -61,10 +61,10 @@ describe('getDraftNoteDisplayState', () => {
 
     expect(state.meta).toEqual([
       { key: 'level', label: 'Уровень', value: 'B1' },
-      { key: 'part_of_speech', label: 'Тип', value: 'глагол' },
+      { key: 'part_of_speech', label: 'Тип', value: 'sloveso' },
       { key: 'popularity', label: 'Популярность', value: '8/10' },
-      { key: 'style', label: 'Стиль', value: 'разговорный' },
-      { key: 'gender', label: 'Род', value: 'женский' },
+      { key: 'style', label: 'Стиль', value: 'hovorový' },
+      { key: 'gender', label: 'Род', value: 'ženský' },
       { key: 'verb_class', label: 'Спряжение', value: '-it/-et/-ět' },
     ])
     expect(state.lists).toEqual([
