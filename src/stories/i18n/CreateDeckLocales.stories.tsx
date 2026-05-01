@@ -1,17 +1,25 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { within, userEvent } from 'storybook/test'
+import type { ReactElement } from 'react'
 import { Button } from '@/components/ui/button'
 import { CreateDeckDialog } from '@/components/create-deck-dialog'
 import { withLocale, localeArgType, messagesByLocale } from './withLocale'
 import type { Locale } from '@/i18n/config'
 
+interface CreateDeckDemoProps {
+  locale?: Locale
+  trigger?: ReactElement
+}
+
+function CreateDeckDialogDemo({ trigger }: CreateDeckDemoProps) {
+  return <CreateDeckDialog trigger={trigger} />
+}
+
 function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
   return async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const t = messagesByLocale[locale]
-    // Open the dialog by clicking the trigger
     await userEvent.click(canvas.getByRole('button'))
-    // Dialog renders in a portal, search document.body
     const body = within(document.body)
     await body.findByText(t.createDeck.title)
     await body.findByPlaceholderText(t.createDeck.namePlaceholder)
@@ -21,7 +29,7 @@ function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
 
 const meta = {
   title: 'i18n/Create Deck Dialog',
-  component: CreateDeckDialog,
+  component: CreateDeckDialogDemo,
   decorators: [withLocale],
   parameters: {
     layout: 'centered',
@@ -37,7 +45,7 @@ const meta = {
     trigger: <Button>+ Trigger</Button>,
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof CreateDeckDialog>
+} satisfies Meta<typeof CreateDeckDialogDemo>
 
 export default meta
 type Story = StoryObj<typeof meta>

@@ -1,4 +1,4 @@
-import type { Decorator } from '@storybook/nextjs-vite'
+import type { Decorator, ArgTypes } from '@storybook/nextjs-vite'
 import { NextIntlClientProvider } from 'next-intl'
 import enMessages from '../../../messages/en.json'
 import ruMessages from '../../../messages/ru.json'
@@ -11,7 +11,7 @@ export const messagesByLocale: Record<Locale, typeof enMessages> = {
   cs: csMessages,
 }
 
-export const localeArgType = {
+export const localeArgType: ArgTypes = {
   locale: {
     control: 'select',
     options: ['ru', 'en', 'cs'] satisfies Locale[],

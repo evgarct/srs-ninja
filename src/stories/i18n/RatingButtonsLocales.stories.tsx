@@ -4,6 +4,16 @@ import { RatingButtons } from '@/components/flashcard/RatingButtons'
 import { withLocale, localeArgType, messagesByLocale } from './withLocale'
 import type { Locale } from '@/i18n/config'
 
+type RatingButtonsProps = React.ComponentProps<typeof RatingButtons>
+
+interface RatingButtonsDemoProps extends RatingButtonsProps {
+  locale?: Locale
+}
+
+function RatingButtonsDemo({ locale: _, ...props }: RatingButtonsDemoProps) {
+  return <RatingButtons {...props} />
+}
+
 function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
   return async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -17,7 +27,7 @@ function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
 
 const meta = {
   title: 'i18n/Rating Buttons',
-  component: RatingButtons,
+  component: RatingButtonsDemo,
   decorators: [withLocale],
   parameters: {
     layout: 'centered',
@@ -43,7 +53,7 @@ const meta = {
     visualStyle: 'default',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof RatingButtons>
+} satisfies Meta<typeof RatingButtonsDemo>
 
 export default meta
 type Story = StoryObj<typeof meta>
