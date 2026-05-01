@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'feature/**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Layer 1: Fast unit tests (Node, no browser) ───────────────────────────
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+        # Runs: vitest --project=unit
+        # Covers: src/lib/**/*.test.ts — fsrs, review algorithms, import pipelines, schemas
+
+  # ── Layer 2: Storybook interaction tests (Playwright/Chromium) ────────────
+  storybook:
+    name: Storybook interaction tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Run Storybook interaction tests
+        run: npm run test:ui
+        # Runs: vitest --project=storybook
+        # Covers:
+        #   - play() functions: reveal flow, keyboard shortcuts, filter toggles, nav menu
+        #   - i18n assertions across en/ru/cs locales
+        #   - a11y checks (mode 'error' on critical stories, 'warn' globally)
+
+  # ── Layer 3: Visual regression (Chromatic) ────────────────────────────────
+  # Runs on PRs only — catches pixel-level regressions before merge
+  chromatic:
+    name: Visual regression (Chromatic)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full git history needed for Chromatic to determine baselines
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish to Chromatic
+        run: npm run chromatic
+        continue-on-error: true   # Fails gracefully until CHROMATIC_PROJECT_TOKEN secret is configured
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        # Exit zero on visual changes (changes need human review in Chromatic UI,
+        # but don't block CI). Remove --exit-zero-on-changes once baseline is stable.

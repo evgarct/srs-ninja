@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import { useState } from "react"
-import { fn } from "storybook/test"
+import { fn, within, userEvent, expect } from "storybook/test"
 import { Flashcard } from "./Flashcard"
 import type { FlashcardProps } from "./Flashcard"
 import type { CEFRLevel } from "./LevelBadge"
@@ -274,5 +274,56 @@ export const MobileTouchReview: Story = {
     isRevealed: false,
     audioUrl: "https://example.com/cauldron.mp3",
     onPlayAudio: fn(),
+  },
+}
+
+// ── Interaction tests (hidden from sidebar, run in CI) ────────────────────────
+
+export const RevealFlow: Story = {
+  name: "Czech · Reveal Flow",
+  render: (args) => <InteractiveFlashcard {...args} />,
+  args: {
+    ...CZECH_DATA,
+    direction: "recognition",
+    isRevealed: false,
+  },
+  tags: ["!dev"],
+  parameters: { a11y: { test: "error" } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Card is in front state — reveal button visible, no rating group yet
+    const revealBtn = await canvas.findByRole("button", { name: /Reveal answer/i })
+    expect(canvas.queryByRole("group", { name: /Rate your recall/i })).toBeNull()
+    // Click to reveal the answer
+    await userEvent.click(revealBtn)
+    // Rating button group should now appear
+    const ratingGroup = await canvas.findByRole("group", { name: /Rate your recall/i })
+    // All 4 rating buttons are present
+    expect(within(ratingGroup).getAllByRole("button")).toHaveLength(4)
+    await canvas.findByRole("button", { name: /Again/i })
+    await canvas.findByRole("button", { name: /Good/i })
+  },
+}
+
+export const KeyboardRevealAndRate: Story = {
+  name: "Czech · Keyboard Reveal & Rate",
+  render: (args) => <InteractiveFlashcard {...args} />,
+  args: {
+    ...CZECH_DATA,
+    direction: "recognition",
+    isRevealed: false,
+  },
+  tags: ["!dev"],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Reveal via Space key (window-level keydown handler)
+    await canvas.findByRole("button", { name: /Reveal answer/i })
+    await userEvent.keyboard(" ")
+    // Rating group appears after reveal
+    await canvas.findByRole("group", { name: /Rate your recall/i })
+    // Press digit 3 to rate "Good" (window-level handler)
+    await userEvent.keyboard("3")
+    // After rating, InteractiveFlashcard resets isRevealed → card returns to front
+    await canvas.findByRole("button", { name: /Reveal answer/i })
   },
 }
