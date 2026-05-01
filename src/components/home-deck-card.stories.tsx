@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
+import { within, expect } from 'storybook/test'
 
 import { HomeDeckCard } from './home-deck-card'
 
@@ -30,7 +31,18 @@ export default meta
 
 type Story = StoryObj<typeof HomeDeckCard>
 
-export const NeedsReview: Story = {}
+export const NeedsReview: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Deck name is visible
+    await canvas.findByText('English Core')
+    // "Start review" link is present and points to the correct URL
+    const reviewLink = await canvas.findByRole('link', { name: /Начать review/i })
+    expect(reviewLink).toHaveAttribute('href', '/decks/deck-1/review')
+    // Draft badge visible (drafts: 2)
+    await canvas.findByText(/2/)
+  },
+}
 
 export const CompletedTodayAndIdle: Story = {
   args: {

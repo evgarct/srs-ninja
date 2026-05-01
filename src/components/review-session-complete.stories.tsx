@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { fn } from 'storybook/test'
+import { fn, within } from 'storybook/test'
 
 import { ReviewSessionComplete } from './review-session-complete'
 
@@ -43,7 +43,23 @@ export default meta
 
 type Story = StoryObj<typeof ReviewSessionComplete>
 
-export const DesktopDueReview: Story = {}
+export const DesktopDueReview: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    // Session complete title is rendered
+    await canvas.findByText('Сегодняшняя сессия завершена')
+    // Stats are displayed: total cards, accuracy (40/69 ≈ 58%), duration
+    await canvas.findByText('69')
+    await canvas.findByText('58%')
+    await canvas.findByText('1m 38s')
+    // Rating breakdown labels
+    await canvas.findByText('Again')
+    await canvas.findByText('Good')
+    // Navigation buttons are present
+    await canvas.findByRole('button', { name: /На главную/i })
+    await canvas.findByRole('link', { name: /Повторить due-сессию/i })
+  },
+}
 
 export const MobileDueReview: Story = {
   parameters: {

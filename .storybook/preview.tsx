@@ -27,7 +27,10 @@ const preview: Preview = {
       },
     },
     a11y: {
-      test: 'todo',
+      // 'warn' surfaces violations as warnings in Storybook UI and CI logs
+      // without blocking test runs — lets us see real issues without a hard stop.
+      // Critical components opt in to 'error' mode via story-level parameters.
+      test: 'warn',
     },
   },
 }
