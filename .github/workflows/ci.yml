@@ -16,8 +16,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+
+      # Lock file was generated with npm 11 locally — keep versions in sync
+      - name: Upgrade npm to v11
+        run: npm install -g npm@11
 
       - name: Install dependencies
         run: npm ci
@@ -36,8 +40,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+
+      # Lock file was generated with npm 11 locally — keep versions in sync
+      - name: Upgrade npm to v11
+        run: npm install -g npm@11
 
       - name: Install dependencies
         run: npm ci
@@ -67,8 +75,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
+
+      # Lock file was generated with npm 11 locally — keep versions in sync
+      - name: Upgrade npm to v11
+        run: npm install -g npm@11
 
       - name: Install dependencies
         run: npm ci
