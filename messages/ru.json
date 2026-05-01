@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "decks": "Колоды",
+    "stats": "Статистика",
+    "newDeck": "Новая колода",
+    "import": "Импорт",
+    "logout": "Выйти",
+    "openMenu": "Открыть дополнительные действия",
+    "newDeckAriaLabel": "Создать новую колоду",
+    "language": "Язык"
+  },
+  "home": {
+    "noDecks": "Нет колод",
+    "createFirst": "Создайте первую колоду, чтобы начать."
+  },
+  "auth": {
+    "loading": "Загрузка...",
+    "signUp": "Зарегистрироваться",
+    "signIn": "Войти",
+    "noAccount": "Нет аккаунта? Создать",
+    "hasAccount": "Уже есть аккаунт? Войти",
+    "orContinueWith": "Или продолжите через",
+    "createAccount": "Создать аккаунт",
+    "signInAccount": "Войти в аккаунт"
+  },
+  "createDeck": {
+    "title": "Создать колоду",
+    "triggerLabel": "+ Новая колода",
+    "name": "Название",
+    "namePlaceholder": "Например: Чешский B1",
+    "language": "Язык",
+    "creating": "Создаём...",
+    "create": "Создать",
+    "langCzech": "🇨🇿 Чешский",
+    "langEnglish": "🇬🇧 Английский"
+  },
+  "review": {
+    "noNewWords": "Нет новых слов!",
+    "noNewWordsBody": "В колоде «{deckName}» нет новых карточек для изучения.",
+    "noCardsFilter": "Нет карточек по фильтру",
+    "noCardsFilterBody": "Фильтрованный набор в колоде «{deckName}» сейчас пуст.",
+    "allReviewed": "Всё повторено!",
+    "allReviewedBody": "В колоде «{deckName}» нет карточек для повторения.",
+    "backToDeck": "← К колоде",
+    "ratingAgain": "Again",
+    "ratingHard": "Hard",
+    "ratingGood": "Good",
+    "ratingEasy": "Easy"
+  },
+  "deck": {
+    "backHome": "← Главная",
+    "notes": "нотов",
+    "cards": "карточек",
+    "dueForReview": "к повторению",
+    "drafts": "Черновики",
+    "study": "Учить",
+    "practiceVisible": "Тренировать показанные",
+    "addNote": "+ Нот",
+    "noNotes": "Нет нотов",
+    "noNotesHint": "Добавьте первый нот или импортируйте из Anki",
+    "addNoteBtn": "Добавить нот",
+    "importAnki": "Импорт из Anki",
+    "noNotesFiltered": "По текущему фильтру ничего не найдено",
+    "notesTable": "Таблица нотов",
+    "showing": "Показано {count} нотов · {cards} карточек",
+    "editNote": "Редактировать",
+    "deleteNote": "Удалить",
+    "showCard": "Показать карточку"
+  },
+  "stats": {
+    "profile": "Profile",
+    "progress": "Прогресс",
+    "today": "today",
+    "streak": "day streak",
+    "accuracy": "accuracy",
+    "cards": "cards",
+    "streakGoal": "Streak goal",
+    "activeDays": "{count} из 7 дней активны на этой неделе",
+    "reviews": "reviews",
+    "reviewHistory": "История review и плотность практики",
+    "library": "library",
+    "avgTime": "avg time",
+    "shortDescription": "Короткий обзор сессий, streak и общей динамики без лишней аналитической перегрузки."
+  }
+}

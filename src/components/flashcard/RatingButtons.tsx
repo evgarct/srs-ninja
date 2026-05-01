@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Heart, RotateCcw, Sparkles, X } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useTranslations } from "next-intl"
 
 type Rating = 1 | 2 | 3 | 4
 
@@ -20,10 +21,10 @@ interface RatingButtonsProps {
   visualStyle?: "default" | "floating"
 }
 
-const BUTTONS: {
+const BUTTON_CONFIG: {
   rating: Rating
-  label: string
   key: string
+  translationKey: 'ratingAgain' | 'ratingHard' | 'ratingGood' | 'ratingEasy'
   icon: React.ComponentType<{ className?: string }>
   sizeClass: string
   shellClass: string
@@ -33,7 +34,7 @@ const BUTTONS: {
 }[] = [
   {
     rating: 1,
-    label: "Again",
+    translationKey: "ratingAgain",
     key: "1",
     icon: RotateCcw,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
@@ -44,7 +45,7 @@ const BUTTONS: {
   },
   {
     rating: 2,
-    label: "Hard",
+    translationKey: "ratingHard",
     key: "2",
     icon: X,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
@@ -55,7 +56,7 @@ const BUTTONS: {
   },
   {
     rating: 3,
-    label: "Good",
+    translationKey: "ratingGood",
     key: "3",
     icon: Sparkles,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
@@ -66,7 +67,7 @@ const BUTTONS: {
   },
   {
     rating: 4,
-    label: "Easy",
+    translationKey: "ratingEasy",
     key: "4",
     icon: Heart,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
@@ -85,6 +86,7 @@ export function RatingButtons({
   stickyMobile = false,
   visualStyle = "default",
 }: RatingButtonsProps) {
+  const t = useTranslations("review")
   const isFloating = visualStyle === "floating"
 
   return (
@@ -98,7 +100,8 @@ export function RatingButtons({
         role="group"
         aria-label="Rate your recall"
       >
-        {BUTTONS.map(({ rating, label, key, icon: Icon, shellClass, iconClass, hoverClass, intervalKey }) => {
+        {BUTTON_CONFIG.map(({ rating, translationKey, key, icon: Icon, shellClass, iconClass, hoverClass, intervalKey }) => {
+          const label = t(translationKey)
           const ariaLabel = `${label} (key ${key})${intervals ? `, ${intervals[intervalKey]}` : ""}`
           const tooltipText = intervals ? `${label} · ${intervals[intervalKey]}` : label
 

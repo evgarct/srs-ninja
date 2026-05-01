@@ -11,6 +11,8 @@ import { headers } from 'next/headers'
 import { ReviewHeatmap, WeeklyActivity } from '@/components/activity'
 import { buildReviewHeatmapWeeks } from '@/lib/activity'
 import { cn } from '@/lib/utils'
+import { getTranslations, getLocale } from 'next-intl/server'
+import { localeToIntlLocale } from '@/i18n/config'
 
 export default async function StatsPage() {
   const supabase = await createClient()
@@ -29,11 +31,13 @@ export default async function StatsPage() {
     }
   })()
 
-  const [reviews, todayStats, distribution, weeklyActivity] = await Promise.all([
+  const [reviews, todayStats, distribution, weeklyActivity, t, locale] = await Promise.all([
     getReviewStats(280),
     getTodayStats(),
     getCardStateDistribution(),
     getWeeklyActivityStats(timeZone),
+    getTranslations('stats'),
+    getLocale(),
   ])
 
   const totalReviews = reviews.length
@@ -41,7 +45,8 @@ export default async function StatsPage() {
   const overallAccuracy = totalReviews > 0 ? Math.round((totalCorrect / totalReviews) * 100) : 0
   const totalCards = Object.values(distribution).reduce((sum, count) => sum + count, 0)
   const heatmap = buildReviewHeatmapWeeks(reviews, timeZone, { weeks: 39 })
-  const currentMonthLabel = new Intl.DateTimeFormat('ru-RU', {
+  const intlLocale = localeToIntlLocale[locale as keyof typeof localeToIntlLocale] ?? 'en-US'
+  const currentMonthLabel = new Intl.DateTimeFormat(intlLocale, {
     month: 'long',
     year: 'numeric',
     timeZone,
@@ -51,19 +56,19 @@ export default async function StatsPage() {
     {
       key: 'streak',
       value: weeklyActivity.streak,
-      label: 'day streak',
+      label: t('streak'),
       className: 'bg-[linear-gradient(180deg,rgba(255,244,120,1),rgba(245,165,233,0.85))] text-black',
     },
     {
       key: 'accuracy',
       value: `${overallAccuracy}%`,
-      label: 'accuracy',
+      label: t('accuracy'),
       className: 'bg-white/[0.06] text-white',
     },
     {
       key: 'cards',
       value: totalCards,
-      label: 'cards',
+      label: t('cards'),
       className: 'bg-white/[0.06] text-white',
     },
   ]
@@ -75,16 +80,16 @@ export default async function StatsPage() {
         <div className="relative space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-white/52">Profile</p>
-              <h1 className="text-3xl font-semibold tracking-[-0.05em] text-white">Прогресс</h1>
+              <p className="text-sm font-medium text-white/52">{t('profile')}</p>
+              <h1 className="text-3xl font-semibold tracking-[-0.05em] text-white">{t('progress')}</h1>
             </div>
             <span className="app-pill border-primary/30 bg-primary/10 text-primary">
-              {todayStats.total} today
+              {todayStats.total} {t('today')}
             </span>
           </div>
 
           <p className="max-w-lg text-sm leading-6 text-white/62">
-            Короткий обзор сессий, streak и общей динамики без лишней аналитической перегрузки.
+            {t('shortDescription')}
           </p>
         </div>
       </section>
@@ -105,9 +110,9 @@ export default async function StatsPage() {
       <section className="app-panel px-4 py-4 sm:px-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-white">Streak goal</p>
+            <p className="text-sm font-medium text-white">{t('streakGoal')}</p>
             <p className="text-sm text-white/54">
-              {weeklyActivity.activeDays} из 7 дней активны на этой неделе
+              {t('activeDays', { count: weeklyActivity.activeDays })}
             </p>
           </div>
           <span className="app-pill">{weeklyActivity.streak} streak</span>
@@ -119,9 +124,9 @@ export default async function StatsPage() {
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <p className="text-sm font-medium text-white capitalize">{currentMonthLabel}</p>
-            <p className="text-sm text-white/54">История review и плотность практики</p>
+            <p className="text-sm text-white/54">{t('reviewHistory')}</p>
           </div>
-          <span className="app-pill">{totalReviews} reviews</span>
+          <span className="app-pill">{totalReviews} {t('reviews')}</span>
         </div>
         <ReviewHeatmap weeks={heatmap.weeks} />
       </section>
@@ -129,21 +134,21 @@ export default async function StatsPage() {
       <section className="grid gap-3 sm:grid-cols-2">
         <Card className="app-panel py-0">
           <CardContent className="px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/42">today</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-white/42">{t('today')}</p>
             <div className="mt-3 grid grid-cols-3 gap-3">
               <div>
                 <p className="text-2xl font-semibold tracking-[-0.05em] text-white">{todayStats.total}</p>
-                <p className="text-xs text-white/48">reviews</p>
+                <p className="text-xs text-white/48">{t('reviews')}</p>
               </div>
               <div>
                 <p className="text-2xl font-semibold tracking-[-0.05em] text-white">{todayStats.accuracy}%</p>
-                <p className="text-xs text-white/48">accuracy</p>
+                <p className="text-xs text-white/48">{t('accuracy')}</p>
               </div>
               <div>
                 <p className="text-2xl font-semibold tracking-[-0.05em] text-white">
                   {todayStats.avgDuration > 0 ? `${(todayStats.avgDuration / 1000).toFixed(1)}s` : '—'}
                 </p>
-                <p className="text-xs text-white/48">avg time</p>
+                <p className="text-xs text-white/48">{t('avgTime')}</p>
               </div>
             </div>
           </CardContent>
@@ -151,7 +156,7 @@ export default async function StatsPage() {
 
         <Card className="app-panel py-0">
           <CardContent className="px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/42">library</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-white/42">{t('library')}</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {(Object.entries(distribution) as Array<[string, number]>).map(([state, count]) => (
                 <div key={state} className="app-panel-muted px-3 py-3">

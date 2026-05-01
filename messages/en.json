@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "decks": "Decks",
+    "stats": "Stats",
+    "newDeck": "New deck",
+    "import": "Import",
+    "logout": "Log out",
+    "openMenu": "Open more actions",
+    "newDeckAriaLabel": "Create new deck",
+    "language": "Language"
+  },
+  "home": {
+    "noDecks": "No decks",
+    "createFirst": "Create your first deck to get started."
+  },
+  "auth": {
+    "loading": "Loading...",
+    "signUp": "Sign up",
+    "signIn": "Sign in",
+    "noAccount": "No account? Sign up",
+    "hasAccount": "Already have an account? Sign in",
+    "orContinueWith": "Or continue with",
+    "createAccount": "Create your account",
+    "signInAccount": "Sign in to your account"
+  },
+  "createDeck": {
+    "title": "Create deck",
+    "triggerLabel": "+ New deck",
+    "name": "Name",
+    "namePlaceholder": "E.g. Czech B1",
+    "language": "Language",
+    "creating": "Creating...",
+    "create": "Create",
+    "langCzech": "🇨🇿 Czech",
+    "langEnglish": "🇬🇧 English"
+  },
+  "review": {
+    "noNewWords": "No new words!",
+    "noNewWordsBody": "No new cards in deck «{deckName}» to study.",
+    "noCardsFilter": "No cards matching filter",
+    "noCardsFilterBody": "The filtered set in deck «{deckName}» is currently empty.",
+    "allReviewed": "All done!",
+    "allReviewedBody": "No cards to review in deck «{deckName}».",
+    "backToDeck": "← Back to deck",
+    "ratingAgain": "Again",
+    "ratingHard": "Hard",
+    "ratingGood": "Good",
+    "ratingEasy": "Easy"
+  },
+  "deck": {
+    "backHome": "← Home",
+    "notes": "notes",
+    "cards": "cards",
+    "dueForReview": "due for review",
+    "drafts": "Drafts",
+    "study": "Study",
+    "practiceVisible": "Practice visible",
+    "addNote": "+ Note",
+    "noNotes": "No notes",
+    "noNotesHint": "Add your first note or import from Anki",
+    "addNoteBtn": "Add note",
+    "importAnki": "Import from Anki",
+    "noNotesFiltered": "No notes match current filter",
+    "notesTable": "Notes table",
+    "showing": "Showing {count} notes · {cards} cards",
+    "editNote": "Edit",
+    "deleteNote": "Delete",
+    "showCard": "Show card"
+  },
+  "stats": {
+    "profile": "Profile",
+    "progress": "Progress",
+    "today": "today",
+    "streak": "day streak",
+    "accuracy": "accuracy",
+    "cards": "cards",
+    "streakGoal": "Streak goal",
+    "activeDays": "{count} of 7 days active this week",
+    "reviews": "reviews",
+    "reviewHistory": "Review history and practice density",
+    "library": "library",
+    "avgTime": "avg time",
+    "shortDescription": "A quick overview of sessions, streak, and overall dynamics without analytics overload."
+  }
+}

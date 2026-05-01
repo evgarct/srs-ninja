@@ -1,0 +1,85 @@
+{
+  "nav": {
+    "decks": "Balíčky",
+    "stats": "Statistiky",
+    "newDeck": "Nový balíček",
+    "import": "Import",
+    "logout": "Odhlásit se",
+    "openMenu": "Otevřít další akce",
+    "newDeckAriaLabel": "Vytvořit nový balíček",
+    "language": "Jazyk"
+  },
+  "home": {
+    "noDecks": "Žádné balíčky",
+    "createFirst": "Vytvořte svůj první balíček a začněte."
+  },
+  "auth": {
+    "loading": "Načítání...",
+    "signUp": "Registrovat se",
+    "signIn": "Přihlásit se",
+    "noAccount": "Nemáte účet? Vytvořit",
+    "hasAccount": "Máte účet? Přihlásit se",
+    "orContinueWith": "Nebo pokračujte přes",
+    "createAccount": "Vytvořit účet",
+    "signInAccount": "Přihlásit se k účtu"
+  },
+  "createDeck": {
+    "title": "Vytvořit balíček",
+    "triggerLabel": "+ Nový balíček",
+    "name": "Název",
+    "namePlaceholder": "Např.: Čeština B1",
+    "language": "Jazyk",
+    "creating": "Vytváříme...",
+    "create": "Vytvořit",
+    "langCzech": "🇨🇿 Čeština",
+    "langEnglish": "🇬🇧 Angličtina"
+  },
+  "review": {
+    "noNewWords": "Žádná nová slova!",
+    "noNewWordsBody": "V balíčku «{deckName}» nejsou žádné nové kartičky ke studiu.",
+    "noCardsFilter": "Žádné kartičky dle filtru",
+    "noCardsFilterBody": "Filtrovaná sada v balíčku «{deckName}» je momentálně prázdná.",
+    "allReviewed": "Vše zopakováno!",
+    "allReviewedBody": "V balíčku «{deckName}» nejsou žádné kartičky k opakování.",
+    "backToDeck": "← Zpět na balíček",
+    "ratingAgain": "Znovu",
+    "ratingHard": "Těžké",
+    "ratingGood": "Dobře",
+    "ratingEasy": "Lehké"
+  },
+  "deck": {
+    "backHome": "← Domů",
+    "notes": "poznámek",
+    "cards": "kartiček",
+    "dueForReview": "k opakování",
+    "drafts": "Koncepty",
+    "study": "Studovat",
+    "practiceVisible": "Procvičit zobrazené",
+    "addNote": "+ Poznámka",
+    "noNotes": "Žádné poznámky",
+    "noNotesHint": "Přidejte první poznámku nebo importujte z Anki",
+    "addNoteBtn": "Přidat poznámku",
+    "importAnki": "Import z Anki",
+    "noNotesFiltered": "Žádné poznámky neodpovídají filtru",
+    "notesTable": "Tabulka poznámek",
+    "showing": "Zobrazeno {count} poznámek · {cards} kartiček",
+    "editNote": "Upravit",
+    "deleteNote": "Smazat",
+    "showCard": "Zobrazit kartičku"
+  },
+  "stats": {
+    "profile": "Profil",
+    "progress": "Pokrok",
+    "today": "dnes",
+    "streak": "dní v řadě",
+    "accuracy": "přesnost",
+    "cards": "kartičky",
+    "streakGoal": "Cíl série",
+    "activeDays": "{count} ze 7 dní aktivních tento týden",
+    "reviews": "opakování",
+    "reviewHistory": "Historie opakování a hustota procvičování",
+    "library": "knihovna",
+    "avgTime": "prům. čas",
+    "shortDescription": "Rychlý přehled sezení, série a celkové dynamiky bez analytického přetížení."
+  }
+}
