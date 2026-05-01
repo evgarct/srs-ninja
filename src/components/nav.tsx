@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Ellipsis, House, LogOut, Plus, Upload } from 'lucide-react'
+import { BarChart3, Check, Ellipsis, Globe, House, LogOut, Plus, Upload } from 'lucide-react'
+import { useTranslations, useLocale } from 'next-intl'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { CreateDeckDialog } from '@/components/create-deck-dialog'
@@ -17,21 +18,36 @@ import {
 import { buttonVariants } from '@/lib/button-variants'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { setLocale } from '@/lib/actions/locale'
+import type { Locale } from '@/i18n/config'
 
-const links = [
-  { href: '/', label: 'Колоды', icon: House },
-  { href: '/stats', label: 'Статистика', icon: BarChart3 },
+const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
+  { locale: 'en', label: '🇬🇧 English' },
+  { locale: 'ru', label: '🇷🇺 Русский' },
+  { locale: 'cs', label: '🇨🇿 Čeština' },
 ]
 
 export function Nav() {
+  const t = useTranslations('nav')
+  const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
   const isReviewRoute = pathname.startsWith('/review/') || /^\/decks\/[^/]+\/review$/.test(pathname)
+
+  const links = [
+    { href: '/', label: t('decks'), icon: House },
+    { href: '/stats', label: t('stats'), icon: BarChart3 },
+  ]
 
   async function signOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
+    router.refresh()
+  }
+
+  async function handleLocaleChange(newLocale: Locale) {
+    await setLocale(newLocale)
     router.refresh()
   }
 
@@ -44,19 +60,28 @@ export function Nav() {
           trigger={
             <DropdownMenuItem>
               <Plus className="size-4" />
-              Новая колода
+              {t('newDeck')}
             </DropdownMenuItem>
           }
         />
         <DropdownMenuItem onClick={() => router.push('/import')}>
           <Upload className="size-4" />
-          Импорт
+          {t('import')}
         </DropdownMenuItem>
+      </DropdownMenuGroup>
+      <DropdownMenuSeparator />
+      <DropdownMenuGroup>
+        {LANGUAGE_OPTIONS.map(({ locale: loc, label }) => (
+          <DropdownMenuItem key={loc} onClick={() => handleLocaleChange(loc)}>
+            {locale === loc ? <Check className="size-4" /> : <span className="size-4" />}
+            {label}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
       <DropdownMenuItem variant="destructive" onClick={signOut}>
         <LogOut className="size-4" />
-        Выйти
+        {t('logout')}
       </DropdownMenuItem>
     </>
   )
@@ -101,7 +126,7 @@ export function Nav() {
               render={
                 <button
                   type="button"
-                  aria-label="Открыть дополнительные действия"
+                  aria-label={t('openMenu')}
                   className={cn(
                     buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
                     'rounded-full border border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1] hover:text-white'
@@ -144,7 +169,7 @@ export function Nav() {
               <button
                 type="button"
                 className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12]"
-                aria-label="Создать новую колоду"
+                aria-label={t('newDeckAriaLabel')}
               >
                 <Plus className="size-4" />
               </button>
@@ -156,7 +181,7 @@ export function Nav() {
               render={
                 <button
                   type="button"
-                  aria-label="Open more actions"
+                  aria-label={t('openMenu')}
                   className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12]"
                 >
                   <Ellipsis className="size-4" />

@@ -11,33 +11,7 @@ import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
 import { parseReviewSessionSearchParams, type ReviewSessionSearchParams } from '@/lib/review-session-route'
 import { createClient } from '@/lib/supabase/server'
 import { supportsTtsLanguage } from '@/lib/tts-config'
-
-function getEmptyStateCopy(
-  sessionMode: 'due' | 'manual' | 'extra',
-  deckName: string
-) {
-  if (sessionMode === 'extra') {
-    return {
-      emoji: '📭',
-      title: 'Нет новых слов!',
-      body: `В колоде «${deckName}» нет новых карточек для изучения.`,
-    }
-  }
-
-  if (sessionMode === 'manual') {
-    return {
-      emoji: '🎯',
-      title: 'Нет карточек по фильтру',
-      body: `Фильтрованный набор в колоде «${deckName}» сейчас пуст.`,
-    }
-  }
-
-  return {
-    emoji: '🎉',
-    title: 'Всё повторено!',
-    body: `В колоде «${deckName}» нет карточек для повторения.`,
-  }
-}
+import { getTranslations } from 'next-intl/server'
 
 export async function renderSharedReviewPage(
   deckId: string,
@@ -94,6 +68,8 @@ export async function renderSharedReviewPage(
     }
   }
 
+  const t = await getTranslations('review')
+
   if (cards.length === 0) {
     if (isCompleted) {
       return (
@@ -103,15 +79,20 @@ export async function renderSharedReviewPage(
       )
     }
 
-    const emptyStateCopy = getEmptyStateCopy(sessionMode, deck.name)
+    const emptyState =
+      sessionMode === 'extra'
+        ? { emoji: '📭', title: t('noNewWords'), body: t('noNewWordsBody', { deckName: deck.name }) }
+        : sessionMode === 'manual'
+          ? { emoji: '🎯', title: t('noCardsFilter'), body: t('noCardsFilterBody', { deckName: deck.name }) }
+          : { emoji: '🎉', title: t('allReviewed'), body: t('allReviewedBody', { deckName: deck.name }) }
 
     return (
       <main className="max-w-xl mx-auto px-4 py-16 text-center">
-        <p className="text-4xl mb-4">{emptyStateCopy.emoji}</p>
-        <h1 className="text-2xl font-bold mb-2">{emptyStateCopy.title}</h1>
-        <p className="text-muted-foreground mb-6">{emptyStateCopy.body}</p>
+        <p className="text-4xl mb-4">{emptyState.emoji}</p>
+        <h1 className="text-2xl font-bold mb-2">{emptyState.title}</h1>
+        <p className="text-muted-foreground mb-6">{emptyState.body}</p>
         <Link href={`/deck/${deckId}`} className={buttonVariants()}>
-          ← К колоде
+          {t('backToDeck')}
         </Link>
       </main>
     )

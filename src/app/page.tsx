@@ -4,6 +4,7 @@ import { getDashboardStats } from '@/lib/actions/decks'
 import { createClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -25,6 +26,7 @@ export default async function Home() {
   })()
 
   const deckStats = await getDashboardStats(timeZone)
+  const t = await getTranslations('home')
 
   return (
     <>
@@ -33,8 +35,8 @@ export default async function Home() {
         {deckStats.length === 0 ? (
           <div className="flex flex-1 items-center">
             <div className="app-panel w-full px-6 py-16 text-center text-white/72">
-              <p className="mb-2 text-lg text-white">Нет колод</p>
-              <p className="text-sm">Создайте первую колоду, чтобы начать.</p>
+              <p className="mb-2 text-lg text-white">{t('noDecks')}</p>
+              <p className="text-sm">{t('createFirst')}</p>
             </div>
           </div>
         ) : (

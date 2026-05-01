@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { Eye, Pencil } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { GenerateAudioButton } from '@/components/generate-audio-button'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
@@ -67,6 +68,7 @@ export function DeckPageClient({
   initialStateFilter,
   initialAudioFilter = 'all',
 }: DeckPageClientProps) {
+  const t = useTranslations('deck')
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -228,7 +230,7 @@ export function DeckPageClient({
     <main className="w-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-center gap-3 mb-1">
         <Link href="/" className="text-muted-foreground hover:text-foreground text-sm">
-          ← Главная
+          {t('backHome')}
         </Link>
       </div>
 
@@ -236,20 +238,20 @@ export function DeckPageClient({
         <div>
           <h1 className="text-3xl font-bold">{deckName}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {totalNotes} нотов · {totalCards} карточек · {dueCards} к повторению
-            {draftNotes > 0 ? ` · ${draftNotes} draft` : ''}
+            {totalNotes} {t('notes')} · {totalCards} {t('cards')} · {dueCards} {t('dueForReview')}
+            {draftNotes > 0 ? ` · ${draftNotes} ${t('drafts').toLowerCase()}` : ''}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2 items-center">
           {draftNotes > 0 && (
             <Link href={`/deck/${deckId}/drafts`} className={buttonVariants({ variant: 'outline' })}>
-              Drafts ({draftNotes})
+              {t('drafts')} ({draftNotes})
             </Link>
           )}
           {dueCards > 0 && (
             <Link href={buildReviewSessionHref(deckId)} className={buttonVariants()}>
-              Учить ({dueCards})
+              {t('study')} ({dueCards})
             </Link>
           )}
           {visibleCardCount > 0 ? (
@@ -257,11 +259,11 @@ export function DeckPageClient({
               href={manualReviewHref}
               className={buttonVariants({ variant: 'secondary' })}
             >
-              Тренировать показанные ({visibleCardCount})
+              {t('practiceVisible')} ({visibleCardCount})
             </Link>
           ) : (
             <Button variant="secondary" disabled>
-              Тренировать показанные (0)
+              {t('practiceVisible')} (0)
             </Button>
           )}
           {supportsTtsLanguage(deckLanguage) && (
@@ -273,21 +275,21 @@ export function DeckPageClient({
             />
           )}
           <Link href={`/notes/new?deckId=${deckId}`} className={buttonVariants({ variant: 'outline' })}>
-            + Нот
+            {t('addNote')}
           </Link>
         </div>
       </div>
 
       {notes.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-lg mb-2">Нет нотов</p>
-          <p className="text-sm">Добавьте первый нот или импортируйте из Anki</p>
+          <p className="text-lg mb-2">{t('noNotes')}</p>
+          <p className="text-sm">{t('noNotesHint')}</p>
           <div className="flex gap-2 justify-center mt-4">
             <Link href={`/notes/new?deckId=${deckId}`} className={buttonVariants({ variant: 'outline' })}>
-              Добавить нот
+              {t('addNoteBtn')}
             </Link>
             <Link href="/import" className={buttonVariants({ variant: 'outline' })}>
-              Импорт из Anki
+              {t('importAnki')}
             </Link>
           </div>
         </div>
@@ -314,9 +316,9 @@ export function DeckPageClient({
           <section className="rounded-2xl border bg-card shadow-sm overflow-hidden">
             <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
               <div>
-                <p className="text-sm font-medium">Таблица нотов</p>
+                <p className="text-sm font-medium">{t('notesTable')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Показано {visibleNotes.length} нотов · {visibleCardCount} карточек
+                  {t('showing', { count: visibleNotes.length, cards: visibleCardCount })}
                 </p>
               </div>
             </div>
@@ -335,7 +337,7 @@ export function DeckPageClient({
                   {visibleNotes.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
-                        По текущему фильтру ничего не найдено
+                        {t('noNotesFiltered')}
                       </td>
                     </tr>
                   ) : (
@@ -377,9 +379,9 @@ export function DeckPageClient({
                                   fields={note.fields}
                                   audioUrl={audioUrl}
                                   language={deckLanguage}
-                                  triggerLabel="Показать карточку"
+                                  triggerLabel={t('showCard')}
                                   trigger={
-                                    <Button variant="ghost" size="icon" title="Показать карточку" aria-label="Показать карточку">
+                                    <Button variant="ghost" size="icon" title={t('showCard')} aria-label={t('showCard')}>
                                       <Eye className="w-4 h-4" />
                                     </Button>
                                   }
@@ -400,7 +402,7 @@ export function DeckPageClient({
                                     )
                                   }}
                                   trigger={
-                                    <Button variant="ghost" size="icon" title="Редактировать" aria-label="Редактировать">
+                                    <Button variant="ghost" size="icon" title={t('editNote')} aria-label={t('editNote')}>
                                       <Pencil className="w-4 h-4" />
                                     </Button>
                                   }
@@ -410,7 +412,7 @@ export function DeckPageClient({
                                   deckId={deckId}
                                   onDeleted={() => handleNoteDeleted(note.id)}
                                   iconOnly
-                                  title="Удалить"
+                                  title={t('deleteNote')}
                                 />
                               </div>
                           </td>

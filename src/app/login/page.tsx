@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { brand } from '@/lib/brand'
+import { useTranslations } from 'next-intl'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const router = useRouter()
   const supabase = createClient()
+  const t = useTranslations('auth')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,21 +49,18 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true)
     setMessage('')
-    
-    // The redirect URL should be the callback route which handles the code exchange
-    // If not specified, Supabase will use the Site URL from your dashboard settings
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${location.origin}/auth/callback`,
       },
     })
-    
+
     if (error) {
       setMessage(error.message)
       setIsLoading(false)
     }
-    // Note: On success, the page will redirect to Google, so we don't set loading to false.
   }
 
   return (
@@ -73,7 +72,7 @@ export default function LoginPage() {
           </div>
           <CardTitle className="sr-only">{brand.name}</CardTitle>
           <CardDescription>
-            {isSignUp ? 'Create your account' : 'Sign in to your account'}
+            {isSignUp ? t('createAccount') : t('signInAccount')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -103,22 +102,22 @@ export default function LoginPage() {
               <p className="text-sm text-muted-foreground">{message}</p>
             )}
             <Button type="submit" disabled={isLoading} className="mt-2">
-              {isLoading ? 'Загрузка...' : isSignUp ? 'Зарегистрироваться' : 'Войти'}
+              {isLoading ? t('loading') : isSignUp ? t('signUp') : t('signIn')}
             </Button>
-            
+
             <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Или продолжите через</span>
+                <span className="bg-card px-2 text-muted-foreground">{t('orContinueWith')}</span>
               </div>
             </div>
 
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={handleGoogleLogin} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGoogleLogin}
               disabled={isLoading}
             >
                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
@@ -133,7 +132,7 @@ export default function LoginPage() {
               className="mt-2"
               onClick={() => setIsSignUp(!isSignUp)}
             >
-              {isSignUp ? 'Уже есть аккаунт? Войти' : "Нет аккаунта? Создать"}
+              {isSignUp ? t('hasAccount') : t('noAccount')}
             </Button>
           </form>
         </CardContent>

@@ -5,22 +5,29 @@ import './globals.css'
 import { Nav } from '@/components/nav'
 import { Toaster } from '@/components/ui/sonner'
 import { buildBrandMetadata, brandViewport } from '@/lib/brand'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 
 const inter = Inter({ subsets: ['latin', 'latin-ext', 'cyrillic'] })
 export const metadata = buildBrandMetadata()
 export const viewport = brandViewport
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
-    <html lang="en" className="dark">
+    <html lang={locale} className="dark">
       <body className={`${inter.className} antialiased`}>
-        <Nav />
-        {children}
-        <Toaster richColors position="top-right" />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Nav />
+          {children}
+          <Toaster richColors position="top-right" />
+        </NextIntlClientProvider>
       </body>
     </html>
   )
