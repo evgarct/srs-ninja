@@ -75,6 +75,7 @@ jobs:
 
       - name: Publish to Chromatic
         run: npm run chromatic
+        continue-on-error: true   # Fails gracefully until CHROMATIC_PROJECT_TOKEN secret is configured
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
         # Exit zero on visual changes (changes need human review in Chromatic UI,
