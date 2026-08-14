@@ -843,6 +843,8 @@ The canonical Streamable HTTP endpoint is `${APP_URL}/api/mcp`. Supabase OAuth 2
 
 Protected-resource metadata is available at `/.well-known/oauth-protected-resource` and its `/api/mcp` path variant. OAuth tokens are header-only. `/api/mcp/health` exposes non-secret readiness. The former owner token is available for one transition release only when `MCP_LEGACY_TOKEN_ENABLED=true` and both owner variables exist.
 
+Auth middleware must bypass the well-known routes and `/oauth/consent`: discovery is public, while the consent page itself preserves `authorization_id` when redirecting an unauthenticated user to login.
+
 MCP permissions are fixed to reading owned decks/contracts/drafts and creating drafts. Approval, publishing, conflict resolution, and deletion stay in Echo. The remote tool set therefore excludes `approve_draft_note`.
 
 Deck-aware tools accept `deckId`, `language`, exact normalized `name`, or narrowing combinations. Unique languages resolve automatically; ambiguous and missing selections return stable codes plus owned candidates. `get_echo_guide`, expanded contracts, and validator-backed English/Czech/Turkish examples replace hard-coded onboarding prompts and UUIDs.
