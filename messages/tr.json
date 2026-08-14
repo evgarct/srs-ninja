@@ -121,5 +121,11 @@
     "library": "kütüphane",
     "avgTime": "ort. süre",
     "shortDescription": "Oturumların, serinin ve genel ilerlemenin sade bir özeti."
+  },
+  "mcpConnect": {
+    "title":"Bir AI aracısı bağla","ready":"OAuth hazır","setup":"Kurulum gerekli","description":"Aynı güvenli MCP uç noktası, OAuth uyumlu tüm istemcilerle çalışır. Her kullanıcı yalnızca kendi Echo hesabına izin verir.","publicRequired":"Herkese açık bir HTTPS URL gerekli","publicDescription":"Geçerli adres: {origin}. Uzak MCP istemcileri localhost'a bağlanamaz.","notConfigured":"yapılandırılmamış","oauthMissing":"OAuth keşfi tam yapılandırılmamış","missingConfig":"Eksik sunucu ayarları: {values}","endpoint":"Uzak MCP uç noktası","endpointCopied":"Uç nokta kopyalandı","endpointHint":"Bu URL'yi MCP istemcinize ekleyin. OAuth, Echo girişini ve onayını otomatik açar; URL'ye token eklemeyin.","permissions":"İzinler","permissionRead":"Deste şemalarını ve taslakları görüntüler","permissionCreate":"İnceleme için taslak notlar oluşturur","permissionDenied":"Notları onaylayamaz, yayımlayamaz veya silemez","starter":"Aracı başlangıç istemi","promptCopied":"İstem kopyalandı","legacy":"Eski sahip tokenı bir geçiş sürümü için geçici olarak etkin. Yeni bağlantılar her zaman OAuth kullanır.","openChatgpt":"ChatGPT'yi aç","testHealth":"Uç noktayı test et"
+  },
+  "oauthConsent": {
+    "eyebrow": "Echo MCP bağlantısı", "title": "Erişime izin verilsin mi?", "description": "{client}, Echo hesabınıza bağlanmak istiyor.", "permissions": "Bu bağlantı şunları yapabilir:", "readDecks": "Deste adlarını, dilleri ve alan şemalarını görüntüler.", "readDrafts": "Taslak gruplarını ve notları görüntüler.", "createDrafts": "İncelemeniz için yeni taslak notlar oluşturur.", "noPublish": "Notları onaylayamaz, yayımlayamaz veya silemez.", "approve": "Bağlantıya izin ver", "deny": "Reddet", "redirectLabel": "Dönüş adresi", "invalidRequest": "Yetkilendirme isteği eksik, geçersiz veya süresi dolmuş. MCP istemcinizden bağlantıyı yeniden başlatın."
   }
 }

@@ -1,61 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { buildMcpConnectionConfig, resolveAppOrigin } from '@/lib/mcp-connection'
-import { brand } from '@/lib/brand'
-
 describe('resolveAppOrigin', () => {
-  it('prefers explicit env origin', () => {
-    expect(
-      resolveAppOrigin({
-        envOrigin: `https://${brand.exampleDomain}/`,
-        forwardedProto: 'http',
-        forwardedHost: 'localhost:3000',
-      })
-    ).toBe(`https://${brand.exampleDomain}`)
-  })
-
-  it('builds origin from forwarded headers', () => {
-    expect(
-      resolveAppOrigin({
-        forwardedProto: 'https',
-        forwardedHost: 'app.example.com',
-      })
-    ).toBe('https://app.example.com')
-  })
+  it('prefers the explicit origin', () => expect(resolveAppOrigin({ envOrigin: 'https://echo.example/' })).toBe('https://echo.example'))
+  it('uses forwarded host information', () => expect(resolveAppOrigin({ forwardedProto: 'https', forwardedHost: 'app.example.com' })).toBe('https://app.example.com'))
 })
-
 describe('buildMcpConnectionConfig', () => {
-  it('returns a full connection URL when personal MCP config is present', () => {
-    const config = buildMcpConnectionConfig({
-      appOrigin: 'https://app.example.com',
-      sharedSecret: 'secret-value',
-      userId: 'user-1',
-    })
-
-    expect(config.connectionUrl).toBe('https://app.example.com/api/mcp?token=secret-value')
-    expect(config.hasPersonalConfig).toBe(true)
-    expect(config.missingEnv).toEqual([])
-    expect(config.requiresPublicOrigin).toBe(false)
-  })
-
-  it('reports missing env vars', () => {
-    const config = buildMcpConnectionConfig({
-      appOrigin: 'https://app.example.com',
-      sharedSecret: null,
-      userId: null,
-    })
-
-    expect(config.connectionUrl).toBeNull()
-    expect(config.hasPersonalConfig).toBe(false)
-    expect(config.missingEnv).toEqual(['MCP_SHARED_SECRET', 'MCP_USER_ID'])
-  })
-
-  it('flags localhost origins as requiring a public URL', () => {
-    const config = buildMcpConnectionConfig({
-      appOrigin: 'http://localhost:3000',
-      sharedSecret: 'secret-value',
-      userId: 'user-1',
-    })
-
-    expect(config.requiresPublicOrigin).toBe(true)
-  })
+  it('exposes one token-free OAuth endpoint', () => { const config = buildMcpConnectionConfig({ appOrigin: 'https://app.example.com', supabaseUrl: 'https://project.supabase.co' }); expect(config).toMatchObject({ endpointUrl: 'https://app.example.com/api/mcp', healthUrl: 'https://app.example.com/api/mcp/health', oauthReady: true, missingEnv: [] }); expect(JSON.stringify(config)).not.toContain('?token=') })
+  it('reports missing OAuth settings and localhost', () => expect(buildMcpConnectionConfig({ appOrigin: 'http://localhost:3000' })).toMatchObject({ oauthReady: false, missingEnv: ['NEXT_PUBLIC_SUPABASE_URL'], requiresPublicOrigin: true }))
 })

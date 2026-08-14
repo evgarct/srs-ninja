@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/lib/button-variants'
 import type { ReviewSessionMode } from '@/lib/review-session-completion-state'
+import { buildReviewSessionHref } from '@/lib/review-session-route'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 
@@ -88,7 +89,7 @@ export function ReviewSessionComplete({
     ? t('seconds', { seconds })
     : t('minutesSeconds', { minutes, seconds })
   const canRestartDue = sessionMode === 'due' && pendingReviewCount === 0
-  const secondaryLinkHref = canRestartDue ? `/decks/${deckId}/review` : `/deck/${deckId}`
+  const secondaryLinkHref = canRestartDue ? buildReviewSessionHref(deckId) : `/deck/${deckId}`
   const secondaryLinkLabel = canRestartDue ? t('restartDue') : t('backToDeck')
 
   useEffect(() => {

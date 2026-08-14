@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/lib/button-variants'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { buildReviewSessionHref } from '@/lib/review-session-route'
 
 const DECK_FLAG: Record<string, { src: string; alt: string }> = {
   czech: { src: '/flags/cz.svg', alt: 'Czech flag' },
@@ -103,7 +104,7 @@ export function HomeDeckCard({
       <CardContent className="relative flex flex-1 flex-col py-3">
         {due > 0 ? (
           <div className="mt-auto flex flex-col gap-2 sm:flex-row">
-            <Link href={`/decks/${deck.id}/review`} className={cn(primaryActionClassName, 'flex-1')}>
+            <Link href={buildReviewSessionHref(deck.id)} className={cn(primaryActionClassName, 'flex-1')}>
               <span>{t('startReview')}</span>
               <ArrowRight className="size-4 text-primary-foreground/80" />
             </Link>

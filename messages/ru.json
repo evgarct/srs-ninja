@@ -121,5 +121,11 @@
     "library": "library",
     "avgTime": "avg time",
     "shortDescription": "Короткий обзор сессий, streak и общей динамики без лишней аналитической перегрузки."
+  },
+  "mcpConnect": {
+    "title":"Подключить AI-агента","ready":"OAuth готов","setup":"Нужна настройка","description":"Один защищённый MCP endpoint работает с любым OAuth-совместимым клиентом. Каждый пользователь разрешает доступ только к своему аккаунту Echo.","publicRequired":"Нужен публичный HTTPS URL","publicDescription":"Текущий адрес: {origin}. Удалённые MCP-клиенты не могут подключаться к localhost.","notConfigured":"не настроен","oauthMissing":"OAuth discovery настроен не полностью","missingConfig":"Не хватает серверных настроек: {values}","endpoint":"Удалённый MCP endpoint","endpointCopied":"Endpoint скопирован","endpointHint":"Добавьте этот URL в MCP-клиент. OAuth сам откроет вход и согласие Echo; не добавляйте token в URL.","permissions":"Разрешения","permissionRead":"Просмотр схем колод и черновиков","permissionCreate":"Создание черновиков для проверки","permissionDenied":"Без подтверждения, публикации и удаления заметок","starter":"Стартовый запрос агенту","promptCopied":"Запрос скопирован","legacy":"Старый токен владельца временно включён на один переходный релиз. Новые подключения всегда используют OAuth.","openChatgpt":"Открыть ChatGPT","testHealth":"Проверить endpoint"
+  },
+  "oauthConsent": {
+    "eyebrow": "Подключение Echo MCP", "title": "Разрешить доступ?", "description": "{client} хочет подключиться к вашему аккаунту Echo.", "permissions": "Подключение сможет:", "readDecks": "Просматривать названия, языки и структуру ваших колод.", "readDrafts": "Просматривать пакеты черновиков и заметки.", "createDrafts": "Создавать новые черновики для вашей проверки.", "noPublish": "Оно не сможет подтверждать, публиковать или удалять заметки.", "approve": "Разрешить подключение", "deny": "Отклонить", "redirectLabel": "Адрес возврата", "invalidRequest": "Запрос авторизации отсутствует, недействителен или устарел. Начните подключение заново в MCP-клиенте."
   }
 }

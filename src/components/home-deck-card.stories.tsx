@@ -39,7 +39,7 @@ export const NeedsReview: Story = {
     await canvas.findByText('English Core')
     // "Start review" link is present and points to the correct URL
     const reviewLink = await canvas.findByRole('link', { name: /Начать повторение/i })
-    expect(reviewLink).toHaveAttribute('href', '/decks/deck-1/review')
+    expect(reviewLink).toHaveAttribute('href', '/review/deck-1')
     // Draft badge visible (drafts: 2)
     await canvas.findByText(/2/)
   },
