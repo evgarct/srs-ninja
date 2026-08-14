@@ -20,6 +20,7 @@ const meta: Meta<typeof HomeDeckCard> = {
       id: 'deck-1',
       name: 'English Core',
       language: 'english',
+      translation_language: 'russian',
     },
     due: 18,
     drafts: 2,
@@ -37,7 +38,7 @@ export const NeedsReview: Story = {
     // Deck name is visible
     await canvas.findByText('English Core')
     // "Start review" link is present and points to the correct URL
-    const reviewLink = await canvas.findByRole('link', { name: /Начать review/i })
+    const reviewLink = await canvas.findByRole('link', { name: /Начать повторение/i })
     expect(reviewLink).toHaveAttribute('href', '/decks/deck-1/review')
     // Draft badge visible (drafts: 2)
     await canvas.findByText(/2/)
@@ -65,5 +66,18 @@ export const IdleBeforeExtraStudy: Story = {
     due: 0,
     drafts: 0,
     completedToday: false,
+  },
+}
+
+export const TurkishToEnglish: Story = {
+  args: {
+    deck: {
+      id: 'deck-tr',
+      name: 'Günlük Türkçe',
+      language: 'turkish',
+      translation_language: 'english',
+    },
+    due: 12,
+    drafts: 1,
   },
 }

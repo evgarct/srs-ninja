@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { brand } from '@/lib/brand'
 import { useTranslations } from 'next-intl'
+import { getConfiguredAuthCallbackUrl } from '@/lib/actions/auth'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -27,11 +28,23 @@ export default function LoginPage() {
     setMessage('')
 
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({ email, password })
+      let emailRedirectTo: string
+      try {
+        emailRedirectTo = await getConfiguredAuthCallbackUrl()
+      } catch {
+        setMessage(t('configurationError'))
+        setIsLoading(false)
+        return
+      }
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo },
+      })
       if (error) {
         setMessage(error.message)
       } else {
-        setMessage('Check your email for the confirmation link!')
+        setMessage(t('checkEmail'))
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -50,10 +63,19 @@ export default function LoginPage() {
     setIsLoading(true)
     setMessage('')
 
+    let redirectTo: string
+    try {
+      redirectTo = await getConfiguredAuthCallbackUrl()
+    } catch {
+      setMessage(t('configurationError'))
+      setIsLoading(false)
+      return
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/auth/callback`,
+        redirectTo,
       },
     })
 
@@ -78,7 +100,7 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('email')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -88,7 +110,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('password')}</Label>
               <Input
                 id="password"
                 type="password"
@@ -123,7 +145,7 @@ export default function LoginPage() {
                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
               </svg>
-              Google
+              {t('google')}
             </Button>
 
             <Button

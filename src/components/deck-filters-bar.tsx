@@ -42,6 +42,10 @@ export function formatTagLabelForLanguage(tag: string, deckLanguage: Language) {
     return tag.slice('ENGLISH::'.length)
   }
 
+  if (deckLanguage === 'turkish' && tag.startsWith('TURKISH::')) {
+    return tag.slice('TURKISH::'.length)
+  }
+
   return tag
 }
 

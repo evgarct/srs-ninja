@@ -98,11 +98,11 @@ export function RatingButtons({
             : `grid grid-cols-4 gap-2 ${stickyMobile ? "sm:gap-2.5" : ""} ${className ?? ""}`
         }
         role="group"
-        aria-label="Rate your recall"
+        aria-label={t("rateRecall")}
       >
         {BUTTON_CONFIG.map(({ rating, translationKey, key, icon: Icon, shellClass, iconClass, hoverClass, intervalKey }) => {
           const label = t(translationKey)
-          const ariaLabel = `${label} (key ${key})${intervals ? `, ${intervals[intervalKey]}` : ""}`
+          const ariaLabel = `${label} (${t("keyboardKey", { key })})${intervals ? `, ${intervals[intervalKey]}` : ""}`
           const tooltipText = intervals ? `${label} · ${intervals[intervalKey]}` : label
 
           if (isFloating) {

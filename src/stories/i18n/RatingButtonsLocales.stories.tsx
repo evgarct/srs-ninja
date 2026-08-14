@@ -10,8 +10,8 @@ interface RatingButtonsDemoProps extends RatingButtonsProps {
   locale?: Locale
 }
 
-function RatingButtonsDemo({ locale: _, ...props }: RatingButtonsDemoProps) {
-  return <RatingButtons {...props} />
+function RatingButtonsDemo({ locale, ...props }: RatingButtonsDemoProps) {
+  return <div data-locale={locale}><RatingButtons {...props} /></div>
 }
 
 function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
@@ -79,6 +79,13 @@ export const LocaleEn: Story = {
 export const LocaleCs: Story = {
   args: { locale: 'cs' },
   play: makePlay('cs'),
+  tags: ['!dev'],
+  parameters: { a11y: { test: 'error' } },
+}
+
+export const LocaleTr: Story = {
+  args: { locale: 'tr' },
+  play: makePlay('tr'),
   tags: ['!dev'],
   parameters: { a11y: { test: 'error' } },
 }

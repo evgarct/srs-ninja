@@ -14,7 +14,8 @@ export type CardType = 'recognition' | 'production' | 'listening'
 export type Rating = 1 | 2 | 3 | 4 // again, hard, good, easy
 
 // Languages
-export type Language = 'czech' | 'english'
+export type Language = 'czech' | 'english' | 'turkish'
+export type TranslationLanguage = 'russian' | 'english' | 'czech' | 'turkish'
 
 // CEFR levels
 export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const
@@ -44,6 +45,11 @@ export const PARTS_OF_SPEECH_CZECH = [
 export const PARTS_OF_SPEECH_ENGLISH = [
   'noun', 'verb', 'adjective', 'adverb', 'pronoun', 'preposition',
   'conjunction', 'phrasal verb', 'expression', 'idiom', 'collocation',
+] as const
+
+export const PARTS_OF_SPEECH_TURKISH = [
+  'isim', 'fiil', 'sıfat', 'zarf', 'zamir', 'edat',
+  'bağlaç', 'ünlem', 'deyim', 'ifade',
 ] as const
 
 // Style/register

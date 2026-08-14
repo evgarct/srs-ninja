@@ -14,7 +14,7 @@ export function mapFieldsToFlashcard(
   const normalizedFields = normalizeNoteFields(fields, language)
   const expression = getNotePrimaryText(normalizedFields) || '—'
   const translation = String(normalizedFields.translation ?? '—')
-  const examples = language === 'english'
+  const examples = language !== 'czech'
     ? extractExamplesFromHtml(normalizedFields.examples_html ?? fields.collocations ?? '')
     : extractExamplesFromHtml(normalizedFields.examples_html ?? '')
 
@@ -24,10 +24,10 @@ export function mapFieldsToFlashcard(
     ? (rawLevel as CEFRLevel)
     : 'B1'
 
-  const frequency = language === 'english'
+  const frequency = language !== 'czech'
     ? getPopularityValue(normalizedFields)
     : Math.min(10, Math.max(1, Math.round(Number(normalizedFields.popularity ?? 5))))
-  const style = language === 'english'
+  const style = language !== 'czech'
     ? formatEnglishStyleLabel(normalizedFields.style)
     : String(normalizedFields.style ?? '')
   const partOfSpeech = String(normalizedFields.part_of_speech ?? '')

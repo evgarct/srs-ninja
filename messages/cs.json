@@ -11,7 +11,11 @@
   },
   "home": {
     "noDecks": "Žádné balíčky",
-    "createFirst": "Vytvořte svůj první balíček a začněte."
+    "createFirst": "Vytvořte svůj první balíček a začněte.",
+    "drafts": "{count, plural, one {# koncept} few {# koncepty} other {# konceptů}}",
+    "due": "k opakování",
+    "startReview": "Začít opakování",
+    "open": "Otevřít"
   },
   "auth": {
     "loading": "Načítání...",
@@ -21,7 +25,12 @@
     "hasAccount": "Máte účet? Přihlásit se",
     "orContinueWith": "Nebo pokračujte přes",
     "createAccount": "Vytvořit účet",
-    "signInAccount": "Přihlásit se k účtu"
+    "signInAccount": "Přihlásit se k účtu",
+    "email": "E-mail",
+    "password": "Heslo",
+    "google": "Google",
+    "checkEmail": "Zkontrolujte e-mail, poslali jsme potvrzovací odkaz.",
+    "configurationError": "Přihlášení není správně nastaveno. Kontaktujte podporu."
   },
   "createDeck": {
     "title": "Vytvořit balíček",
@@ -32,7 +41,13 @@
     "creating": "Vytváříme...",
     "create": "Vytvořit",
     "langCzech": "🇨🇿 Čeština",
-    "langEnglish": "🇬🇧 Angličtina"
+    "langEnglish": "🇬🇧 Angličtina",
+    "langTurkish": "🇹🇷 Turečtina",
+    "translationLanguage": "Jazyk překladu",
+    "translationRussian": "🇷🇺 Ruština",
+    "translationEnglish": "🇬🇧 Angličtina",
+    "translationCzech": "🇨🇿 Čeština",
+    "translationTurkish": "🇹🇷 Turečtina"
   },
   "review": {
     "noNewWords": "Žádná nová slova!",
@@ -45,7 +60,9 @@
     "ratingAgain": "Znovu",
     "ratingHard": "Těžké",
     "ratingGood": "Dobře",
-    "ratingEasy": "Lehké"
+    "ratingEasy": "Lehké",
+    "rateRecall": "Ohodnotit vybavení",
+    "keyboardKey": "klávesa {key}"
   },
   "deck": {
     "backHome": "← Domů",
@@ -66,6 +83,15 @@
     "editNote": "Upravit",
     "deleteNote": "Smazat",
     "showCard": "Zobrazit kartičku"
+  },
+  "flashcard": {
+    "synonyms": "Synonyma",
+    "antonyms": "Antonyma",
+    "note": "Poznámka",
+    "examples": "Příkladové věty",
+    "playPronunciation": "Přehrát výslovnost",
+    "reveal": "Zobrazit odpověď (Mezerník)",
+    "revealHint": "Stiskněte {key} nebo klikněte pro zobrazení odpovědi"
   },
   "stats": {
     "profile": "Profil",

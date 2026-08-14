@@ -15,8 +15,9 @@
 
 - `english` через voice `JBFqnCBsd6RMkjVDRZzb` и `language_code = 'en'`;
 - `czech` через voice `TX3LPaxmHKxFdv7VOQHJ` и `language_code = 'cs'`.
+- `turkish` через профессиональный Voice Library voice Gökçe Deniz (`oPC5I9GKjMReiaM29gjY`) из `ELEVENLABS_TURKISH_VOICE_ID` и `language_code = 'tr'`; переменная обязательна для турецкого TTS.
 
-Обе языковые конфигурации используют один и тот же ElevenLabs model:
+Все три языковые конфигурации используют один и тот же ElevenLabs model:
 
 - `eleven_flash_v2_5`
 

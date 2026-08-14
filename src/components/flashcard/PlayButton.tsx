@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Volume2 } from "lucide-react"
+import { useTranslations } from "next-intl"
 
 interface PlayButtonProps {
   onPlay: () => void
@@ -10,6 +11,8 @@ interface PlayButtonProps {
 }
 
 export function PlayButton({ onPlay, className, disabled }: PlayButtonProps) {
+  const t = useTranslations("flashcard")
+
   return (
     <button
       type="button"
@@ -18,7 +21,7 @@ export function PlayButton({ onPlay, className, disabled }: PlayButtonProps) {
         onPlay()
       }}
       disabled={disabled}
-      aria-label="Play pronunciation"
+      aria-label={t("playPronunciation")}
       className={`
         group inline-flex h-10 w-10 items-center justify-center
         rounded-full

@@ -74,10 +74,11 @@ export const OverflowMenuOpen: Story = {
     // Create deck & import actions
     await body.findByText('Новая колода')
     await body.findByText('Импорт')
-    // All three language options
+    // All language options
     await body.findByText('🇬🇧 English')
     await body.findByText('🇷🇺 Русский')
     await body.findByText('🇨🇿 Čeština')
+    await body.findByText('🇹🇷 Türkçe')
     // Logout option
     await body.findByText('Выйти')
   },

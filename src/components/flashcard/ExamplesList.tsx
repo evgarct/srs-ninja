@@ -1,4 +1,5 @@
 import * as React from "react"
+import { useTranslations } from "next-intl"
 
 interface ExamplesListProps {
   examples: string[]
@@ -6,10 +7,12 @@ interface ExamplesListProps {
 }
 
 export function ExamplesList({ examples, className }: ExamplesListProps) {
+  const t = useTranslations("flashcard")
+
   return (
     <ul
       className={`space-y-2 text-sm text-foreground/75 ${className ?? ""}`}
-      aria-label="Example sentences"
+      aria-label={t("examples")}
     >
       {examples.map((example, index) => (
         <li key={index} className="flex gap-2 leading-relaxed">

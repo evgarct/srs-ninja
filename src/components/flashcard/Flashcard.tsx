@@ -8,6 +8,8 @@ import { FrequencyBar } from "./FrequencyBar"
 import { PlayButton } from "./PlayButton"
 import { RatingButtons } from "./RatingButtons"
 import { ExamplesList } from "./ExamplesList"
+import { useTranslations } from "next-intl"
+import type { Language } from "@/lib/types"
 
 export interface FlashcardProps {
   // Content
@@ -24,7 +26,7 @@ export interface FlashcardProps {
   antonyms?: string[]
   audioUrl?: string
   imageUrl?: string
-  language: "czech" | "english"
+  language: Language
 
   // State
   direction: "recognition" | "production"
@@ -75,6 +77,7 @@ export function Flashcard({
   renderRatingButtons = true,
   className,
 }: FlashcardProps) {
+  const t = useTranslations("flashcard")
   const isCzech = language === "czech"
   const [isPressingReveal, setIsPressingReveal] = React.useState(false)
 
@@ -147,7 +150,7 @@ export function Flashcard({
       <div
         role={!previewMode && !isRevealed ? "button" : undefined}
         tabIndex={!previewMode && !isRevealed ? 0 : undefined}
-        aria-label={!previewMode && !isRevealed ? "Reveal answer (Space)" : undefined}
+        aria-label={!previewMode && !isRevealed ? t("reveal") : undefined}
         onClick={!previewMode && !isRevealed ? onReveal : undefined}
         onPointerDown={
           !previewMode && !isRevealed
@@ -229,13 +232,13 @@ export function Flashcard({
                   <div className="flex flex-col gap-1 pt-0.5 text-xs text-muted-foreground">
                     {synonyms && synonyms.length > 0 && (
                       <p>
-                        <span className="font-medium text-foreground/60">Synonyms: </span>
+                        <span className="font-medium text-foreground/60">{t("synonyms")}: </span>
                         {synonyms.join(', ')}
                       </p>
                     )}
                     {antonyms && antonyms.length > 0 && (
                       <p>
-                        <span className="font-medium text-foreground/60">Antonyms: </span>
+                        <span className="font-medium text-foreground/60">{t("antonyms")}: </span>
                         {antonyms.join(', ')}
                       </p>
                     )}
@@ -275,7 +278,7 @@ export function Flashcard({
           {isCzech && note && (
             <div className="rounded-lg border border-foreground/8 bg-muted/40 px-3 py-2">
               <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground/60">Pozn.: </span>
+                <span className="font-semibold text-foreground/60">{t("note")}: </span>
                 {note}
               </p>
             </div>
@@ -285,11 +288,7 @@ export function Flashcard({
           {!previewMode && !isRevealed && (
             <div className="flex justify-center pt-1">
               <span className="text-xs text-muted-foreground/50 tracking-wide">
-                Press{" "}
-                <kbd className="rounded border border-foreground/10 bg-muted px-1.5 py-0.5 font-mono text-[10px]">
-                  Space
-                </kbd>{" "}
-                or click to reveal
+                {t("revealHint", { key: "Space" })}
               </span>
             </div>
           )}

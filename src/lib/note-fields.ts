@@ -12,6 +12,11 @@ import {
   ENGLISH_NOTE_FIELDS,
   normalizeEnglishNoteFields,
 } from './english-note-schema'
+import {
+  getTurkishNoteFormValues,
+  normalizeTurkishNoteFields,
+  TURKISH_NOTE_FIELDS,
+} from './turkish-note-schema'
 
 export const CZECH_POPULARITY_VALUES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'] as const
 
@@ -27,9 +32,11 @@ export interface FieldDef {
 export const CZECH_FIELDS: FieldDef[] = CZECH_NOTE_FIELDS
 
 export const ENGLISH_FIELDS: FieldDef[] = ENGLISH_NOTE_FIELDS
+export const TURKISH_FIELDS: FieldDef[] = TURKISH_NOTE_FIELDS
 
 export function getFields(language: Language): FieldDef[] {
-  return language === 'czech' ? CZECH_FIELDS : ENGLISH_FIELDS
+  if (language === 'czech') return CZECH_FIELDS
+  return language === 'turkish' ? TURKISH_FIELDS : ENGLISH_FIELDS
 }
 
 export function getNotePrimaryText(fields: Record<string, unknown>): string {
@@ -48,6 +55,8 @@ export function normalizeNoteFields(
     return normalizeEnglishNoteFields(fields)
   }
 
+  if (language === 'turkish') return normalizeTurkishNoteFields(fields)
+
   return normalizeCzechNoteFields(fields)
 }
 
@@ -58,6 +67,8 @@ export function getNoteFormValues(
   if (language === 'english') {
     return getEnglishNoteFormValues(fields)
   }
+
+  if (language === 'turkish') return getTurkishNoteFormValues(fields)
 
   return getCzechNoteFormValues(fields)
 }

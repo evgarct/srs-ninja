@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Check, Ellipsis, Globe, House, LogOut, Plus, Upload } from 'lucide-react'
+import { BarChart3, Check, Ellipsis, House, LogOut, Plus, Upload } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
@@ -25,6 +25,7 @@ const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
   { locale: 'en', label: '🇬🇧 English' },
   { locale: 'ru', label: '🇷🇺 Русский' },
   { locale: 'cs', label: '🇨🇿 Čeština' },
+  { locale: 'tr', label: '🇹🇷 Türkçe' },
 ]
 
 export function Nav() {
