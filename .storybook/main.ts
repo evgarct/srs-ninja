@@ -1,5 +1,9 @@
 import type { StorybookConfig } from '@storybook/nextjs-vite';
 import { mergeConfig } from 'vite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const config: StorybookConfig = {
   "stories": [
@@ -19,6 +23,11 @@ const config: StorybookConfig = {
   ],
   async viteFinal(baseConfig) {
     return mergeConfig(baseConfig, {
+      resolve: {
+        alias: {
+          'node:crypto': path.join(dirname, 'mocks/node-crypto.ts'),
+        },
+      },
       build: {
         // Storybook bundles docs, addons, and preview code into a few large assets.
         // Raising the threshold keeps routine verification focused on actionable warnings.

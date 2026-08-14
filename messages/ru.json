@@ -7,7 +7,8 @@
     "logout": "Выйти",
     "openMenu": "Открыть дополнительные действия",
     "newDeckAriaLabel": "Создать новую колоду",
-    "language": "Язык"
+    "language": "Язык",
+    "voiceSettings": "Настройки голосов"
   },
   "home": {
     "noDecks": "Нет колод",
@@ -31,6 +32,9 @@
     "google": "Google",
     "checkEmail": "Проверьте почту — мы отправили ссылку для подтверждения.",
     "configurationError": "Авторизация настроена неправильно. Обратитесь в поддержку."
+  },
+  "elevenlabsSettings": {
+    "pageTitle": "Голоса ElevenLabs", "pageDescription": "Подключите свой аккаунт ElevenLabs и выберите голоса для каждого изучаемого языка.", "title": "Ваш аккаунт ElevenLabs", "description": "API-ключ хранится в зашифрованном виде и используется только сервером для вашего аудио.", "ownerTitle": "Персональный аккаунт ElevenLabs подключён", "ownerDescription": "Ваш аккаунт использует существующее приватное системное подключение. Другие пользователи не могут расходовать его лимит.", "apiKey": "API-ключ ElevenLabs", "apiKeyPlaceholder": "Вставьте ключ с ограниченными правами", "keyHint": "Создайте в ElevenLabs ключ с доступом только к text-to-speech. После сохранения ключ больше не показывается.", "connect": "Подключить аккаунт", "connected": "ElevenLabs подключён", "connectError": "Не удалось подключить ElevenLabs. Проверьте ключ и его права.", "connectedTier": "Подключённый тариф: {tier}", "englishVoice": "Английский голос", "czechVoice": "Чешский голос", "turkishVoice": "Турецкий голос", "chooseVoice": "Выберите голос", "saveVoices": "Сохранить голоса", "voicesSaved": "Настройки голосов сохранены", "saveError": "Не удалось сохранить голоса", "disconnect": "Отключить", "disconnected": "ElevenLabs отключён", "disconnectError": "Не удалось отключить ElevenLabs"
   },
   "createDeck": {
     "title": "Создать колоду",

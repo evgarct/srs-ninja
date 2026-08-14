@@ -21,7 +21,10 @@ export const TTS_LANGUAGE_CONFIG: Partial<Record<Language, TtsLanguageConfig>> =
   },
 }
 
-export function getTtsLanguageConfig(language: string): TtsLanguageConfig | null {
+export function getTtsLanguageConfig(language: string, voiceOverride?: string): TtsLanguageConfig | null {
+  if (voiceOverride && supportsTtsLanguage(language)) {
+    return { voiceId: voiceOverride, modelId: ELEVENLABS_MODEL, languageCode: { english: 'en', czech: 'cs', turkish: 'tr' }[language] }
+  }
   if (language === 'turkish') {
     const voiceId = process.env.ELEVENLABS_TURKISH_VOICE_ID?.trim()
     if (!voiceId) return null

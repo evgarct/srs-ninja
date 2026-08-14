@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Check, Ellipsis, House, LogOut, Plus, Upload } from 'lucide-react'
+import { BarChart3, Check, Ellipsis, House, LogOut, Plus, Settings, Upload } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
@@ -68,6 +68,10 @@ export function Nav() {
         <DropdownMenuItem onClick={() => router.push('/import')}>
           <Upload className="size-4" />
           {t('import')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/settings/elevenlabs')}>
+          <Settings className="size-4" />
+          {t('voiceSettings')}
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />

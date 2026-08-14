@@ -7,7 +7,8 @@
     "logout": "Çıkış yap",
     "openMenu": "Diğer işlemleri aç",
     "newDeckAriaLabel": "Yeni deste oluştur",
-    "language": "Dil"
+    "language": "Dil",
+    "voiceSettings": "Ses ayarları"
   },
   "home": {
     "noDecks": "Deste yok",
@@ -31,6 +32,9 @@
     "google": "Google",
     "checkEmail": "Onay bağlantısı için e-postanızı kontrol edin.",
     "configurationError": "Kimlik doğrulama doğru yapılandırılmamış. Destekle iletişime geçin."
+  },
+  "elevenlabsSettings": {
+    "pageTitle": "ElevenLabs sesleri", "pageDescription": "Kendi ElevenLabs hesabınızı bağlayın ve her öğrenme dili için ses seçin.", "title": "ElevenLabs hesabınız", "description": "API anahtarınız şifrelenir ve yalnızca sunucu tarafından sizin sesleriniz için kullanılır.", "ownerTitle": "Kişisel ElevenLabs hesabı etkin", "ownerDescription": "Bu hesap mevcut özel sistem bağlantısını kullanır. Diğer kullanıcılar kotasını tüketemez.", "apiKey": "ElevenLabs API anahtarı", "apiKeyPlaceholder": "Kısıtlı API anahtarınızı yapıştırın", "keyHint": "ElevenLabs'te yalnızca text-to-speech erişimli bir anahtar oluşturun. Anahtar kaydedildikten sonra tekrar gösterilmez.", "connect": "Hesabı bağla", "connected": "ElevenLabs bağlandı", "connectError": "ElevenLabs bağlanamadı. Anahtarı ve izinlerini kontrol edin.", "connectedTier": "Bağlı plan: {tier}", "englishVoice": "İngilizce sesi", "czechVoice": "Çekçe sesi", "turkishVoice": "Türkçe sesi", "chooseVoice": "Bir ses seçin", "saveVoices": "Sesleri kaydet", "voicesSaved": "Ses ayarları kaydedildi", "saveError": "Ses ayarları kaydedilemedi", "disconnect": "Bağlantıyı kes", "disconnected": "ElevenLabs bağlantısı kesildi", "disconnectError": "ElevenLabs bağlantısı kesilemedi"
   },
   "createDeck": {
     "title": "Deste oluştur",
