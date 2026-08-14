@@ -4,7 +4,7 @@ import { generateAndCacheAudio } from '@/lib/tts'
 import { summarizeBatchAudioResults, type BatchAudioResult } from '@/lib/tts-batch'
 import { getNotePrimaryText } from '@/lib/note-fields'
 import { supportsTtsLanguage } from '@/lib/tts-config'
-import { resolveElevenLabsTts } from '@/lib/server/elevenlabs-account'
+import { resolveValidatedElevenLabsTts } from '@/lib/server/elevenlabs-account'
 
 // POST /api/tts/batch  { deckId, noteIds? }
 // Generates audio for filtered supported-language notes in a deck that don't have audio yet.
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const resolvedTts = await resolveElevenLabsTts(user.id, deck.language)
+  const resolvedTts = await resolveValidatedElevenLabsTts(user.id, deck.language).catch(() => null)
   if (!resolvedTts) {
     return NextResponse.json(
       { error: 'Connect ElevenLabs and choose a voice for this language' },

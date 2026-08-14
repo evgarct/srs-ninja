@@ -55,3 +55,18 @@ export async function resolveElevenLabsTts(userId: string, language: Language): 
   if (!config) return null
   return { apiKey: decryptSecret(data.encrypted_api_key), config }
 }
+
+export async function resolveValidatedElevenLabsTts(
+  userId: string,
+  language: Language
+): Promise<ResolvedElevenLabsTts | null> {
+  const resolved = await resolveElevenLabsTts(userId, language)
+  if (!resolved) return null
+
+  const account = await fetchElevenLabsAccount(resolved.apiKey)
+  const voiceIsAvailable = account.voices.some(
+    (voice) => voice.voice_id === resolved.config.voiceId
+  )
+
+  return voiceIsAvailable ? resolved : null
+}

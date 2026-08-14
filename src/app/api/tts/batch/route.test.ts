@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { resolveElevenLabsTts, generateAndCacheAudio, from } = vi.hoisted(() => ({
-  resolveElevenLabsTts: vi.fn(),
+const { resolveValidatedElevenLabsTts, generateAndCacheAudio, from } = vi.hoisted(() => ({
+  resolveValidatedElevenLabsTts: vi.fn(),
   generateAndCacheAudio: vi.fn(),
   from: vi.fn(),
 }))
 
-vi.mock('@/lib/server/elevenlabs-account', () => ({ resolveElevenLabsTts }))
+vi.mock('@/lib/server/elevenlabs-account', () => ({ resolveValidatedElevenLabsTts }))
 vi.mock('@/lib/tts', () => ({ generateAndCacheAudio }))
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
@@ -36,7 +36,7 @@ describe('POST /api/tts/batch', () => {
   })
 
   it('preflights the account and voice before fetching or generating notes', async () => {
-    resolveElevenLabsTts.mockResolvedValue(null)
+    resolveValidatedElevenLabsTts.mockResolvedValue(null)
 
     const response = await POST(new Request('http://localhost/api/tts/batch', {
       method: 'POST',
@@ -47,7 +47,7 @@ describe('POST /api/tts/batch', () => {
     await expect(response.json()).resolves.toEqual({
       error: 'Connect ElevenLabs and choose a voice for this language',
     })
-    expect(resolveElevenLabsTts).toHaveBeenCalledWith('user-1', 'turkish')
+    expect(resolveValidatedElevenLabsTts).toHaveBeenCalledWith('user-1', 'turkish')
     expect(from).toHaveBeenCalledTimes(1)
     expect(generateAndCacheAudio).not.toHaveBeenCalled()
   })
