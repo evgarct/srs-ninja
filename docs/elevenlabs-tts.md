@@ -9,9 +9,22 @@
 - single-note generation для редактирования ноты и точечных действий;
 - batch generation для deck page и filtered subset.
 
+## Account isolation
+
+ElevenLabs расходуется отдельно для каждого пользователя:
+
+- только пользователь с UUID из `ELEVENLABS_OWNER_USER_ID` использует существующий серверный `ELEVENLABS_API_KEY` и системные voice IDs;
+- остальные пользователи подключают собственный restricted API key на `/settings/elevenlabs` и выбирают доступные в своём аккаунте голоса для английского, чешского и турецкого;
+- сервер проверяет ключ через ElevenLabs `/v1/user` и получает список голосов через `/v1/voices`;
+- пользовательский ключ шифруется AES-256-GCM ключом `USER_CREDENTIALS_ENCRYPTION_KEY` и никогда не возвращается клиенту;
+- таблица `user_elevenlabs_settings` закрыта для `anon` и `authenticated`; чтение и запись выполняются только сервером через service role после проверки Supabase-сессии;
+- voice ID при сохранении сверяется со списком голосов именно подключённого аккаунта.
+
+Если обычный пользователь не подключил ElevenLabs или не выбрал голос для языка, TTS не использует системный fallback и возвращает конфигурационную ошибку. Поэтому чужой пользователь не может расходовать квоту владельца.
+
 ## Supported Languages
 
-Сейчас TTS включён для:
+Для системного аккаунта владельца TTS настроен так:
 
 - `english` через voice `JBFqnCBsd6RMkjVDRZzb` и `language_code = 'en'`;
 - `czech` через voice `TX3LPaxmHKxFdv7VOQHJ` и `language_code = 'cs'`.
@@ -21,9 +34,16 @@
 
 - `eleven_flash_v2_5`
 
+Для остальных пользователей язык и модель остаются такими же, а `voice_id` берётся из их персональных настроек.
+
 ## Files
 
 - `src/lib/tts.ts`
+- `src/lib/server/elevenlabs-account.ts`
+- `src/lib/server/secret-encryption.ts`
+- `src/lib/actions/elevenlabs.ts`
+- `src/components/elevenlabs-settings.tsx`
+- `src/app/settings/elevenlabs/page.tsx`
 - `src/app/api/tts/route.ts`
 - `src/app/api/tts/batch/route.ts`
 - `src/lib/note-fields.ts`
@@ -35,7 +55,7 @@
 
 `generateAndCacheAudio(...)` является единым серверным helper для TTS:
 
-- выбирает language-aware `voice_id`, `model_id` и `language_code`;
+- выбирает изолированную учётную запись, затем language-aware `voice_id`, `model_id` и `language_code`;
 - загружает итоговый mp3 в bucket `audio`;
 - получает public URL;
 - добавляет cache-busting query parameter;

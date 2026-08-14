@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { getTtsLanguageConfig } from '@/lib/tts-config'
+import { supportsTtsLanguage } from '@/lib/tts-config'
+import { resolveElevenLabsTts } from '@/lib/server/elevenlabs-account'
 
 /**
  * Calls ElevenLabs TTS, uploads the resulting mp3 to Supabase Storage,
@@ -12,17 +13,10 @@ export async function generateAndCacheAudio(
   text: string,
   language: string
 ): Promise<{ audioUrl: string } | { error: string }> {
-  if (!process.env.ELEVENLABS_API_KEY) {
-    return { error: 'ELEVENLABS_API_KEY is not configured' }
-  }
-
-  const config = getTtsLanguageConfig(language)
-  if (!config) {
-    if (language === 'turkish') {
-      return { error: 'ELEVENLABS_TURKISH_VOICE_ID is not configured' }
-    }
-    return { error: `TTS is not supported for ${language} decks` }
-  }
+  if (!supportsTtsLanguage(language)) return { error: `TTS is not supported for ${language} decks` }
+  const resolved = await resolveElevenLabsTts(userId, language)
+  if (!resolved) return { error: 'Connect ElevenLabs and choose a voice for this language' }
+  const { apiKey, config } = resolved
 
   // Call ElevenLabs
   const ttsResponse = await fetch(
@@ -30,7 +24,7 @@ export async function generateAndCacheAudio(
     {
       method: 'POST',
       headers: {
-        'xi-api-key': process.env.ELEVENLABS_API_KEY,
+        'xi-api-key': apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -42,9 +36,8 @@ export async function generateAndCacheAudio(
   )
 
   if (!ttsResponse.ok) {
-    const err = await ttsResponse.text()
-    console.error('ElevenLabs error:', err)
-    return { error: `TTS generation failed: ${err || ttsResponse.statusText}` }
+    console.error('ElevenLabs TTS request failed:', ttsResponse.status)
+    return { error: 'TTS generation failed. Check the connected ElevenLabs account and quota.' }
   }
 
   const audioBuffer = await ttsResponse.arrayBuffer()
@@ -56,11 +49,6 @@ export async function generateAndCacheAudio(
   // Upload to Supabase Storage — path: {userId}/{noteId}.mp3
   const storagePath = `${cleanUserId}/${cleanNoteId}.mp3`
   
-  console.log('--- TTS DEBUG ---')
-  console.log('Status 200 from API:', ttsResponse.status === 200)
-  console.log('Audio buffer size (bytes):', audioBuffer.byteLength)
-  console.log('Storage path to upload:', storagePath)
-
   const { error: uploadError } = await supabase.storage
     .from('audio')
     .upload(storagePath, audioBuffer, {

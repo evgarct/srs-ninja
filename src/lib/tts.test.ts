@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { generateAndCacheAudio } from './tts'
 
@@ -25,14 +25,16 @@ function createSupabaseMock({
 }
 
 describe('generateAndCacheAudio', () => {
+  beforeEach(() => {
+    vi.stubEnv('ELEVENLABS_OWNER_USER_ID', 'user-1')
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.unstubAllEnvs()
   })
 
   it('returns a config error when ElevenLabs key is missing', async () => {
-    vi.unstubAllEnvs()
-
     const result = await generateAndCacheAudio(
       createSupabaseMock() as never,
       'user-1',
@@ -41,7 +43,7 @@ describe('generateAndCacheAudio', () => {
       'english'
     )
 
-    expect(result).toEqual({ error: 'ELEVENLABS_API_KEY is not configured' })
+    expect(result).toEqual({ error: 'Connect ElevenLabs and choose a voice for this language' })
   })
 
   it('returns a language error for unsupported decks', async () => {
@@ -99,7 +101,7 @@ describe('generateAndCacheAudio', () => {
       'turkish'
     )
 
-    expect(result).toEqual({ error: 'ELEVENLABS_TURKISH_VOICE_ID is not configured' })
+    expect(result).toEqual({ error: 'Connect ElevenLabs and choose a voice for this language' })
   })
 
   it('uses the configured Turkish voice and language code', async () => {

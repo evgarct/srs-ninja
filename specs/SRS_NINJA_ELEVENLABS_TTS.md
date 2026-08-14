@@ -2,8 +2,9 @@
 
 ## Context
 
-Add text-to-speech audio to supported decks using ElevenLabs API. Supported languages are English, Czech, and Turkish. Turkish uses a dedicated voice supplied through `ELEVENLABS_TURKISH_VOICE_ID`. Free tier: 10,000 characters/month.
-The API key should already be in `.env.local` as `ELEVENLABS_API_KEY`.
+Add text-to-speech audio to supported decks using ElevenLabs API. Supported languages are English, Czech, and Turkish.
+
+The existing platform API key is a personal owner connection. It may be used only when the authenticated Supabase user ID equals `ELEVENLABS_OWNER_USER_ID`. Every other user must connect their own ElevenLabs API key and select voices from their own account. There is no fallback from a user connection to the owner connection.
 
 **English Voice ID:** `JBFqnCBsd6RMkjVDRZzb`
 **Czech Voice ID:** `TX3LPaxmHKxFdv7VOQHJ`
@@ -13,6 +14,16 @@ The API key should already be in `.env.local` as `ELEVENLABS_API_KEY`.
 ---
 
 ## What to Build
+
+### 0. Per-user ElevenLabs connection
+
+- Add `/settings/elevenlabs` with disconnected, connected, and owner-only states.
+- A non-owner can submit a restricted ElevenLabs API key, then choose English, Czech, and Turkish voices returned by that account.
+- Validate the key with ElevenLabs and validate saved voice IDs against that key's available voices.
+- Encrypt each API key at rest with AES-256-GCM and a server-only `USER_CREDENTIALS_ENCRYPTION_KEY`.
+- Never return saved keys to the browser, include them in logs, or expose provider response bodies.
+- Keep the settings table service-role-only with RLS enabled and direct `anon`/`authenticated` grants revoked.
+- Disconnecting deletes the stored encrypted credential and selections.
 
 ### 1. API Route: Generate Audio
 
@@ -300,11 +311,13 @@ Add a button that triggers batch audio generation:
 
 ---
 
-## Environment Variable
+## Environment Variables
 
 Add to `.env.local` (user should already have this):
 ```
 ELEVENLABS_API_KEY=sk_your_key_here
+ELEVENLABS_OWNER_USER_ID=the-owner-supabase-user-uuid
+USER_CREDENTIALS_ENCRYPTION_KEY=base64-encoded-32-byte-key
 ```
 
 **IMPORTANT:** Never hardcode the API key. Always use process.env.
@@ -347,6 +360,11 @@ Free tier: 10,000 chars/month.
 - [ ] Error handling for API failures
 - [ ] Uses voice ID `JBFqnCBsd6RMkjVDRZzb` for English cards
 - [ ] Uses voice ID `TX3LPaxmHKxFdv7VOQHJ` for Czech cards
+- [ ] Only `ELEVENLABS_OWNER_USER_ID` can consume the platform ElevenLabs key
+- [ ] Every other user must connect a personal key and choose personal voices
+- [ ] User API keys are encrypted at rest and are never returned to the client
+- [ ] Invalid or foreign voice IDs are rejected server-side
+- [ ] Missing personal configuration never falls back to owner quota
 - [ ] Character usage awareness (don't burn free tier)
 - [ ] "Generate Audio" button accessible from deck/review page
 - [ ] Unsupported deck languages are rejected with a clear error

@@ -148,6 +148,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_elevenlabs_settings: {
+        Row: {
+          account_tier: string | null
+          created_at: string
+          czech_voice_id: string | null
+          encrypted_api_key: string
+          english_voice_id: string | null
+          turkish_voice_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_tier?: string | null
+          created_at?: string
+          czech_voice_id?: string | null
+          encrypted_api_key: string
+          english_voice_id?: string | null
+          turkish_voice_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_tier?: string | null
+          created_at?: string
+          czech_voice_id?: string | null
+          encrypted_api_key?: string
+          english_voice_id?: string | null
+          turkish_voice_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       import_batches: {
         Row: {
           created_at: string

@@ -7,7 +7,8 @@
     "logout": "Odhlásit se",
     "openMenu": "Otevřít další akce",
     "newDeckAriaLabel": "Vytvořit nový balíček",
-    "language": "Jazyk"
+    "language": "Jazyk",
+    "voiceSettings": "Nastavení hlasů"
   },
   "home": {
     "noDecks": "Žádné balíčky",
@@ -31,6 +32,9 @@
     "google": "Google",
     "checkEmail": "Zkontrolujte e-mail, poslali jsme potvrzovací odkaz.",
     "configurationError": "Přihlášení není správně nastaveno. Kontaktujte podporu."
+  },
+  "elevenlabsSettings": {
+    "pageTitle": "Hlasy ElevenLabs", "pageDescription": "Připojte vlastní účet ElevenLabs a vyberte hlasy pro každý studovaný jazyk.", "title": "Váš účet ElevenLabs", "description": "API klíč je šifrovaný a server jej používá pouze pro vaše audio.", "ownerTitle": "Osobní účet ElevenLabs je aktivní", "ownerDescription": "Tento účet používá stávající soukromé systémové připojení. Ostatní uživatelé jeho limit nemohou čerpat.", "apiKey": "API klíč ElevenLabs", "apiKeyPlaceholder": "Vložte omezený API klíč", "keyHint": "Vytvořte klíč s přístupem k text-to-speech. Po uložení se již nezobrazí.", "connect": "Připojit účet", "connected": "ElevenLabs připojen", "connectError": "ElevenLabs se nepodařilo připojit. Zkontrolujte klíč a oprávnění.", "connectedTier": "Připojený tarif: {tier}", "englishVoice": "Anglický hlas", "czechVoice": "Český hlas", "turkishVoice": "Turecký hlas", "chooseVoice": "Vyberte hlas", "saveVoices": "Uložit hlasy", "voicesSaved": "Nastavení hlasů uloženo", "saveError": "Hlasy se nepodařilo uložit", "disconnect": "Odpojit", "disconnected": "ElevenLabs odpojen", "disconnectError": "ElevenLabs se nepodařilo odpojit"
   },
   "createDeck": {
     "title": "Vytvořit balíček",

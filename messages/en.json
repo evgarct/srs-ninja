@@ -7,7 +7,8 @@
     "logout": "Log out",
     "openMenu": "Open more actions",
     "newDeckAriaLabel": "Create new deck",
-    "language": "Language"
+    "language": "Language",
+    "voiceSettings": "Voice settings"
   },
   "home": {
     "noDecks": "No decks",
@@ -31,6 +32,9 @@
     "google": "Google",
     "checkEmail": "Check your email for the confirmation link.",
     "configurationError": "Authentication is not configured correctly. Please contact support."
+  },
+  "elevenlabsSettings": {
+    "pageTitle": "ElevenLabs voices", "pageDescription": "Connect your own ElevenLabs account and choose voices for each study language.", "title": "Your ElevenLabs account", "description": "Your API key is encrypted and used only by the server for your audio.", "ownerTitle": "Personal ElevenLabs account active", "ownerDescription": "This account uses the existing private system connection. Other users cannot consume its quota.", "apiKey": "ElevenLabs API key", "apiKeyPlaceholder": "Paste your restricted API key", "keyHint": "Create a key with text-to-speech access in ElevenLabs. The key is never shown again.", "connect": "Connect account", "connected": "ElevenLabs connected", "connectError": "Could not connect ElevenLabs. Check the key and its permissions.", "connectedTier": "Connected plan: {tier}", "englishVoice": "English voice", "czechVoice": "Czech voice", "turkishVoice": "Turkish voice", "chooseVoice": "Choose a voice", "saveVoices": "Save voices", "voicesSaved": "Voice settings saved", "saveError": "Could not save voice settings", "disconnect": "Disconnect", "disconnected": "ElevenLabs disconnected", "disconnectError": "Could not disconnect ElevenLabs"
   },
   "createDeck": {
     "title": "Create deck",
