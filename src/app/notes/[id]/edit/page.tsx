@@ -4,9 +4,11 @@ import Link from 'next/link'
 import { getNote } from '@/lib/actions/notes'
 import { NoteForm } from '@/components/note-form'
 import type { Language } from '@/lib/types'
+import { getTranslations } from 'next-intl/server'
 
 export default async function EditNotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  const t = await getTranslations('noteForm')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -23,7 +25,7 @@ export default async function EditNotePage({ params }: { params: Promise<{ id: s
         <Link href={`/deck/${deck.id}`} className="text-muted-foreground hover:text-foreground text-sm">
           ← {deck.name}
         </Link>
-        <h1 className="text-2xl font-bold mt-2">Редактировать нот</h1>
+        <h1 className="text-2xl font-bold mt-2">{t('editTitle')}</h1>
       </div>
       <NoteForm
         deckId={deck.id}

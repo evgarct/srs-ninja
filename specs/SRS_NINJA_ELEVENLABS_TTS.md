@@ -8,7 +8,7 @@ The existing platform API key is a personal owner connection. It may be used onl
 
 **English Voice ID:** `JBFqnCBsd6RMkjVDRZzb`
 **Czech Voice ID:** `TX3LPaxmHKxFdv7VOQHJ`
-**Languages:** English (`en`) and Czech (`cs`)
+**Languages:** English (`en`), Czech (`cs`), and Turkish (`tr`)
 **Model:** `eleven_flash_v2_5` (fast, 0.5 credits per character)
 
 ---
@@ -365,6 +365,8 @@ Free tier: 10,000 chars/month.
 - [ ] User API keys are encrypted at rest and are never returned to the client
 - [ ] Invalid or foreign voice IDs are rejected server-side
 - [ ] Missing personal configuration never falls back to owner quota
+- [ ] A revoked or invalid saved key does not break settings rendering; the user can disconnect and reconnect it
+- [ ] Batch generation validates the account and language voice once before loading and iterating notes
 - [ ] Character usage awareness (don't burn free tier)
 - [ ] "Generate Audio" button accessible from deck/review page
 - [ ] Unsupported deck languages are rejected with a clear error

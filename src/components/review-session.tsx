@@ -36,12 +36,7 @@ import {
 } from '@/lib/review-swipe'
 import { RatingButtons } from '@/components/flashcard/RatingButtons'
 import { toast } from 'sonner'
-
-function getSessionLabel(sessionMode: ReviewSessionMode) {
-  if (sessionMode === 'manual') return 'Manual review'
-  if (sessionMode === 'extra') return ''
-  return 'Review'
-}
+import { useTranslations } from 'next-intl'
 
 function getTimestamp() {
   return Date.now()
@@ -61,6 +56,7 @@ export function ReviewSession({
   audioMap?: Record<string, string>
   sessionMode?: ReviewSessionMode
 }) {
+  const t = useTranslations('review')
   const [queue, setQueue] = useState(cards)
   const [dynamicAudio, setDynamicAudio] = useState<Record<string, string>>({})
   const [revealed, setRevealed] = useState(false)
@@ -116,7 +112,7 @@ export function ReviewSession({
   const progress = projectedTotal > 0
     ? Math.round((completedReviews / projectedTotal) * 100)
     : 0
-  const sessionLabel = getSessionLabel(sessionMode)
+  const sessionLabel = sessionMode === 'manual' ? t('sessionManual') : t('sessionReview')
   const showSessionHeader = sessionMode !== 'extra'
   const showActionBar = revealed || burstState !== null
 
@@ -334,7 +330,7 @@ export function ReviewSession({
     setPendingReviewCount((count) => count + 1)
     void submitReview(currentCardId, rating, durationMs)
       .catch(() => {
-        setSyncError('Часть результатов не сохранилась. Лучше обновить страницу и проверить историю review.')
+        setSyncError(t('syncError'))
       })
       .finally(() => {
         setPendingReviewCount((count) => Math.max(0, count - 1))
@@ -356,7 +352,7 @@ export function ReviewSession({
       startTimeRef.current = getTimestamp()
     }
 
-    toast('Card hidden for this session')
+    toast(t('cardHidden'))
   }
 
   function handleCardPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
@@ -477,7 +473,8 @@ export function ReviewSession({
         variant="ghost"
         size="icon"
         className="h-8 w-8 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-        title="Hide for this session"
+        title={t('hideCard')}
+        aria-label={t('hideCard')}
         onClick={handleHideCurrentCard}
       >
         <EyeOff className="h-4 w-4" />
@@ -494,7 +491,8 @@ export function ReviewSession({
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-            title="Edit Note"
+            title={t('editNote')}
+            aria-label={t('editNote')}
           >
             <Pencil className="w-4 h-4" />
           </Button>
@@ -546,14 +544,14 @@ export function ReviewSession({
                       size="icon"
                       onClick={handleExitReview}
                       className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.06] text-white/76 shadow-[0_18px_30px_-22px_rgba(0,0,0,0.72)] backdrop-blur-xl hover:bg-white/[0.12] hover:text-white"
-                      aria-label="Exit review"
+                      aria-label={t('exitReview')}
                     >
                       <ArrowLeft className="h-4 w-4" />
                     </Button>
                   }
                 />
                 <TooltipContent side="bottom" sideOffset={10}>
-                  Exit review
+                  {t('exitReview')}
                 </TooltipContent>
               </Tooltip>
 

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { NoteForm } from '@/components/note-form'
 import type { Language } from '@/lib/types'
+import { getTranslations } from 'next-intl/server'
 
 export default async function NewNotePage({
   searchParams,
@@ -10,6 +11,7 @@ export default async function NewNotePage({
   searchParams: Promise<{ deckId?: string }>
 }) {
   const { deckId } = await searchParams
+  const t = await getTranslations('noteForm')
   if (!deckId) redirect('/')
 
   const supabase = await createClient()
@@ -25,7 +27,7 @@ export default async function NewNotePage({
         <Link href={`/deck/${deckId}`} className="text-muted-foreground hover:text-foreground text-sm">
           ← {deck.name}
         </Link>
-        <h1 className="text-2xl font-bold mt-2">Добавить нот</h1>
+        <h1 className="text-2xl font-bold mt-2">{t('newTitle')}</h1>
       </div>
       <NoteForm deckId={deckId} language={deck.language as Language} />
     </main>

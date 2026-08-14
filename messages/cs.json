@@ -34,8 +34,11 @@
     "configurationError": "Přihlášení není správně nastaveno. Kontaktujte podporu."
   },
   "elevenlabsSettings": {
-    "pageTitle": "Hlasy ElevenLabs", "pageDescription": "Připojte vlastní účet ElevenLabs a vyberte hlasy pro každý studovaný jazyk.", "title": "Váš účet ElevenLabs", "description": "API klíč je šifrovaný a server jej používá pouze pro vaše audio.", "ownerTitle": "Osobní účet ElevenLabs je aktivní", "ownerDescription": "Tento účet používá stávající soukromé systémové připojení. Ostatní uživatelé jeho limit nemohou čerpat.", "apiKey": "API klíč ElevenLabs", "apiKeyPlaceholder": "Vložte omezený API klíč", "keyHint": "Vytvořte klíč s přístupem k text-to-speech. Po uložení se již nezobrazí.", "connect": "Připojit účet", "connected": "ElevenLabs připojen", "connectError": "ElevenLabs se nepodařilo připojit. Zkontrolujte klíč a oprávnění.", "connectedTier": "Připojený tarif: {tier}", "englishVoice": "Anglický hlas", "czechVoice": "Český hlas", "turkishVoice": "Turecký hlas", "chooseVoice": "Vyberte hlas", "saveVoices": "Uložit hlasy", "voicesSaved": "Nastavení hlasů uloženo", "saveError": "Hlasy se nepodařilo uložit", "disconnect": "Odpojit", "disconnected": "ElevenLabs odpojen", "disconnectError": "ElevenLabs se nepodařilo odpojit"
+    "pageTitle": "Hlasy ElevenLabs", "pageDescription": "Připojte vlastní účet ElevenLabs a vyberte hlasy pro každý studovaný jazyk.", "title": "Váš účet ElevenLabs", "description": "API klíč je šifrovaný a server jej používá pouze pro vaše audio.", "ownerTitle": "Osobní účet ElevenLabs je aktivní", "ownerDescription": "Tento účet používá stávající soukromé systémové připojení. Ostatní uživatelé jeho limit nemohou čerpat.", "apiKey": "API klíč ElevenLabs", "apiKeyPlaceholder": "Vložte omezený API klíč", "keyHint": "Vytvořte klíč s přístupem k text-to-speech. Po uložení se již nezobrazí.", "connect": "Připojit účet", "connected": "ElevenLabs připojen", "connectError": "ElevenLabs se nepodařilo připojit. Zkontrolujte klíč a oprávnění.", "connectionUnavailable": "Toto připojení již nefunguje. Odpojte ho a připojte platný API klíč.", "connectedTier": "Připojený tarif: {tier}", "englishVoice": "Anglický hlas", "czechVoice": "Český hlas", "turkishVoice": "Turecký hlas", "chooseVoice": "Vyberte hlas", "saveVoices": "Uložit hlasy", "voicesSaved": "Nastavení hlasů uloženo", "saveError": "Hlasy se nepodařilo uložit", "disconnect": "Odpojit", "disconnected": "ElevenLabs odpojen", "disconnectError": "ElevenLabs se nepodařilo odpojit"
   },
+  "noteForm": {"newTitle":"Přidat poznámku","editTitle":"Upravit poznámku","selectPlaceholder":"Vyberte…","tagsLabel":"Štítky (oddělené čárkou)","tagsPlaceholder":"B1, sloveso, …","saving":"Ukládání…","save":"Uložit","add":"Přidat poznámku","cancel":"Zrušit","error":"Poznámku se nepodařilo uložit"},
+  "deckFilters": {"tags":"Štítky","tagsTrigger":"Štítky: {summary}","allTags":"Všechny štítky","tagSearch":"Hledat štítky…","clearTagSearch":"Vymazat hledání a filtry štítků","nothingFound":"Nic nenalezeno","tagCount":"{count, plural, one {# štítek} few {# štítky} other {# štítků}}","level":"Úroveň: {summary}","allLevels":"Všechny úrovně","levelCount":"{count, plural, one {# úroveň} few {# úrovně} other {# úrovní}}","fsrsLevel":"Úroveň FSRS","stateNew":"Nové","stateLearning":"Učení","stateRelearning":"Znovu učení","stateReview":"Opakování","audioLabel":"Audio","audio":"Audio: {summary}","allNotes":"Všechny poznámky","withAudio":"S audiem","withoutAudio":"Bez audia","syncing":"Synchronizace…"},
+  "reviewCompletion": {"manualBadge":"Ruční opakování","manualTitle":"Filtr dokončen","manualBody":"Prošli jste vybrané karty. Můžete se vrátit k balíčku nebo spustit nový filtr.","extraBadge":"Dodatečné studium","extraTitle":"Dodatečné procvičování dokončeno","extraBody":"Studovali jste další karty nad rámec hlavní relace. Pomáhá to tempu, ale nenahrazuje plánované opakování.","dueBadge":"Pro dnešek hotovo","dueTitle":"Dnešní relace je dokončena","dueBody":"Plánované opakování je dokončeno. Systém automaticky vybere další termín.","restartDue":"Zopakovat due relaci","backToDeck":"K balíčku","cards":"Karty","accuracy":"Přesnost","time":"Čas","difficult":"Obtížné","savingResults":"Ukládání výsledků… {count}","home":"Domů","seconds":"{seconds}s","minutesSeconds":"{minutes}m {seconds}s"},
   "createDeck": {
     "title": "Vytvořit balíček",
     "triggerLabel": "+ Nový balíček",
@@ -66,7 +69,14 @@
     "ratingGood": "Dobře",
     "ratingEasy": "Lehké",
     "rateRecall": "Ohodnotit vybavení",
-    "keyboardKey": "klávesa {key}"
+    "keyboardKey": "klávesa {key}",
+    "sessionManual": "Ruční opakování",
+    "sessionReview": "Opakování",
+    "syncError": "Některé výsledky se neuložily. Obnovte stránku a zkontrolujte historii opakování.",
+    "cardHidden": "Karta je pro tuto relaci skrytá",
+    "hideCard": "Skrýt pro tuto relaci",
+    "editNote": "Upravit poznámku",
+    "exitReview": "Ukončit opakování"
   },
   "deck": {
     "backHome": "← Domů",

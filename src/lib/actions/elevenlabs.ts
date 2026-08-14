@@ -20,10 +20,23 @@ export async function getElevenLabsSettings() {
   const admin = createAdminClient()
   const { data } = await admin.from('user_elevenlabs_settings').select('*').eq('user_id', user.id).maybeSingle()
   if (!data) return { isOwner: false, connected: false, tier: null, voices: [], selections: {} }
-  const account = await fetchElevenLabsAccount(decryptSecret(data.encrypted_api_key))
+  let account
+  try {
+    account = await fetchElevenLabsAccount(decryptSecret(data.encrypted_api_key))
+  } catch {
+    return {
+      isOwner: false,
+      connected: true,
+      connectionError: true,
+      tier: data.account_tier,
+      voices: [],
+      selections: { english: data.english_voice_id, czech: data.czech_voice_id, turkish: data.turkish_voice_id },
+    }
+  }
   return {
     isOwner: false,
     connected: true,
+    connectionError: false,
     tier: data.account_tier,
     voices: account.voices,
     selections: { english: data.english_voice_id, czech: data.czech_voice_id, turkish: data.turkish_voice_id },

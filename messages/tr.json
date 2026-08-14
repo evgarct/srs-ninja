@@ -34,8 +34,11 @@
     "configurationError": "Kimlik doğrulama doğru yapılandırılmamış. Destekle iletişime geçin."
   },
   "elevenlabsSettings": {
-    "pageTitle": "ElevenLabs sesleri", "pageDescription": "Kendi ElevenLabs hesabınızı bağlayın ve her öğrenme dili için ses seçin.", "title": "ElevenLabs hesabınız", "description": "API anahtarınız şifrelenir ve yalnızca sunucu tarafından sizin sesleriniz için kullanılır.", "ownerTitle": "Kişisel ElevenLabs hesabı etkin", "ownerDescription": "Bu hesap mevcut özel sistem bağlantısını kullanır. Diğer kullanıcılar kotasını tüketemez.", "apiKey": "ElevenLabs API anahtarı", "apiKeyPlaceholder": "Kısıtlı API anahtarınızı yapıştırın", "keyHint": "ElevenLabs'te yalnızca text-to-speech erişimli bir anahtar oluşturun. Anahtar kaydedildikten sonra tekrar gösterilmez.", "connect": "Hesabı bağla", "connected": "ElevenLabs bağlandı", "connectError": "ElevenLabs bağlanamadı. Anahtarı ve izinlerini kontrol edin.", "connectedTier": "Bağlı plan: {tier}", "englishVoice": "İngilizce sesi", "czechVoice": "Çekçe sesi", "turkishVoice": "Türkçe sesi", "chooseVoice": "Bir ses seçin", "saveVoices": "Sesleri kaydet", "voicesSaved": "Ses ayarları kaydedildi", "saveError": "Ses ayarları kaydedilemedi", "disconnect": "Bağlantıyı kes", "disconnected": "ElevenLabs bağlantısı kesildi", "disconnectError": "ElevenLabs bağlantısı kesilemedi"
+    "pageTitle": "ElevenLabs sesleri", "pageDescription": "Kendi ElevenLabs hesabınızı bağlayın ve her öğrenme dili için ses seçin.", "title": "ElevenLabs hesabınız", "description": "API anahtarınız şifrelenir ve yalnızca sunucu tarafından sizin sesleriniz için kullanılır.", "ownerTitle": "Kişisel ElevenLabs hesabı etkin", "ownerDescription": "Bu hesap mevcut özel sistem bağlantısını kullanır. Diğer kullanıcılar kotasını tüketemez.", "apiKey": "ElevenLabs API anahtarı", "apiKeyPlaceholder": "Kısıtlı API anahtarınızı yapıştırın", "keyHint": "ElevenLabs'te yalnızca text-to-speech erişimli bir anahtar oluşturun. Anahtar kaydedildikten sonra tekrar gösterilmez.", "connect": "Hesabı bağla", "connected": "ElevenLabs bağlandı", "connectError": "ElevenLabs bağlanamadı. Anahtarı ve izinlerini kontrol edin.", "connectionUnavailable": "Bu bağlantı artık çalışmıyor. Bağlantıyı kesin ve geçerli bir API anahtarı bağlayın.", "connectedTier": "Bağlı plan: {tier}", "englishVoice": "İngilizce sesi", "czechVoice": "Çekçe sesi", "turkishVoice": "Türkçe sesi", "chooseVoice": "Bir ses seçin", "saveVoices": "Sesleri kaydet", "voicesSaved": "Ses ayarları kaydedildi", "saveError": "Ses ayarları kaydedilemedi", "disconnect": "Bağlantıyı kes", "disconnected": "ElevenLabs bağlantısı kesildi", "disconnectError": "ElevenLabs bağlantısı kesilemedi"
   },
+  "noteForm": {"newTitle":"Not ekle","editTitle":"Notu düzenle","selectPlaceholder":"Seçin…","tagsLabel":"Etiketler (virgülle ayrılmış)","tagsPlaceholder":"B1, fiil, …","saving":"Kaydediliyor…","save":"Kaydet","add":"Not ekle","cancel":"İptal","error":"Not kaydedilemedi"},
+  "deckFilters": {"tags":"Etiketler","tagsTrigger":"Etiketler: {summary}","allTags":"Tüm etiketler","tagSearch":"Etiket ara…","clearTagSearch":"Etiket aramasını ve filtrelerini temizle","nothingFound":"Sonuç bulunamadı","tagCount":"{count} etiket","level":"Seviye: {summary}","allLevels":"Tüm seviyeler","levelCount":"{count} seviye","fsrsLevel":"FSRS seviyesi","stateNew":"Yeni","stateLearning":"Öğreniliyor","stateRelearning":"Yeniden öğreniliyor","stateReview":"Tekrar","audioLabel":"Ses","audio":"Ses: {summary}","allNotes":"Tüm notlar","withAudio":"Sesli","withoutAudio":"Sessiz","syncing":"Eşitleniyor…"},
+  "reviewCompletion": {"manualBadge":"Manuel tekrar","manualTitle":"Filtre tamamlandı","manualBody":"Seçilen kartları tamamladınız. Desteye dönebilir veya yeni bir filtre başlatabilirsiniz.","extraBadge":"Ek çalışma","extraTitle":"Ek alıştırma tamamlandı","extraBody":"Ana oturumun dışında ek kartlar çalıştınız. Bu hızınızı artırır ancak planlı tekrarın yerini almaz.","dueBadge":"Bugünlük tamam","dueTitle":"Bugünkü oturum tamamlandı","dueBody":"Planlı tekrarınız tamamlandı. Sistem bir sonraki tekrarı otomatik olarak belirleyecek.","restartDue":"Due oturumunu tekrarla","backToDeck":"Desteye dön","cards":"Kartlar","accuracy":"Doğruluk","time":"Süre","difficult":"Zor","savingResults":"Sonuçlar kaydediliyor… {count}","home":"Ana sayfa","seconds":"{seconds} sn","minutesSeconds":"{minutes} dk {seconds} sn"},
   "createDeck": {
     "title": "Deste oluştur",
     "triggerLabel": "+ Yeni deste",
@@ -66,7 +69,14 @@
     "ratingGood": "İyi",
     "ratingEasy": "Kolay",
     "rateRecall": "Hatırlamanızı değerlendirin",
-    "keyboardKey": "{key} tuşu"
+    "keyboardKey": "{key} tuşu",
+    "sessionManual": "Manuel tekrar",
+    "sessionReview": "Tekrar",
+    "syncError": "Bazı sonuçlar kaydedilemedi. Sayfayı yenileyip tekrar geçmişinizi kontrol edin.",
+    "cardHidden": "Kart bu oturum için gizlendi",
+    "hideCard": "Bu oturum için gizle",
+    "editNote": "Notu düzenle",
+    "exitReview": "Tekrardan çık"
   },
   "deck": {
     "backHome": "← Ana sayfa",

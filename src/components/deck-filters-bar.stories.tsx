@@ -74,7 +74,7 @@ export const Interactive: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     // Open the Tags dropdown — initially shows the active tag ("travel")
-    const tagsTrigger = await canvas.findByRole('button', { name: /Tags:/i })
+    const tagsTrigger = await canvas.findByRole('button', { name: /Теги:/i })
     await userEvent.click(tagsTrigger)
     // Dropdown renders in a portal
     const body = within(document.body)
@@ -87,7 +87,7 @@ export const Interactive: Story = {
     await userEvent.click(await body.findByText('food'))
     // Close by clicking the trigger again (toggles the dropdown closed)
     await userEvent.click(tagsTrigger)
-    // Trigger now shows "2 tags" (travel + food)
-    await canvas.findByRole('button', { name: /Tags: 2 tags/i })
+    // Trigger now shows two active tags (travel + food)
+    await canvas.findByRole('button', { name: /Теги: 2 тега/i })
   },
 }

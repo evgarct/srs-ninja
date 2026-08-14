@@ -18,6 +18,7 @@ import {
   type FsrsState,
 } from '@/lib/deck-notes'
 import type { Language } from '@/lib/types'
+import { useTranslations } from 'next-intl'
 
 interface DeckFiltersBarProps {
   deckLanguage: Language
@@ -66,6 +67,7 @@ export function DeckFiltersBar({
   onToggleState,
   onAudioFilterChange,
 }: DeckFiltersBarProps) {
+  const t = useTranslations('deckFilters')
   const filteredAvailableTags = availableTags.filter((tag) =>
     formatTagLabelForLanguage(tag, deckLanguage)
       .toLowerCase()
@@ -74,24 +76,24 @@ export function DeckFiltersBar({
 
   const tagSummary =
     activeTags.length === 0
-      ? 'All tags'
+      ? t('allTags')
       : activeTags.length === 1
         ? formatTagLabelForLanguage(activeTags[0], deckLanguage)
-        : `${activeTags.length} tags`
+        : t('tagCount', { count: activeTags.length })
 
   const levelSummary =
     activeStates.length === 0
-      ? 'All levels'
+      ? t('allLevels')
       : activeStates.length === 1
-        ? getFsrsStateLabel(activeStates[0])
-        : `${activeStates.length} levels`
+        ? t(`state${getFsrsStateLabel(activeStates[0])}`)
+        : t('levelCount', { count: activeStates.length })
 
   const audioSummary =
     activeAudioFilter === 'all'
-      ? 'All notes'
+      ? t('allNotes')
       : activeAudioFilter === 'with_audio'
-        ? 'With audio'
-        : 'Without audio'
+        ? t('withAudio')
+        : t('withoutAudio')
 
   return (
     <section className="rounded-2xl border bg-card px-4 py-4 shadow-sm">
@@ -102,12 +104,12 @@ export function DeckFiltersBar({
               <Button variant="outline" className="w-[280px] justify-between" title={tagSummary} />
             }
           >
-            <span className="min-w-0 truncate text-left">Tags: {tagSummary}</span>
+            <span className="min-w-0 truncate text-left">{t('tagsTrigger', { summary: tagSummary })}</span>
             <ChevronDown className="h-4 w-4 shrink-0" />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="min-w-[280px]">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Теги</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('tags')}</DropdownMenuLabel>
               <div className="px-1.5 py-1">
                 <div className="relative">
                   <Input
@@ -116,7 +118,7 @@ export function DeckFiltersBar({
                     onKeyDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
                     onPointerDown={(e) => e.stopPropagation()}
-                    placeholder="Поиск тега..."
+                    placeholder={t('tagSearch')}
                     className="h-8 pr-8"
                   />
                   {(tagQuery.length > 0 || activeTags.length > 0) && (
@@ -128,8 +130,8 @@ export function DeckFiltersBar({
                       }}
                       onPointerDown={(e) => e.stopPropagation()}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      aria-label="Сбросить поиск и фильтр тегов"
-                      title="Сбросить поиск и фильтр тегов"
+                      aria-label={t('clearTagSearch')}
+                      title={t('clearTagSearch')}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -140,7 +142,7 @@ export function DeckFiltersBar({
                 checked={activeTags.length === 0}
                 onCheckedChange={onResetTags}
               >
-                Все теги
+                {t('allTags')}
               </DropdownMenuCheckboxItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -156,7 +158,7 @@ export function DeckFiltersBar({
               ))}
               {filteredAvailableTags.length === 0 && (
                 <div className="px-2 py-2 text-xs text-muted-foreground">
-                  Ничего не найдено
+                  {t('nothingFound')}
                 </div>
               )}
             </DropdownMenuGroup>
@@ -169,17 +171,17 @@ export function DeckFiltersBar({
               <Button variant="outline" className="w-[280px] justify-between" title={levelSummary} />
             }
           >
-            <span className="min-w-0 truncate text-left">Level: {levelSummary}</span>
+            <span className="min-w-0 truncate text-left">{t('level', { summary: levelSummary })}</span>
             <ChevronDown className="h-4 w-4 shrink-0" />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="min-w-[280px]">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>FSRS level</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('fsrsLevel')}</DropdownMenuLabel>
               <DropdownMenuCheckboxItem
                 checked={activeStates.length === 0}
                 onCheckedChange={onResetStates}
               >
-                Все уровни
+                {t('allLevels')}
               </DropdownMenuCheckboxItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
@@ -190,7 +192,7 @@ export function DeckFiltersBar({
                   checked={activeStates.includes(state)}
                   onCheckedChange={() => onToggleState(state)}
                 >
-                  {getFsrsStateLabel(state)}
+                  {t(`state${getFsrsStateLabel(state)}`)}
                 </DropdownMenuCheckboxItem>
               ))}
             </DropdownMenuGroup>
@@ -203,35 +205,35 @@ export function DeckFiltersBar({
               <Button variant="outline" className="w-[220px] justify-between" title={audioSummary} />
             }
           >
-            <span className="min-w-0 truncate text-left">Audio: {audioSummary}</span>
+            <span className="min-w-0 truncate text-left">{t('audio', { summary: audioSummary })}</span>
             <ChevronDown className="h-4 w-4 shrink-0" />
           </DropdownMenuTrigger>
           <DropdownMenuContent className="min-w-[220px]">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Audio</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('audioLabel')}</DropdownMenuLabel>
               <DropdownMenuCheckboxItem
                 checked={activeAudioFilter === 'all'}
                 onCheckedChange={() => onAudioFilterChange('all')}
               >
-                All notes
+                {t('allNotes')}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={activeAudioFilter === 'with_audio'}
                 onCheckedChange={() => onAudioFilterChange('with_audio')}
               >
-                With audio
+                {t('withAudio')}
               </DropdownMenuCheckboxItem>
               <DropdownMenuCheckboxItem
                 checked={activeAudioFilter === 'without_audio'}
                 onCheckedChange={() => onAudioFilterChange('without_audio')}
               >
-                Without audio
+                {t('withoutAudio')}
               </DropdownMenuCheckboxItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {isRefreshing && <span className="text-xs text-muted-foreground">Синхронизация…</span>}
+        {isRefreshing && <span className="text-xs text-muted-foreground">{t('syncing')}</span>}
       </div>
     </section>
   )

@@ -34,8 +34,11 @@
     "configurationError": "Авторизация настроена неправильно. Обратитесь в поддержку."
   },
   "elevenlabsSettings": {
-    "pageTitle": "Голоса ElevenLabs", "pageDescription": "Подключите свой аккаунт ElevenLabs и выберите голоса для каждого изучаемого языка.", "title": "Ваш аккаунт ElevenLabs", "description": "API-ключ хранится в зашифрованном виде и используется только сервером для вашего аудио.", "ownerTitle": "Персональный аккаунт ElevenLabs подключён", "ownerDescription": "Ваш аккаунт использует существующее приватное системное подключение. Другие пользователи не могут расходовать его лимит.", "apiKey": "API-ключ ElevenLabs", "apiKeyPlaceholder": "Вставьте ключ с ограниченными правами", "keyHint": "Создайте в ElevenLabs ключ с доступом только к text-to-speech. После сохранения ключ больше не показывается.", "connect": "Подключить аккаунт", "connected": "ElevenLabs подключён", "connectError": "Не удалось подключить ElevenLabs. Проверьте ключ и его права.", "connectedTier": "Подключённый тариф: {tier}", "englishVoice": "Английский голос", "czechVoice": "Чешский голос", "turkishVoice": "Турецкий голос", "chooseVoice": "Выберите голос", "saveVoices": "Сохранить голоса", "voicesSaved": "Настройки голосов сохранены", "saveError": "Не удалось сохранить голоса", "disconnect": "Отключить", "disconnected": "ElevenLabs отключён", "disconnectError": "Не удалось отключить ElevenLabs"
+    "pageTitle": "Голоса ElevenLabs", "pageDescription": "Подключите свой аккаунт ElevenLabs и выберите голоса для каждого изучаемого языка.", "title": "Ваш аккаунт ElevenLabs", "description": "API-ключ хранится в зашифрованном виде и используется только сервером для вашего аудио.", "ownerTitle": "Персональный аккаунт ElevenLabs подключён", "ownerDescription": "Ваш аккаунт использует существующее приватное системное подключение. Другие пользователи не могут расходовать его лимит.", "apiKey": "API-ключ ElevenLabs", "apiKeyPlaceholder": "Вставьте ключ с ограниченными правами", "keyHint": "Создайте в ElevenLabs ключ с доступом только к text-to-speech. После сохранения ключ больше не показывается.", "connect": "Подключить аккаунт", "connected": "ElevenLabs подключён", "connectError": "Не удалось подключить ElevenLabs. Проверьте ключ и его права.", "connectionUnavailable": "Это подключение больше не работает. Отключите его и подключите действующий API-ключ.", "connectedTier": "Подключённый тариф: {tier}", "englishVoice": "Английский голос", "czechVoice": "Чешский голос", "turkishVoice": "Турецкий голос", "chooseVoice": "Выберите голос", "saveVoices": "Сохранить голоса", "voicesSaved": "Настройки голосов сохранены", "saveError": "Не удалось сохранить голоса", "disconnect": "Отключить", "disconnected": "ElevenLabs отключён", "disconnectError": "Не удалось отключить ElevenLabs"
   },
+  "noteForm": {"newTitle":"Добавить заметку","editTitle":"Редактировать заметку","selectPlaceholder":"Выбрать…","tagsLabel":"Теги (через запятую)","tagsPlaceholder":"B1, глагол, …","saving":"Сохраняем…","save":"Сохранить","add":"Добавить заметку","cancel":"Отмена","error":"Не удалось сохранить заметку"},
+  "deckFilters": {"tags":"Теги","tagsTrigger":"Теги: {summary}","allTags":"Все теги","tagSearch":"Поиск тегов…","clearTagSearch":"Сбросить поиск и фильтр тегов","nothingFound":"Ничего не найдено","tagCount":"{count, plural, one {# тег} few {# тега} many {# тегов} other {# тега}}","level":"Уровень: {summary}","allLevels":"Все уровни","levelCount":"{count, plural, one {# уровень} few {# уровня} many {# уровней} other {# уровня}}","fsrsLevel":"Уровень FSRS","stateNew":"Новые","stateLearning":"Изучаемые","stateRelearning":"Переучиваемые","stateReview":"Повторение","audioLabel":"Аудио","audio":"Аудио: {summary}","allNotes":"Все заметки","withAudio":"С аудио","withoutAudio":"Без аудио","syncing":"Синхронизация…"},
+  "reviewCompletion": {"manualBadge":"Ручное повторение","manualTitle":"Фильтр завершён","manualBody":"Вы прошли выбранный набор карточек. Можно вернуться к колоде или запустить новый фильтр.","extraBadge":"Дополнительная практика","extraTitle":"Экстра-практика завершена","extraBody":"Вы изучили дополнительные карточки сверх основной сессии. Это ускоряет темп, но не заменяет плановое повторение.","dueBadge":"На сегодня готово","dueTitle":"Сегодняшняя сессия завершена","dueBody":"Основное повторение на сегодня завершено. Следующее повторение система подберёт автоматически.","restartDue":"Повторить due-сессию","backToDeck":"К колоде","cards":"Карточек","accuracy":"Точность","time":"Время","difficult":"Сложных","savingResults":"Сохраняем результаты… {count}","home":"На главную","seconds":"{seconds}с","minutesSeconds":"{minutes}м {seconds}с"},
   "createDeck": {
     "title": "Создать колоду",
     "triggerLabel": "+ Новая колода",
@@ -61,12 +64,19 @@
     "allReviewed": "Всё повторено!",
     "allReviewedBody": "В колоде «{deckName}» нет карточек для повторения.",
     "backToDeck": "← К колоде",
-    "ratingAgain": "Again",
-    "ratingHard": "Hard",
-    "ratingGood": "Good",
-    "ratingEasy": "Easy",
+    "ratingAgain": "Снова",
+    "ratingHard": "Трудно",
+    "ratingGood": "Хорошо",
+    "ratingEasy": "Легко",
     "rateRecall": "Оценить воспроизведение",
-    "keyboardKey": "клавиша {key}"
+    "keyboardKey": "клавиша {key}",
+    "sessionManual": "Ручное повторение",
+    "sessionReview": "Повторение",
+    "syncError": "Часть результатов не сохранилась. Обновите страницу и проверьте историю повторений.",
+    "cardHidden": "Карточка скрыта до конца сессии",
+    "hideCard": "Скрыть до конца сессии",
+    "editNote": "Редактировать заметку",
+    "exitReview": "Выйти из повторения"
   },
   "deck": {
     "backHome": "← Главная",

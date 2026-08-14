@@ -14,7 +14,9 @@
 ## Acceptance criteria
 
 - Turkish UI, creation, deck, review, stats, auth, empty states, and rating states render without missing messages on desktop and mobile.
+- Note forms, deck filters, review completion copy, errors, tooltips, and accessible names contain no hard-coded Russian or English text when the Turkish locale is active.
 - Turkish → Russian/English/Czech decks can be created; Turkish → Turkish is rejected in both domain validation and the database.
 - Turkish notes pass import/MCP validation, render cards, and generate/cache audio using `language_code = tr`.
 - Missing `ELEVENLABS_TURKISH_VOICE_ID` produces an explicit error.
+- Turkish batch TTS preflights the current user's account and selected Turkish voice before iterating notes.
 - A production registration email resolves to `${APP_URL}/auth/callback`, never localhost.

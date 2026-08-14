@@ -7,6 +7,8 @@ The application supports Turkish in two independent roles:
 
 Opening a Turkish deck selects the Turkish message catalogue, following the same deck-locale behavior as English and Czech decks. Users may also select Türkçe from the global locale menu.
 
+Deck filters, note create/edit forms, review headers and actions, completion statistics, errors, ARIA labels, and tooltips all read from the active message catalogue. Turkish deck locale switching must not expose Russian or English fallback copy on these surfaces.
+
 ## Deck direction
 
 Every deck stores both `language` and `translation_language`. Supported study languages are `czech`, `english`, and `turkish`; supported translation languages are `russian`, `english`, `czech`, and `turkish`. The two values must differ. Existing decks receive `russian` during migration.
@@ -18,3 +20,5 @@ Turkish notes use the universal canonical contract: `word`, `translation`, `leve
 Turkish audio uses ElevenLabs with `language_code = tr` and the existing `eleven_flash_v2_5` model. Configure a Turkish-trained voice through `ELEVENLABS_TURKISH_VOICE_ID`. When it is missing, Turkish audio generation returns a configuration error rather than silently using a voice for another language.
 
 Single-note generation, batch generation, review prefetch, caching, and autoplay use the same language-aware pipeline as English and Czech.
+
+Batch generation resolves the user account and Turkish voice once before querying notes. Missing or invalid configuration fails immediately instead of waiting between guaranteed per-note failures.

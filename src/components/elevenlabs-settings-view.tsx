@@ -13,6 +13,7 @@ import { ELEVENLABS_LANGUAGES, type ElevenLabsVoice, type ElevenLabsVoiceSelecti
 export type ElevenLabsSettingsState = {
   isOwner: boolean
   connected: boolean
+  connectionError?: boolean
   tier: string | null
   voices: ElevenLabsVoice[]
   selections: ElevenLabsVoiceSelections
@@ -31,6 +32,7 @@ export function ElevenLabsSettingsView({ initial, actions }: Props) {
   const t = useTranslations('elevenlabsSettings')
   const [apiKey, setApiKey] = useState('')
   const [connected, setConnected] = useState(initial.connected)
+  const [connectionError, setConnectionError] = useState(initial.connectionError ?? false)
   const [tier, setTier] = useState(initial.tier)
   const [voices, setVoices] = useState(initial.voices)
   const [selections, setSelections] = useState(initial.selections)
@@ -41,6 +43,7 @@ export function ElevenLabsSettingsView({ initial, actions }: Props) {
       try {
         const result = await actions.connect(apiKey)
         setConnected(true)
+        setConnectionError(false)
         setTier(result.tier)
         setVoices(result.voices)
         setApiKey('')
@@ -67,6 +70,7 @@ export function ElevenLabsSettingsView({ initial, actions }: Props) {
       try {
         await actions.disconnect()
         setConnected(false)
+        setConnectionError(false)
         setVoices([])
         setSelections({})
         toast.success(t('disconnected'))
@@ -103,6 +107,11 @@ export function ElevenLabsSettingsView({ initial, actions }: Props) {
           </div>
         ) : (
           <div className="space-y-5">
+            {connectionError ? (
+              <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {t('connectionUnavailable')}
+              </p>
+            ) : null}
             <p className="text-sm text-muted-foreground">{t('connectedTier', { tier: tier ?? 'unknown' })}</p>
             {ELEVENLABS_LANGUAGES.map((language) => (
               <div className="space-y-2" key={language}>
@@ -114,7 +123,7 @@ export function ElevenLabsSettingsView({ initial, actions }: Props) {
               </div>
             ))}
             <div className="flex flex-wrap gap-3">
-              <Button disabled={pending} onClick={saveVoices}>{t('saveVoices')}</Button>
+              <Button disabled={pending || connectionError} onClick={saveVoices}>{t('saveVoices')}</Button>
               <Button disabled={pending} variant="outline" onClick={disconnect}>{t('disconnect')}</Button>
             </div>
           </div>

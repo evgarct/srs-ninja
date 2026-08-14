@@ -6,6 +6,11 @@ import { decryptSecret } from '@/lib/server/secret-encryption'
 import { getTtsLanguageConfig } from '@/lib/tts-config'
 import type { ElevenLabsVoice } from '@/lib/elevenlabs-types'
 
+export type ResolvedElevenLabsTts = {
+  apiKey: string
+  config: NonNullable<ReturnType<typeof getTtsLanguageConfig>>
+}
+
 export async function fetchElevenLabsAccount(apiKey: string) {
   const headers = { 'xi-api-key': apiKey }
   const [userResponse, voicesResponse] = await Promise.all([
@@ -28,7 +33,7 @@ export async function fetchElevenLabsAccount(apiKey: string) {
   return { tier: user.subscription?.tier ?? 'unknown', voices: safeVoices }
 }
 
-export async function resolveElevenLabsTts(userId: string, language: Language) {
+export async function resolveElevenLabsTts(userId: string, language: Language): Promise<ResolvedElevenLabsTts | null> {
   const ownerId = process.env.ELEVENLABS_OWNER_USER_ID?.trim()
   if (ownerId && userId === ownerId) {
     const apiKey = process.env.ELEVENLABS_API_KEY?.trim()

@@ -8,7 +8,7 @@ import { localeArgType, messagesByLocale, withLocale } from './withLocale'
 
 type Props = {
   locale?: Locale
-  state: 'disconnected' | 'connected' | 'owner'
+  state: 'disconnected' | 'connected' | 'connection-error' | 'owner'
 }
 
 const voices = [
@@ -20,13 +20,14 @@ function SettingsPageDemo({ state }: Props) {
   const t = useTranslations('elevenlabsSettings')
   const initial = state === 'owner'
     ? { isOwner: true, connected: true, tier: 'owner', voices: [], selections: {} }
-    : state === 'connected'
+    : state === 'connected' || state === 'connection-error'
       ? {
           isOwner: false,
           connected: true,
           tier: 'creator',
           voices,
           selections: { english: 'voice-2', turkish: 'voice-1' },
+          connectionError: state === 'connection-error',
         }
       : { isOwner: false, connected: false, tier: null, voices: [], selections: {} }
 
@@ -53,7 +54,7 @@ const meta = {
   },
   argTypes: {
     ...localeArgType,
-    state: { control: 'radio', options: ['disconnected', 'connected', 'owner'] },
+    state: { control: 'radio', options: ['disconnected', 'connected', 'connection-error', 'owner'] },
   },
   args: { locale: 'en', state: 'disconnected' },
 } satisfies Meta<typeof SettingsPageDemo>
@@ -70,6 +71,18 @@ export const Disconnected: Story = {
 }
 
 export const Connected: Story = { args: { state: 'connected' } }
+export const ConnectionError: Story = {
+  args: { state: 'connection-error' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      messagesByLocale.en.elevenlabsSettings.connectionUnavailable
+    )
+    await expect(canvas.getByRole('button', {
+      name: messagesByLocale.en.elevenlabsSettings.disconnect,
+    })).toBeEnabled()
+  },
+}
 export const Owner: Story = { args: { state: 'owner' } }
 
 export const TurkishMobile: Story = {
