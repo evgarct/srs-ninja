@@ -4,6 +4,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 export function shouldBypassAuthRedirect(pathname: string) {
   return pathname.startsWith('/login')
     || pathname.startsWith('/auth')
+    || pathname.startsWith('/oauth/consent')
+    || pathname.startsWith('/.well-known/oauth-protected-resource')
     || pathname === '/api/mcp'
     || pathname.startsWith('/api/mcp/')
 }

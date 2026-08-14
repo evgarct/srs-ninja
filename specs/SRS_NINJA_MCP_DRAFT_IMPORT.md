@@ -652,6 +652,7 @@ Remote MCP endpoint недостаточно реализовать только
 - Standards-compatible MCP clients authenticate through Supabase OAuth 2.1 with PKCE, DCR, explicit consent, and RLS-backed user isolation.
 - Consent allows reading owned deck schemas/drafts and creating drafts only. MCP cannot approve, publish, resolve, or delete notes.
 - OAuth credentials use Bearer headers and discover the protected resource through well-known metadata.
+- Well-known discovery is publicly readable, and unauthenticated consent preserves the pending authorization request through login.
 - Deck tools accept UUID, language, exact normalized name, or a narrowing combination. A unique language needs no UUID; ambiguity returns owned candidates and performs no write.
 - `get_echo_guide` explains the workflow and returns validator-backed examples. Onboarding contains no real UUID or secret URL.
 - Acceptance covers ChatGPT plus an independent MCP Inspector, English/Czech/Turkish examples, token rejection, cross-user isolation, unique-language creation, ambiguity, and manual approval in Echo.

@@ -10,6 +10,9 @@ describe('shouldBypassAuthRedirect', () => {
   it('allows MCP routes through', () => {
     expect(shouldBypassAuthRedirect('/api/mcp')).toBe(true)
     expect(shouldBypassAuthRedirect('/api/mcp/drafts')).toBe(true)
+    expect(shouldBypassAuthRedirect('/.well-known/oauth-protected-resource')).toBe(true)
+    expect(shouldBypassAuthRedirect('/.well-known/oauth-protected-resource/api/mcp')).toBe(true)
+    expect(shouldBypassAuthRedirect('/oauth/consent')).toBe(true)
   })
 
   it('keeps regular app pages protected', () => {
