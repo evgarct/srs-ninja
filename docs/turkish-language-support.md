@@ -9,6 +9,8 @@ Opening a Turkish deck selects the Turkish message catalogue, following the same
 
 Deck filters, note create/edit forms, review headers and actions, completion statistics, errors, ARIA labels, and tooltips all read from the active message catalogue. Turkish deck locale switching must not expose Russian or English fallback copy on these surfaces.
 
+The standalone `/notes/new` and `/notes/[id]/edit` routes resolve their provider and server headings from the loaded deck language, not only from the user's global locale. Expected save failures use localized generic copy instead of exposing raw server/provider messages.
+
 ## Deck direction
 
 Every deck stores both `language` and `translation_language`. Supported study languages are `czech`, `english`, and `turkish`; supported translation languages are `russian`, `english`, `czech`, and `turkish`. The two values must differ. Existing decks receive `russian` during migration.

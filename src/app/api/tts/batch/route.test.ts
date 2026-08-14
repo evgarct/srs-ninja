@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const resolveElevenLabsTts = vi.fn()
-const generateAndCacheAudio = vi.fn()
-const from = vi.fn()
+const { resolveElevenLabsTts, generateAndCacheAudio, from } = vi.hoisted(() => ({
+  resolveElevenLabsTts: vi.fn(),
+  generateAndCacheAudio: vi.fn(),
+  from: vi.fn(),
+}))
 
 vi.mock('@/lib/server/elevenlabs-account', () => ({ resolveElevenLabsTts }))
 vi.mock('@/lib/tts', () => ({ generateAndCacheAudio }))

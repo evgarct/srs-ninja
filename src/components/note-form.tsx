@@ -66,8 +66,8 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
         setTagsInput('')
         router.refresh()
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('error'))
+    } catch {
+      setError(t('error'))
     } finally {
       setLoading(false)
     }
