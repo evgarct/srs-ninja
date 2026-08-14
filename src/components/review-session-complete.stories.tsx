@@ -51,10 +51,10 @@ export const DesktopDueReview: Story = {
     // Stats are displayed: total cards, accuracy (40/69 ≈ 58%), duration
     await canvas.findByText('69')
     await canvas.findByText('58%')
-    await canvas.findByText('1m 38s')
+    await canvas.findByText('1м 38с')
     // Rating breakdown labels
-    await canvas.findByText('Again')
-    await canvas.findByText('Good')
+    await canvas.findByText('Снова')
+    await canvas.findByText('Хорошо')
     // Navigation buttons are present
     await canvas.findByRole('button', { name: /На главную/i })
     await canvas.findByRole('link', { name: /Повторить due-сессию/i })

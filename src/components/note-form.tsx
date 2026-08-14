@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Language } from '@/lib/types'
+import { useTranslations } from 'next-intl'
 
 interface NoteFormProps {
   deckId: string
@@ -35,6 +36,7 @@ interface NoteFormProps {
  * @param initialTags - (Optional) Existing tags for edit mode.
  */
 export function NoteForm({ deckId, language, noteId, initialFields = {}, initialTags = [] }: NoteFormProps) {
+  const t = useTranslations('noteForm')
   const fields = getFields(language)
   const [values, setValues] = useState<Record<string, string>>(getNoteFormValues(language, initialFields))
   const [tagsInput, setTagsInput] = useState(initialTags.join(', '))
@@ -64,8 +66,8 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
         setTagsInput('')
         router.refresh()
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка')
+    } catch {
+      setError(t('error'))
     } finally {
       setLoading(false)
     }
@@ -88,7 +90,7 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
               onValueChange={(v) => v && setValue(field.key, v)}
             >
               <SelectTrigger id={field.key}>
-                <SelectValue placeholder="Выбрать..." />
+                <SelectValue placeholder={t('selectPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {field.options.map((opt) => (
@@ -116,12 +118,12 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
       ))}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="tags">Теги (через запятую)</Label>
+        <Label htmlFor="tags">{t('tagsLabel')}</Label>
         <Input
           id="tags"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="B1, глагол, ..."
+          placeholder={t('tagsPlaceholder')}
         />
       </div>
 
@@ -129,10 +131,10 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
 
       <div className="flex gap-2 pt-2">
         <Button type="submit" disabled={loading}>
-          {loading ? 'Сохраняем...' : noteId ? 'Сохранить' : 'Добавить нот'}
+          {loading ? t('saving') : noteId ? t('save') : t('add')}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>
-          Отмена
+          {t('cancel')}
         </Button>
       </div>
     </form>

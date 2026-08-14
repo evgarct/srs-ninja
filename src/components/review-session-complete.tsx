@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/lib/button-variants'
 import type { ReviewSessionMode } from '@/lib/review-session-completion-state'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 export interface ReviewSessionStats {
   total: number
@@ -52,45 +53,6 @@ const PARTICLES = [
   { x: 118, y: -206, delay: 0.1, emoji: '💥' },
 ]
 
-function formatDuration(durationMs: number) {
-  const totalSeconds = Math.max(0, Math.round(durationMs / 1000))
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-
-  if (minutes === 0) return `${seconds}s`
-  return `${minutes}m ${seconds}s`
-}
-
-function getCompletionCopy(sessionMode: ReviewSessionMode) {
-  if (sessionMode === 'manual') {
-    return {
-      badge: 'Manual review',
-      title: 'Фильтр завершен',
-      body: 'Вы прошли выбранный набор карточек. Можно вернуться к колоде или запустить новый фильтр.',
-      accent: 'border-sky-400/18 bg-sky-400/10 text-sky-200',
-      icon: <RotateCcw className="size-4" />,
-    }
-  }
-
-  if (sessionMode === 'extra') {
-    return {
-      badge: 'Extra study',
-      title: 'Экстра-практика завершена',
-      body: 'Вы взяли дополнительные карточки сверх основной сессии. Это ускоряет темп, но не заменяет основной review.',
-      accent: 'border-violet-400/18 bg-violet-400/10 text-violet-200',
-      icon: <Sparkles className="size-4" />,
-    }
-  }
-
-  return {
-    badge: 'Done today',
-    title: 'Сегодняшняя сессия завершена',
-    body: 'Основной review на сегодня закрыт. Следующее повторение система подберет автоматически.',
-    accent: 'border-emerald-400/18 bg-emerald-400/10 text-emerald-200',
-    icon: <CheckCheck className="size-4" />,
-  }
-}
-
 export function ReviewSessionComplete({
   deckId,
   sessionMode,
@@ -99,14 +61,35 @@ export function ReviewSessionComplete({
   stats,
   onGoHome,
 }: ReviewSessionCompleteProps) {
+  const t = useTranslations('reviewCompletion')
+  const reviewT = useTranslations('review')
   const shouldReduceMotion = useReducedMotion()
   const [celebrationTick, setCelebrationTick] = useState(1)
   const accuracy = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0
   const difficultCount = stats.ratings.again + stats.ratings.hard
-  const completionCopy = getCompletionCopy(sessionMode)
+  const completionCopy = sessionMode === 'manual'
+    ? {
+        badge: t('manualBadge'), title: t('manualTitle'), body: t('manualBody'),
+        accent: 'border-sky-400/18 bg-sky-400/10 text-sky-200', icon: <RotateCcw className="size-4" />,
+      }
+    : sessionMode === 'extra'
+      ? {
+          badge: t('extraBadge'), title: t('extraTitle'), body: t('extraBody'),
+          accent: 'border-violet-400/18 bg-violet-400/10 text-violet-200', icon: <Sparkles className="size-4" />,
+        }
+      : {
+          badge: t('dueBadge'), title: t('dueTitle'), body: t('dueBody'),
+          accent: 'border-emerald-400/18 bg-emerald-400/10 text-emerald-200', icon: <CheckCheck className="size-4" />,
+        }
+  const totalSeconds = Math.max(0, Math.round(stats.durationMs / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  const durationLabel = minutes === 0
+    ? t('seconds', { seconds })
+    : t('minutesSeconds', { minutes, seconds })
   const canRestartDue = sessionMode === 'due' && pendingReviewCount === 0
   const secondaryLinkHref = canRestartDue ? `/decks/${deckId}/review` : `/deck/${deckId}`
-  const secondaryLinkLabel = canRestartDue ? 'Повторить due-сессию' : 'К колоде'
+  const secondaryLinkLabel = canRestartDue ? t('restartDue') : t('backToDeck')
 
   useEffect(() => {
     if (shouldReduceMotion || syncError) return
@@ -186,22 +169,22 @@ export function ReviewSessionComplete({
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
                 {
-                  label: 'Карточек',
+                  label: t('cards'),
                   value: String(stats.total),
                   icon: <CheckCheck className="size-4 text-emerald-400" />,
                 },
                 {
-                  label: 'Точность',
+                  label: t('accuracy'),
                   value: `${accuracy}%`,
                   icon: <TrendingUp className="size-4 text-sky-400" />,
                 },
                 {
-                  label: 'Время',
-                  value: formatDuration(stats.durationMs),
+                  label: t('time'),
+                  value: durationLabel,
                   icon: <Clock3 className="size-4 text-amber-400" />,
                 },
                 {
-                  label: 'Сложных',
+                  label: t('difficult'),
                   value: String(difficultCount),
                   icon: <Flame className="size-4 text-rose-400" />,
                 },
@@ -231,10 +214,10 @@ export function ReviewSessionComplete({
               className="grid grid-cols-2 gap-2 rounded-2xl border border-white/8 bg-white/[0.04] p-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:grid-cols-4 sm:gap-3 sm:p-3"
             >
               {[
-                { label: 'Again', value: stats.ratings.again, tone: 'text-destructive' },
-                { label: 'Hard', value: stats.ratings.hard, tone: 'text-orange-400' },
-                { label: 'Good', value: stats.ratings.good, tone: 'text-emerald-400' },
-                { label: 'Easy', value: stats.ratings.easy, tone: 'text-sky-400' },
+                { label: reviewT('ratingAgain'), value: stats.ratings.again, tone: 'text-destructive' },
+                { label: reviewT('ratingHard'), value: stats.ratings.hard, tone: 'text-orange-400' },
+                { label: reviewT('ratingGood'), value: stats.ratings.good, tone: 'text-emerald-400' },
+                { label: reviewT('ratingEasy'), value: stats.ratings.easy, tone: 'text-sky-400' },
               ].map((item) => (
                 <div
                   key={item.label}
@@ -250,7 +233,7 @@ export function ReviewSessionComplete({
 
             {pendingReviewCount > 0 ? (
               <p className="text-center text-sm text-white/56">
-                Сохраняем результаты... {pendingReviewCount}
+                {t('savingResults', { count: pendingReviewCount })}
               </p>
             ) : null}
 
@@ -270,7 +253,7 @@ export function ReviewSessionComplete({
             className="min-h-11 sm:min-w-40"
           >
             <ArrowLeft className="size-4" />
-            На главную
+            {t('home')}
           </Button>
           {pendingReviewCount > 0 ? (
             <Button

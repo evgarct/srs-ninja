@@ -34,8 +34,11 @@
     "configurationError": "Authentication is not configured correctly. Please contact support."
   },
   "elevenlabsSettings": {
-    "pageTitle": "ElevenLabs voices", "pageDescription": "Connect your own ElevenLabs account and choose voices for each study language.", "title": "Your ElevenLabs account", "description": "Your API key is encrypted and used only by the server for your audio.", "ownerTitle": "Personal ElevenLabs account active", "ownerDescription": "This account uses the existing private system connection. Other users cannot consume its quota.", "apiKey": "ElevenLabs API key", "apiKeyPlaceholder": "Paste your restricted API key", "keyHint": "Create a key with text-to-speech access in ElevenLabs. The key is never shown again.", "connect": "Connect account", "connected": "ElevenLabs connected", "connectError": "Could not connect ElevenLabs. Check the key and its permissions.", "connectedTier": "Connected plan: {tier}", "englishVoice": "English voice", "czechVoice": "Czech voice", "turkishVoice": "Turkish voice", "chooseVoice": "Choose a voice", "saveVoices": "Save voices", "voicesSaved": "Voice settings saved", "saveError": "Could not save voice settings", "disconnect": "Disconnect", "disconnected": "ElevenLabs disconnected", "disconnectError": "Could not disconnect ElevenLabs"
+    "pageTitle": "ElevenLabs voices", "pageDescription": "Connect your own ElevenLabs account and choose voices for each study language.", "title": "Your ElevenLabs account", "description": "Your API key is encrypted and used only by the server for your audio.", "ownerTitle": "Personal ElevenLabs account active", "ownerDescription": "This account uses the existing private system connection. Other users cannot consume its quota.", "apiKey": "ElevenLabs API key", "apiKeyPlaceholder": "Paste your restricted API key", "keyHint": "Create a key with text-to-speech access in ElevenLabs. The key is never shown again.", "connect": "Connect account", "connected": "ElevenLabs connected", "connectError": "Could not connect ElevenLabs. Check the key and its permissions.", "connectionUnavailable": "This connection is no longer available. Disconnect it, then connect a valid API key.", "connectedTier": "Connected plan: {tier}", "englishVoice": "English voice", "czechVoice": "Czech voice", "turkishVoice": "Turkish voice", "chooseVoice": "Choose a voice", "saveVoices": "Save voices", "voicesSaved": "Voice settings saved", "saveError": "Could not save voice settings", "disconnect": "Disconnect", "disconnected": "ElevenLabs disconnected", "disconnectError": "Could not disconnect ElevenLabs"
   },
+  "noteForm": {"newTitle":"Add note","editTitle":"Edit note","selectPlaceholder":"Select…","tagsLabel":"Tags (comma-separated)","tagsPlaceholder":"B1, verb, …","saving":"Saving…","save":"Save","add":"Add note","cancel":"Cancel","error":"Could not save the note"},
+  "deckFilters": {"tags":"Tags","tagsTrigger":"Tags: {summary}","allTags":"All tags","tagSearch":"Search tags…","clearTagSearch":"Clear tag search and filters","nothingFound":"Nothing found","tagCount":"{count, plural, one {# tag} other {# tags}}","level":"Level: {summary}","allLevels":"All levels","levelCount":"{count, plural, one {# level} other {# levels}}","fsrsLevel":"FSRS level","stateNew":"New","stateLearning":"Learning","stateRelearning":"Relearning","stateReview":"Review","audioLabel":"Audio","audio":"Audio: {summary}","allNotes":"All notes","withAudio":"With audio","withoutAudio":"Without audio","syncing":"Syncing…"},
+  "reviewCompletion": {"manualBadge":"Manual review","manualTitle":"Filter complete","manualBody":"You reviewed the selected cards. Return to the deck or start another filter.","extraBadge":"Extra study","extraTitle":"Extra practice complete","extraBody":"You studied additional cards beyond the main session. This helps your pace but does not replace scheduled review.","dueBadge":"Done today","dueTitle":"Today’s session is complete","dueBody":"Your scheduled review is complete. The system will choose the next review automatically.","restartDue":"Repeat due session","backToDeck":"Back to deck","cards":"Cards","accuracy":"Accuracy","time":"Time","difficult":"Difficult","savingResults":"Saving results… {count}","home":"Home","seconds":"{seconds}s","minutesSeconds":"{minutes}m {seconds}s"},
   "createDeck": {
     "title": "Create deck",
     "triggerLabel": "+ New deck",
@@ -66,7 +69,14 @@
     "ratingGood": "Good",
     "ratingEasy": "Easy",
     "rateRecall": "Rate your recall",
-    "keyboardKey": "key {key}"
+    "keyboardKey": "key {key}",
+    "sessionManual": "Manual review",
+    "sessionReview": "Review",
+    "syncError": "Some results were not saved. Refresh the page and check your review history.",
+    "cardHidden": "Card hidden for this session",
+    "hideCard": "Hide for this session",
+    "editNote": "Edit note",
+    "exitReview": "Exit review"
   },
   "deck": {
     "backHome": "← Home",

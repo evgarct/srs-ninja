@@ -300,8 +300,8 @@ export const RevealFlow: Story = {
     const ratingGroup = await canvas.findByRole("group", { name: /Оценить воспроизведение/i })
     // All 4 rating buttons are present
     expect(within(ratingGroup).getAllByRole("button")).toHaveLength(4)
-    await canvas.findByRole("button", { name: /Again/i })
-    await canvas.findByRole("button", { name: /Good/i })
+    await canvas.findByRole("button", { name: /Снова/i })
+    await canvas.findByRole("button", { name: /Хорошо/i })
   },
 }
 

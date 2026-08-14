@@ -40,7 +40,7 @@
 - When running `git commit -m` for this WSL repo from PowerShell, avoid nested quote patterns that can truncate the commit subject. Prefer a simple single-line message, a temporary message file, or a stdin/helper-based script when the message contains punctuation that needs escaping.
 - Before sharing local app or Storybook URLs, verify them from WSL with an HTTP request such as `curl -I`. If a process is listening but the page returns `5xx`, report that as a runtime error instead of calling the preview ready.
 - In a fresh WSL worktree, verify that `node_modules` is available before running `vitest`, `eslint`, `tsc`, or build commands. If the worktree does not have its own dependencies yet, install them there or attach the approved shared `node_modules` source first.
-- In this repo, the checked-in `vitest.config.ts` is Storybook-browser oriented and does not discover the `src/lib/**/*.test.ts` unit tests by default. When verifying library unit tests, run Vitest with a temporary/basic unit config or equivalent explicit config instead of assuming plain `vitest run` covers them.
+- In this repo, Vitest uses explicitly scoped unit and Storybook projects. Before adding a test outside an existing include glob, update the unit project's include list and verify the full `npm test -- --run` output reports the new file.
 - If `git merge --autostash` or `git pull --autostash` leaves conflicts behind, do not consider the sync finished until the conflict set is resolved or explicitly handed back to the user with the affected files listed.
 
 ## Default UI Libraries
@@ -76,6 +76,7 @@
 - Prefer creating PRs through `/home/evgenii/bin/codex-gh-pr-create` when the description is multi-line or generated from markdown content, instead of assembling shell heredocs inline through PowerShell.
 - Before sharing a PR link, verify that the PR is open and that it corresponds to the current branch head. If the previous PR for the branch is merged or closed, create a new PR instead of reusing the old link.
 - After every follow-up push to an open PR, re-check the live PR `headRefOid` against the local branch head before reporting the PR as updated.
+- When automated code review is configured, do not merge on green CI alone. Wait until the reviewer has reported on the current head SHA, then inspect and resolve every materially actionable thread before merging.
 - If GitHub CLI PR editing fails, patch the PR via `gh api` and then re-check the live PR fields.
 - If a GitHub write command partially succeeds before failing because of shell quoting or command chaining, verify the live GitHub state first and only then retry.
 - After the PR is created, move related Linear issues to the correct review state, add the PR link/reference, and leave a short implementation status comment.

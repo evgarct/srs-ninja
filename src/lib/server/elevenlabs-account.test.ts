@@ -7,7 +7,11 @@ vi.mock('@/lib/supabase/admin', () => ({
   }),
 }))
 
-import { fetchElevenLabsAccount, resolveElevenLabsTts } from './elevenlabs-account'
+import {
+  fetchElevenLabsAccount,
+  resolveElevenLabsTts,
+  resolveValidatedElevenLabsTts,
+} from './elevenlabs-account'
 
 describe('ElevenLabs account resolution', () => {
   afterEach(() => {
@@ -48,5 +52,18 @@ describe('ElevenLabs account resolution', () => {
       tier: 'creator',
       voices: [{ voice_id: 'voice-1', name: 'Voice One' }],
     })
+  })
+
+  it('rejects a batch context when the selected voice is no longer available', async () => {
+    vi.stubEnv('ELEVENLABS_OWNER_USER_ID', 'owner-id')
+    vi.stubEnv('ELEVENLABS_API_KEY', 'owner-secret')
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ subscription: { tier: 'creator' } }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ voices: [{ voice_id: 'different-voice', name: 'Different Voice' }] }),
+      }))
+
+    await expect(resolveValidatedElevenLabsTts('owner-id', 'english')).resolves.toBeNull()
   })
 })

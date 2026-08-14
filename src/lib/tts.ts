@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { supportsTtsLanguage } from '@/lib/tts-config'
 import { resolveElevenLabsTts } from '@/lib/server/elevenlabs-account'
+import type { ResolvedElevenLabsTts } from '@/lib/server/elevenlabs-account'
 
 /**
  * Calls ElevenLabs TTS, uploads the resulting mp3 to Supabase Storage,
@@ -11,10 +12,11 @@ export async function generateAndCacheAudio(
   userId: string,
   noteId: string,
   text: string,
-  language: string
+  language: string,
+  resolvedTts?: ResolvedElevenLabsTts
 ): Promise<{ audioUrl: string } | { error: string }> {
   if (!supportsTtsLanguage(language)) return { error: `TTS is not supported for ${language} decks` }
-  const resolved = await resolveElevenLabsTts(userId, language)
+  const resolved = resolvedTts ?? await resolveElevenLabsTts(userId, language)
   if (!resolved) return { error: 'Connect ElevenLabs and choose a voice for this language' }
   const { apiKey, config } = resolved
 
