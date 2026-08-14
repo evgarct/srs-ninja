@@ -121,5 +121,11 @@
     "library": "knihovna",
     "avgTime": "prům. čas",
     "shortDescription": "Rychlý přehled sezení, série a celkové dynamiky bez analytického přetížení."
+  },
+  "mcpConnect": {
+    "title":"Připojit AI agenta","ready":"OAuth připraven","setup":"Nutné nastavení","description":"Stejný zabezpečený MCP endpoint funguje s každým klientem podporujícím OAuth. Každý uživatel povoluje pouze svůj účet Echo.","publicRequired":"Je vyžadována veřejná HTTPS URL","publicDescription":"Aktuální adresa je {origin}. Vzdálení MCP klienti se nemohou připojit k localhostu.","notConfigured":"nenastaveno","oauthMissing":"OAuth discovery není plně nastaveno","missingConfig":"Chybějící nastavení serveru: {values}","endpoint":"Vzdálený MCP endpoint","endpointCopied":"Endpoint zkopírován","endpointHint":"Přidejte tuto URL do MCP klienta. OAuth automaticky otevře přihlášení a souhlas Echo; nepřidávejte token.","permissions":"Oprávnění","permissionRead":"Zobrazit schémata balíčků a koncepty","permissionCreate":"Vytvářet koncepty ke kontrole","permissionDenied":"Nemůže schvalovat, publikovat ani mazat poznámky","starter":"Úvodní pokyn pro agenta","promptCopied":"Pokyn zkopírován","legacy":"Starý token vlastníka je dočasně zapnutý na jedno přechodné vydání. Nová připojení vždy používají OAuth.","openChatgpt":"Otevřít ChatGPT","testHealth":"Otestovat endpoint"
+  },
+  "oauthConsent": {
+    "eyebrow": "Připojení Echo MCP", "title": "Povolit přístup?", "description": "{client} se chce připojit k vašemu účtu Echo.", "permissions": "Toto připojení může:", "readDecks": "Zobrazit názvy, jazyky a schémata vašich balíčků.", "readDrafts": "Zobrazit dávky konceptů a poznámky.", "createDrafts": "Vytvářet nové koncepty poznámek ke kontrole.", "noPublish": "Nemůže poznámky schvalovat, publikovat ani mazat.", "approve": "Povolit připojení", "deny": "Zamítnout", "redirectLabel": "Návratová adresa", "invalidRequest": "Požadavek na autorizaci chybí, je neplatný nebo vypršel. Spusťte připojení znovu v klientu MCP."
   }
 }

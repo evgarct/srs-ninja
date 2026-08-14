@@ -1,445 +1,160 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
 import { z } from 'zod'
-import { getDraftFieldContract, type DraftCandidateInput } from '@/lib/draft-import'
-import {
-  approveDraftNoteForUser,
-  listDraftBatchesForUser,
-  listDraftNotesForUser,
-  saveDraftNotesForUser,
-  type DraftBatchMetadata,
-} from '@/lib/draft-import-service'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database.types'
+import { getDraftFieldContract, validateDraftCandidate, type DraftCandidateInput } from '@/lib/draft-import'
 import type { Language } from '@/lib/types'
+import { listDraftBatchesForUser, listDraftNotesForUser, saveDraftNotesForUser, type DraftBatchMetadata } from '@/lib/draft-import-service'
+import { addAgentSelectors, hasDeckSelector, MCP_DECK_LANGUAGES, resolveDeck, type DeckSelector, type McpDeck } from '@/lib/mcp-decks'
+import { buildDeckContract, buildEchoGuide } from '@/lib/mcp-guide'
 import { brand } from '@/lib/brand'
 
 type TypedSupabaseClient = SupabaseClient<Database>
-type DeckContractRow = Pick<Database['public']['Tables']['decks']['Row'], 'id' | 'name' | 'language' | 'translation_language' | 'description'>
+const selectorFields = {
+  deckId: z.string().min(1).optional().describe('Deck UUID from list_decks; not needed when language or exact name uniquely identifies the deck.'),
+  language: z.enum(MCP_DECK_LANGUAGES).optional().describe('Study language. A unique language selects the deck automatically.'),
+  name: z.string().min(1).optional().describe('Exact deck name, compared case-insensitively after trimming whitespace.'),
+}
 
 function toTextResult(text: string, structuredContent?: Record<string, unknown>) {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text,
-      },
-    ],
-    structuredContent,
-  }
+  return { content: [{ type: 'text' as const, text }], structuredContent }
 }
 
-type ToolErrorDiagnostic = {
-  message: string
-  errorType?: string
-  code?: string
-  details?: string
-  hint?: string
-  tool?: string
-  deckId?: string
-  itemCount?: number
+function toToolError(message: string, structuredContent: Record<string, unknown>) {
+  return { content: [{ type: 'text' as const, text: message }], isError: true, structuredContent }
 }
 
-function toToolError(message: string, structuredContent?: Record<string, unknown>) {
-  return {
-    content: [
-      {
-        type: 'text' as const,
-        text: message,
-      },
-    ],
-    isError: true,
-    structuredContent,
-  }
+export type ToolErrorDiagnostic = {
+  message: string; errorType?: string; code?: string; details?: string; hint?: string; tool?: string; deckId?: string; itemCount?: number
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
-}
+function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null }
 
-export function buildToolErrorDiagnostic(
-  error: unknown,
-  fallbackMessage: string,
-  context: Omit<ToolErrorDiagnostic, 'message' | 'errorType' | 'code' | 'details' | 'hint'> = {}
-): ToolErrorDiagnostic {
-  const diagnostic: ToolErrorDiagnostic = {
-    message: fallbackMessage,
-    ...context,
-  }
-
-  if (error instanceof Error) {
-    diagnostic.message = error.message || fallbackMessage
-    diagnostic.errorType = error.name
-  }
-
+export function buildToolErrorDiagnostic(error: unknown, fallbackMessage: string, context: Omit<ToolErrorDiagnostic, 'message' | 'errorType' | 'code' | 'details' | 'hint'> = {}): ToolErrorDiagnostic {
+  const diagnostic: ToolErrorDiagnostic = { message: fallbackMessage, ...context }
+  if (error instanceof Error) { diagnostic.message = error.message || fallbackMessage; diagnostic.errorType = error.name }
   if (isRecord(error)) {
-    if (typeof error.message === 'string' && error.message.trim()) {
-      diagnostic.message = error.message
-    }
-    if (typeof error.code === 'string' && error.code.trim()) {
-      diagnostic.code = error.code
-    }
-    if (typeof error.details === 'string' && error.details.trim()) {
-      diagnostic.details = error.details
-    }
-    if (typeof error.hint === 'string' && error.hint.trim()) {
-      diagnostic.hint = error.hint
-    }
-    if (!diagnostic.errorType && typeof error.name === 'string' && error.name.trim()) {
-      diagnostic.errorType = error.name
-    }
+    if (typeof error.message === 'string' && error.message.trim()) diagnostic.message = error.message
+    if (typeof error.code === 'string' && error.code.trim()) diagnostic.code = error.code
+    if (typeof error.details === 'string' && error.details.trim()) diagnostic.details = error.details
+    if (typeof error.hint === 'string' && error.hint.trim()) diagnostic.hint = error.hint
+    if (!diagnostic.errorType && typeof error.name === 'string') diagnostic.errorType = error.name
   }
-
   return diagnostic
 }
 
-function formatToolErrorText(diagnostic: ToolErrorDiagnostic) {
-  const lines = [diagnostic.message]
-
-  if (diagnostic.tool) lines.push(`Tool: ${diagnostic.tool}`)
-  if (diagnostic.deckId) lines.push(`Deck ID: ${diagnostic.deckId}`)
-  if (typeof diagnostic.itemCount === 'number') lines.push(`Items: ${diagnostic.itemCount}`)
-  if (diagnostic.code) lines.push(`Code: ${diagnostic.code}`)
-  if (diagnostic.details) lines.push(`Details: ${diagnostic.details}`)
-  if (diagnostic.hint) lines.push(`Hint: ${diagnostic.hint}`)
-  if (diagnostic.errorType) lines.push(`Error type: ${diagnostic.errorType}`)
-
-  return lines.join('\n')
+async function getOwnedDecks(supabase: TypedSupabaseClient, userId: string): Promise<McpDeck[]> {
+  const { data, error } = await supabase.from('decks').select('id, name, language, translation_language, description').eq('user_id', userId).order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as McpDeck[]
 }
 
-export function createEchoMcpServer({
-  supabase,
-  userId,
-}: {
-  supabase: TypedSupabaseClient
-  userId: string
-}) {
-  const server = new McpServer({
-    name: brand.mcp.serverName,
-    version: '0.1.0',
+async function resolveOwnedDeck(supabase: TypedSupabaseClient, userId: string, selector: DeckSelector) {
+  const decks = await getOwnedDecks(supabase, userId)
+  const resolution = resolveDeck(decks, selector)
+  if (!resolution.ok) return { error: toToolError(resolution.message, { code: resolution.code, candidates: addAgentSelectors(resolution.candidates), nextTool: 'list_decks' }) }
+  return { deck: resolution.deck }
+}
+
+function selectorFromInput(input: { deckId?: string; language?: typeof MCP_DECK_LANGUAGES[number]; name?: string }): DeckSelector {
+  return { deckId: input.deckId, language: input.language, name: input.name }
+}
+
+export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupabaseClient; userId: string }) {
+  const server = new McpServer({ name: brand.mcp.serverName, version: '0.2.0' })
+
+  server.registerTool('list_decks', {
+    title: 'List Echo decks',
+    description: 'List only the authenticated user\'s decks. Each result includes a recommended selector; prefer language when isUniqueForLanguage is true.',
+    annotations: { readOnlyHint: true },
+  }, async () => {
+    try {
+      const decks = addAgentSelectors(await getOwnedDecks(supabase, userId))
+      return toTextResult(`Found ${decks.length} owned decks. Use recommendedSelector in other tools.`, { decks })
+    } catch (error) { return toToolError('Failed to list decks.', { code: 'LIST_DECKS_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to list decks.') }) }
   })
 
-  server.registerTool(
-    'list_decks',
-    {
-      title: 'List Decks',
-      description: `List decks available to the current ${brand.mcp.agentProductName} user.`,
-      annotations: { readOnlyHint: true },
-      outputSchema: {
-        decks: z.array(
-          z.object({
-            id: z.string(),
-            name: z.string(),
-            language: z.string(),
-            translation_language: z.string(),
-            description: z.string().nullable().optional(),
-          })
-        ),
-      },
+  server.registerTool('get_echo_guide', {
+    title: 'Explain Echo MCP',
+    description: 'Call this first when you need the workflow, available tools, deck selection rules, field schema, or a valid save example. Add a selector to include a specific deck contract.',
+    annotations: { readOnlyHint: true }, inputSchema: selectorFields,
+  }, async (input) => {
+    const selector = selectorFromInput(input)
+    if (!hasDeckSelector(selector)) return toTextResult('Echo MCP guide. Select a deck by language, exact name, or deckId to include its contract.', buildEchoGuide())
+    const resolved = await resolveOwnedDeck(supabase, userId, selector)
+    if (resolved.error) return resolved.error
+    return toTextResult(`Echo MCP guide for ${resolved.deck!.name}.`, buildEchoGuide(resolved.deck!))
+  })
+
+  server.registerTool('get_deck_contract', {
+    title: 'Get a deck field contract',
+    description: 'Get required fields, types, exact enum options, instructions, and a valid save example. UUID is optional: use language for a unique language deck, or language plus exact name on ambiguity.',
+    annotations: { readOnlyHint: true }, inputSchema: selectorFields,
+  }, async (input) => {
+    const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
+    if (resolved.error) return resolved.error
+    return toTextResult(`Contract for ${resolved.deck!.name}. Follow it exactly, then save drafts.`, buildDeckContract(resolved.deck!))
+  })
+
+  server.registerTool('save_draft_notes', {
+    title: 'Save Echo draft notes',
+    description: 'Create draft notes only. Select by unique language, exact name, or deckId. Call get_deck_contract first and use exact field keys and enum values. The user approves drafts later in Echo.',
+    inputSchema: {
+      ...selectorFields,
+      items: z.array(z.object({ fields: z.record(z.string(), z.unknown()), tags: z.array(z.string()).optional() })).min(1),
+      metadata: z.object({ modelName: z.string().optional(), promptVersion: z.string().optional(), topic: z.string().optional(), requestedTags: z.array(z.string()).optional(), inputPayload: z.record(z.string(), z.unknown()).optional() }).optional(),
     },
-    async () => {
-      const { data: decks, error } = await supabase
-        .from('decks')
-        .select('id, name, language, translation_language, description')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: true })
-
-      if (error) {
-        return toToolError('Failed to fetch decks.')
-      }
-
-      return toTextResult(
-        `Found ${(decks ?? []).length} decks.`,
-        { decks: (decks ?? []) as Record<string, unknown>[] }
-      )
-    }
-  )
-
-  server.registerTool(
-    'get_deck_contract',
-    {
-      title: 'Get Deck Contract',
-      description: 'Return the field contract for a deck so candidate notes match the expected schema.',
-      annotations: { readOnlyHint: true },
-      inputSchema: {
-        deckId: z.string(),
-      },
-      outputSchema: {
-        deck: z.object({
-          id: z.string(),
-          name: z.string(),
-          language: z.string(),
-          translation_language: z.string(),
-          description: z.string().nullable().optional(),
-        }),
-        contract: z.object({
-          keys: z.array(z.string()),
-          requiredKeys: z.array(z.string()),
-          fields: z.array(
-            z.object({
-              key: z.string(),
-              label: z.string(),
-              type: z.string(),
-              required: z.boolean().optional(),
-              options: z.array(z.string()).optional(),
-              hint: z.string().optional(),
-            })
-          ),
-        }),
-      },
-    },
-    async ({ deckId }) => {
-      const { data: deckData, error } = await supabase
-        .from('decks')
-        .select('id, name, language, translation_language, description')
-        .eq('id', deckId)
-        .eq('user_id', userId)
-        .single()
-
-      const deck = deckData as DeckContractRow | null
-
-      if (error || !deck) {
-        return toToolError('Deck not found.')
-      }
-
-      const contract = getDraftFieldContract(deck.language as Language)
-
-      return toTextResult(
-        `Deck ${deck.name} studies ${deck.language} with translations in ${deck.translation_language}.`,
-        {
-          deck,
-          contract: {
-            keys: contract.keys,
-            requiredKeys: contract.requiredKeys,
-            fields: contract.fields.map((field) => ({
-              key: field.key,
-              label: field.label,
-              type: field.type,
-              required: field.required,
-              options: field.options ? [...field.options] : undefined,
-              hint: field.hint,
-            })),
-          },
-        }
-      )
-    }
-  )
-
-  server.registerTool(
-    'save_draft_notes',
-    {
-      title: 'Save Draft Notes',
-      description: 'Save AI-generated note candidates into a deck as drafts grouped by an import batch.',
-      inputSchema: {
-        deckId: z.string(),
-        items: z.array(
-          z.object({
-            fields: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])),
-            tags: z.array(z.string()).optional(),
-          })
-        ),
-        metadata: z
-          .object({
-            modelName: z.string().optional(),
-            promptVersion: z.string().optional(),
-            topic: z.string().optional(),
-            requestedTags: z.array(z.string()).optional(),
-            inputPayload: z.record(z.string(), z.unknown()).optional(),
-          })
-          .optional(),
-      },
-      outputSchema: {
-        batchId: z.string(),
-        createdNoteIds: z.array(z.string()),
-        skippedItems: z.array(
-          z.object({
-            index: z.number(),
-            reason: z.string(),
-          })
-        ),
-        warnings: z.array(z.string()),
-      },
-    },
-    async ({ deckId, items, metadata }) => {
-      try {
-        const result = await saveDraftNotesForUser(
-          supabase,
-          userId,
-          deckId,
-          items as DraftCandidateInput[],
-          (metadata ?? {}) as DraftBatchMetadata
-        )
-
-        return toTextResult(
-          `Saved ${result.createdNoteIds.length} draft notes.`,
-          {
-            batchId: result.batchId,
-            createdNoteIds: result.createdNoteIds,
-            skippedItems: result.skippedItems,
-            warnings: result.warnings,
-          }
-        )
-      } catch (error) {
-        const diagnostic = buildToolErrorDiagnostic(error, 'Failed to save draft notes.', {
-          tool: 'save_draft_notes',
-          deckId,
-          itemCount: items.length,
+  }, async ({ items, metadata, ...input }) => {
+    const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
+    if (resolved.error) return resolved.error
+    try {
+      const language = resolved.deck!.language as Language
+      const fieldContract = getDraftFieldContract(language)
+      const validationIssues = items.flatMap((item, index) => {
+        const validation = validateDraftCandidate(language, item as DraftCandidateInput)
+        return [...validation.errors, ...validation.warnings].map((issue) => {
+          const field = issue.field ? fieldContract.fields.find((candidate) => candidate.key === issue.field) : undefined
+          return { index, severity: validation.errors.includes(issue) ? 'error' : 'warning', ...issue, expected: field ? { type: field.type, required: field.required ?? false, options: field.options ? [...field.options] : undefined, hint: field.hint } : undefined }
         })
-
-        return toToolError(formatToolErrorText(diagnostic), diagnostic as Record<string, unknown>)
-      }
+      })
+      const result = await saveDraftNotesForUser(supabase, userId, resolved.deck!.id, items as DraftCandidateInput[], (metadata ?? {}) as DraftBatchMetadata)
+      return toTextResult(`Saved ${result.createdNoteIds.length} draft notes to ${resolved.deck!.name}. Review them in Echo before publishing.`, { deck: resolved.deck, ...result, validationIssues, reviewRequired: true })
+    } catch (error) {
+      const diagnostic = buildToolErrorDiagnostic(error, 'Failed to save draft notes.', { tool: 'save_draft_notes', deckId: resolved.deck!.id, itemCount: items.length })
+      return toToolError(diagnostic.message, { code: diagnostic.code ?? 'SAVE_DRAFTS_FAILED', diagnostic, nextTool: 'get_deck_contract', example: buildDeckContract(resolved.deck!).saveExample })
     }
-  )
+  })
 
-  server.registerTool(
-    'list_draft_batches',
-    {
-      title: 'List Draft Batches',
-      description: 'List draft import batches for the current user.',
-      annotations: { readOnlyHint: true },
-      inputSchema: {
-        deckId: z.string().optional(),
-      },
-      outputSchema: {
-        batches: z.array(
-          z.object({
-            id: z.string(),
-            deck_id: z.string(),
-            source: z.string(),
-            status: z.string(),
-            notes_count: z.number(),
-            topic: z.string().nullable().optional(),
-            model_name: z.string().nullable().optional(),
-          })
-        ),
-      },
-    },
-    async ({ deckId }) => {
-      const batches = await listDraftBatchesForUser(supabase, userId, deckId)
-
-      return toTextResult(
-        `Found ${batches.length} draft batches.`,
-        {
-          batches: batches.map((batch) => ({
-            id: batch.id,
-            deck_id: batch.deck_id,
-            source: batch.source,
-            status: batch.status,
-            notes_count: batch.notes_count,
-            topic: batch.topic,
-            model_name: batch.model_name,
-          })),
-        }
-      )
+  server.registerTool('list_draft_batches', {
+    title: 'List Echo draft batches', description: 'List owned draft batches. Omit the selector for all batches, or select a deck without needing its UUID.', annotations: { readOnlyHint: true }, inputSchema: selectorFields,
+  }, async (input) => {
+    let deckId: string | undefined
+    if (hasDeckSelector(selectorFromInput(input))) {
+      const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input)); if (resolved.error) return resolved.error; deckId = resolved.deck!.id
     }
-  )
+    try { const batches = await listDraftBatchesForUser(supabase, userId, deckId); return toTextResult(`Found ${batches.length} draft batches.`, { batches }) }
+    catch (error) { return toToolError('Failed to list draft batches.', { code: 'LIST_DRAFT_BATCHES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to list draft batches.') }) }
+  })
 
-  server.registerTool(
-    'list_draft_notes',
-    {
-      title: 'List Draft Notes',
-      description: 'List draft notes for a deck or import batch.',
-      annotations: { readOnlyHint: true },
-      inputSchema: {
-        deckId: z.string().optional(),
-        batchId: z.string().optional(),
-      },
-      outputSchema: {
-        notes: z.array(
-          z.object({
-            id: z.string(),
-            deck_id: z.string(),
-            import_batch_id: z.string().nullable(),
-            tags: z.array(z.string()),
-            fields: z.record(z.string(), z.unknown()),
-            created_at: z.string(),
-            draft_conflict: z
-              .object({
-                kind: z.literal('similar_existing_note'),
-                matchedNoteId: z.string(),
-                matchedPrimaryText: z.string(),
-                similarityScore: z.number(),
-                resolution: z.enum(['open', 'kept_separate', 'ignored']),
-                resolvedAt: z.string().optional(),
-              })
-              .nullable()
-              .optional(),
-          })
-        ),
-      },
-    },
-    async ({ deckId, batchId }) => {
-      const notes = await listDraftNotesForUser(supabase, userId, { deckId, batchId })
-
-      return toTextResult(
-        `Found ${notes.length} draft notes.`,
-        {
-          notes: notes.map((note) => ({
-            id: note.id,
-            deck_id: note.deck_id,
-            import_batch_id: note.import_batch_id,
-            tags: note.tags ?? [],
-            fields: note.fields as Record<string, unknown>,
-            created_at: note.created_at,
-            draft_conflict: note.draft_conflict ?? null,
-          })),
-        }
-      )
+  server.registerTool('list_draft_notes', {
+    title: 'List Echo draft notes', description: 'List owned draft notes by optional deck selector or batchId. This tool cannot approve or publish notes.', annotations: { readOnlyHint: true }, inputSchema: { ...selectorFields, batchId: z.string().min(1).optional() },
+  }, async ({ batchId, ...input }) => {
+    let deckId: string | undefined
+    if (hasDeckSelector(selectorFromInput(input))) {
+      const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input)); if (resolved.error) return resolved.error; deckId = resolved.deck!.id
     }
-  )
-
-  server.registerTool(
-    'approve_draft_note',
-    {
-      title: 'Approve Draft Note',
-      description: 'Approve a draft note and publish it into the active review system.',
-      inputSchema: {
-        noteId: z.string(),
-      },
-      outputSchema: {
-        noteId: z.string(),
-        deckId: z.string(),
-        importBatchId: z.string().nullable(),
-      },
-    },
-    async ({ noteId }) => {
-      try {
-        const result = await approveDraftNoteForUser(supabase, userId, noteId)
-        return toTextResult(
-          `Approved draft note ${result.noteId}.`,
-          result
-        )
-      } catch (error) {
-        return toToolError(error instanceof Error ? error.message : 'Failed to approve draft note.')
-      }
-    }
-  )
+    try { const notes = await listDraftNotesForUser(supabase, userId, { deckId, batchId }); return toTextResult(`Found ${notes.length} draft notes. Approval remains in Echo.`, { notes }) }
+    catch (error) { return toToolError('Failed to list draft notes.', { code: 'LIST_DRAFT_NOTES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to list draft notes.') }) }
+  })
 
   return server
 }
 
-export async function handleMcpRequest(
-  request: Request,
-  {
-    supabase,
-    userId,
-  }: {
-    supabase: TypedSupabaseClient
-    userId: string
-  }
-) {
-  const server = createEchoMcpServer({ supabase, userId })
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: undefined,
-    enableJsonResponse: true,
-  })
-
+export async function handleMcpRequest(request: Request, context: { supabase: TypedSupabaseClient; userId: string }) {
+  const server = createEchoMcpServer(context)
+  const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true })
   await server.connect(transport)
-
-  const parsedBody =
-    request.method === 'POST'
-      ? await request.clone().json().catch(() => undefined)
-      : undefined
-
+  const parsedBody = request.method === 'POST' ? await request.clone().json().catch(() => undefined) : undefined
   return transport.handleRequest(request, { parsedBody })
 }

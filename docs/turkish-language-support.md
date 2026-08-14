@@ -11,6 +11,8 @@ Deck filters, note create/edit forms, review headers and actions, completion sta
 
 The standalone `/notes/new` and `/notes/[id]/edit` routes resolve their provider and server headings from the loaded deck language, not only from the user's global locale. Expected save failures use localized generic copy instead of exposing raw server/provider messages.
 
+All dashboard and completion actions enter review through `/review/[deckId]`, whose layout resolves the catalogue from the deck language. The legacy plural review route is not used for user-facing navigation.
+
 ## Deck direction
 
 Every deck stores both `language` and `translation_language`. Supported study languages are `czech`, `english`, and `turkish`; supported translation languages are `russian`, `english`, `czech`, and `turkish`. The two values must differ. Existing decks receive `russian` during migration.

@@ -20,10 +20,11 @@ export const Ready: Story = {
   args: {
     appOrigin: `https://${brand.exampleDomain}`,
     endpointUrl: `https://${brand.exampleDomain}/api/mcp`,
-    connectionUrl: `https://${brand.exampleDomain}/api/mcp?token=secret-value`,
-    hasPersonalConfig: true,
+    healthUrl: `https://${brand.exampleDomain}/api/mcp/health`,
+    oauthReady: true,
     missingEnv: [],
     requiresPublicOrigin: false,
+    legacyEnabled: false,
   },
 }
 
@@ -31,9 +32,10 @@ export const NeedsSetup: Story = {
   args: {
     appOrigin: 'http://localhost:3000',
     endpointUrl: 'http://localhost:3000/api/mcp',
-    connectionUrl: null,
-    hasPersonalConfig: false,
-    missingEnv: ['MCP_SHARED_SECRET', 'MCP_USER_ID'],
+    healthUrl: 'http://localhost:3000/api/mcp/health',
+    oauthReady: false,
+    missingEnv: ['NEXT_PUBLIC_SUPABASE_URL'],
     requiresPublicOrigin: true,
+    legacyEnabled: false,
   },
 }

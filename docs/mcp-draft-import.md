@@ -836,3 +836,13 @@ Prompt должен явно запрещать legacy English keys для но�
 4. Нужно ли сразу поддерживать bulk approve?
 
 Эти вопросы не блокируют архитектурное направление, но влияют на объём первой итерации.
+
+## Multi-user OAuth and agent discovery
+
+The canonical Streamable HTTP endpoint is `${APP_URL}/api/mcp`. Supabase OAuth 2.1 with PKCE and Dynamic Client Registration authenticates each MCP user; bearer-backed Supabase clients preserve RLS. Configure the Supabase Authorization Path as `/oauth/consent`, use an asymmetric signing key, and keep production Site URL aligned with `APP_URL`.
+
+Protected-resource metadata is available at `/.well-known/oauth-protected-resource` and its `/api/mcp` path variant. OAuth tokens are header-only. `/api/mcp/health` exposes non-secret readiness. The former owner token is available for one transition release only when `MCP_LEGACY_TOKEN_ENABLED=true` and both owner variables exist.
+
+MCP permissions are fixed to reading owned decks/contracts/drafts and creating drafts. Approval, publishing, conflict resolution, and deletion stay in Echo. The remote tool set therefore excludes `approve_draft_note`.
+
+Deck-aware tools accept `deckId`, `language`, exact normalized `name`, or narrowing combinations. Unique languages resolve automatically; ambiguous and missing selections return stable codes plus owned candidates. `get_echo_guide`, expanded contracts, and validator-backed English/Czech/Turkish examples replace hard-coded onboarding prompts and UUIDs.

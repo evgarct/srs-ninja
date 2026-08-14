@@ -1,69 +1,12 @@
-export interface McpConnectionConfig {
-  appOrigin: string | null
-  endpointUrl: string | null
-  connectionUrl: string | null
-  hasPersonalConfig: boolean
-  missingEnv: string[]
-  requiresPublicOrigin: boolean
+export interface McpConnectionConfig { appOrigin: string | null; endpointUrl: string | null; healthUrl: string | null; oauthReady: boolean; missingEnv: string[]; requiresPublicOrigin: boolean; legacyEnabled: boolean }
+function stripTrailingSlash(value: string) { return value.replace(/\/+$/, '') }
+export function resolveAppOrigin({ envOrigin, forwardedProto, forwardedHost, host }: { envOrigin?: string | null; forwardedProto?: string | null; forwardedHost?: string | null; host?: string | null }) {
+  if (envOrigin?.trim()) return stripTrailingSlash(envOrigin.trim())
+  const resolvedHost = forwardedHost?.trim() || host?.trim(); if (!resolvedHost) return null
+  return `${forwardedProto?.trim() || (resolvedHost.includes('localhost') ? 'http' : 'https')}://${resolvedHost}`
 }
-
-function stripTrailingSlash(value: string) {
-  return value.replace(/\/+$/, '')
-}
-
-export function resolveAppOrigin({
-  envOrigin,
-  forwardedProto,
-  forwardedHost,
-  host,
-}: {
-  envOrigin?: string | null
-  forwardedProto?: string | null
-  forwardedHost?: string | null
-  host?: string | null
-}) {
-  if (envOrigin?.trim()) {
-    return stripTrailingSlash(envOrigin.trim())
-  }
-
-  const resolvedHost = forwardedHost?.trim() || host?.trim()
-  if (!resolvedHost) return null
-
-  const protocol = forwardedProto?.trim() || (resolvedHost.includes('localhost') ? 'http' : 'https')
-  return `${protocol}://${resolvedHost}`
-}
-
-export function buildMcpConnectionConfig({
-  appOrigin,
-  sharedSecret,
-  userId,
-}: {
-  appOrigin: string | null
-  sharedSecret?: string | null
-  userId?: string | null
-}): McpConnectionConfig {
+export function buildMcpConnectionConfig({ appOrigin, supabaseUrl, legacyEnabled = false }: { appOrigin: string | null; supabaseUrl?: string | null; legacyEnabled?: boolean }): McpConnectionConfig {
   const normalizedOrigin = appOrigin ? stripTrailingSlash(appOrigin) : null
-  const endpointUrl = normalizedOrigin ? `${normalizedOrigin}/api/mcp` : null
-  const hasSharedSecret = Boolean(sharedSecret?.trim())
-  const hasUserId = Boolean(userId?.trim())
-  const missingEnv = [
-    ...(!hasSharedSecret ? ['MCP_SHARED_SECRET'] : []),
-    ...(!hasUserId ? ['MCP_USER_ID'] : []),
-  ]
-  const hasPersonalConfig = missingEnv.length === 0
-  const requiresPublicOrigin = normalizedOrigin
-    ? normalizedOrigin.includes('localhost') || normalizedOrigin.includes('127.0.0.1')
-    : true
-
-  return {
-    appOrigin: normalizedOrigin,
-    endpointUrl,
-    connectionUrl:
-      endpointUrl && hasPersonalConfig && sharedSecret
-        ? `${endpointUrl}?token=${encodeURIComponent(sharedSecret)}`
-        : null,
-    hasPersonalConfig,
-    missingEnv,
-    requiresPublicOrigin,
-  }
+  const missingEnv = [...(!normalizedOrigin ? ['APP_URL'] : []), ...(!supabaseUrl?.trim() ? ['NEXT_PUBLIC_SUPABASE_URL'] : [])]
+  return { appOrigin: normalizedOrigin, endpointUrl: normalizedOrigin ? `${normalizedOrigin}/api/mcp` : null, healthUrl: normalizedOrigin ? `${normalizedOrigin}/api/mcp/health` : null, oauthReady: missingEnv.length === 0, missingEnv, requiresPublicOrigin: normalizedOrigin ? /localhost|127\.0\.0\.1/.test(normalizedOrigin) : true, legacyEnabled }
 }

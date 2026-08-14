@@ -121,5 +121,11 @@
     "library": "library",
     "avgTime": "avg time",
     "shortDescription": "A quick overview of sessions, streak, and overall dynamics without analytics overload."
+  },
+  "mcpConnect": {
+    "title":"Connect an AI agent","ready":"OAuth ready","setup":"Setup required","description":"Use the same secure MCP endpoint with any OAuth-compatible client. Each user authorizes only their own Echo account.","publicRequired":"A public HTTPS URL is required","publicDescription":"The current origin is {origin}. Remote MCP clients cannot connect to localhost.","notConfigured":"not configured","oauthMissing":"OAuth discovery is not fully configured","missingConfig":"Missing server configuration: {values}","endpoint":"Remote MCP endpoint","endpointCopied":"Endpoint copied","endpointHint":"Add this URL in your MCP client. OAuth opens Echo sign-in and consent automatically; do not append a token.","permissions":"Permissions","permissionRead":"View your deck schemas and drafts","permissionCreate":"Create draft notes for review","permissionDenied":"Cannot approve, publish, or delete notes","starter":"Agent starter prompt","promptCopied":"Prompt copied","legacy":"The owner-only legacy token is temporarily enabled for one transition release. New connections always use OAuth.","openChatgpt":"Open ChatGPT","testHealth":"Test endpoint health"
+  },
+  "oauthConsent": {
+    "eyebrow": "Echo MCP connection", "title": "Allow access?", "description": "{client} wants to connect to your Echo account.", "permissions": "This connection can:", "readDecks": "View your deck names, languages, and field contracts.", "readDrafts": "View your draft batches and notes.", "createDrafts": "Create new draft notes for your review.", "noPublish": "It cannot approve, publish, or delete notes.", "approve": "Allow connection", "deny": "Deny", "redirectLabel": "Return address", "invalidRequest": "This authorization request is missing, invalid, or expired. Start the connection again from your MCP client."
   }
 }

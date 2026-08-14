@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { resolveMcpContext } from '@/lib/mcp-auth'
 import { handleMcpRequest } from '@/lib/mcp-server'
+import { getMcpAuthenticateHeader } from '@/lib/mcp-oauth'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,8 +10,8 @@ async function processMcpRequest(request: Request) {
 
   if (!context) {
     return NextResponse.json(
-      { error: 'Unauthorized. Provide a valid session or MCP shared secret.' },
-      { status: 401 }
+      { error: 'invalid_token', error_description: 'Connect Echo with OAuth and send the access token as a Bearer token.' },
+      { status: 401, headers: { 'WWW-Authenticate': getMcpAuthenticateHeader() } }
     )
   }
 

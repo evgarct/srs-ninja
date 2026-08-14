@@ -16,6 +16,7 @@
 - Turkish UI, creation, deck, review, stats, auth, empty states, and rating states render without missing messages on desktop and mobile.
 - Note forms, deck filters, review completion copy, errors, tooltips, and accessible names contain no hard-coded Russian or English text when the Turkish locale is active.
 - Standalone note create/edit routes derive their message catalogue from the deck language, including when the user's global locale differs.
+- Dashboard and restart actions use the deck-localized `/review/[deckId]` route for every study language.
 - Expected note save failures display localized product copy and do not expose raw server or provider errors.
 - Turkish → Russian/English/Czech decks can be created; Turkish → Turkish is rejected in both domain validation and the database.
 - Turkish notes pass import/MCP validation, render cards, and generate/cache audio using `language_code = tr`.

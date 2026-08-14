@@ -29,8 +29,8 @@ export default async function ImportPage() {
   })
   const mcpConfig = buildMcpConnectionConfig({
     appOrigin,
-    sharedSecret: process.env.MCP_SHARED_SECRET,
-    userId: process.env.MCP_USER_ID,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    legacyEnabled: process.env.MCP_LEGACY_TOKEN_ENABLED === 'true',
   })
 
   await cleanupEmptyImportBatchesForUser(supabase, user.id)
