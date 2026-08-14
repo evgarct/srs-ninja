@@ -11,7 +11,11 @@
   },
   "home": {
     "noDecks": "Нет колод",
-    "createFirst": "Создайте первую колоду, чтобы начать."
+    "createFirst": "Создайте первую колоду, чтобы начать.",
+    "drafts": "{count, plural, one {# черновик} few {# черновика} many {# черновиков} other {# черновика}}",
+    "due": "к повторению",
+    "startReview": "Начать повторение",
+    "open": "Открыть"
   },
   "auth": {
     "loading": "Загрузка...",
@@ -21,7 +25,12 @@
     "hasAccount": "Уже есть аккаунт? Войти",
     "orContinueWith": "Или продолжите через",
     "createAccount": "Создать аккаунт",
-    "signInAccount": "Войти в аккаунт"
+    "signInAccount": "Войти в аккаунт",
+    "email": "Email",
+    "password": "Пароль",
+    "google": "Google",
+    "checkEmail": "Проверьте почту — мы отправили ссылку для подтверждения.",
+    "configurationError": "Авторизация настроена неправильно. Обратитесь в поддержку."
   },
   "createDeck": {
     "title": "Создать колоду",
@@ -32,7 +41,13 @@
     "creating": "Создаём...",
     "create": "Создать",
     "langCzech": "🇨🇿 Чешский",
-    "langEnglish": "🇬🇧 Английский"
+    "langEnglish": "🇬🇧 Английский",
+    "langTurkish": "🇹🇷 Турецкий",
+    "translationLanguage": "Язык перевода",
+    "translationRussian": "🇷🇺 Русский",
+    "translationEnglish": "🇬🇧 Английский",
+    "translationCzech": "🇨🇿 Чешский",
+    "translationTurkish": "🇹🇷 Турецкий"
   },
   "review": {
     "noNewWords": "Нет новых слов!",
@@ -45,7 +60,9 @@
     "ratingAgain": "Again",
     "ratingHard": "Hard",
     "ratingGood": "Good",
-    "ratingEasy": "Easy"
+    "ratingEasy": "Easy",
+    "rateRecall": "Оценить воспроизведение",
+    "keyboardKey": "клавиша {key}"
   },
   "deck": {
     "backHome": "← Главная",
@@ -66,6 +83,15 @@
     "editNote": "Редактировать",
     "deleteNote": "Удалить",
     "showCard": "Показать карточку"
+  },
+  "flashcard": {
+    "synonyms": "Синонимы",
+    "antonyms": "Антонимы",
+    "note": "Примечание",
+    "examples": "Примеры предложений",
+    "playPronunciation": "Воспроизвести произношение",
+    "reveal": "Показать ответ (Пробел)",
+    "revealHint": "Нажмите {key} или кликните, чтобы показать ответ"
   },
   "stats": {
     "profile": "Profile",

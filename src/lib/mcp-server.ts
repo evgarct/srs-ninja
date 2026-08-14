@@ -15,7 +15,7 @@ import type { Language } from '@/lib/types'
 import { brand } from '@/lib/brand'
 
 type TypedSupabaseClient = SupabaseClient<Database>
-type DeckContractRow = Pick<Database['public']['Tables']['decks']['Row'], 'id' | 'name' | 'language' | 'description'>
+type DeckContractRow = Pick<Database['public']['Tables']['decks']['Row'], 'id' | 'name' | 'language' | 'translation_language' | 'description'>
 
 function toTextResult(text: string, structuredContent?: Record<string, unknown>) {
   return {
@@ -131,6 +131,7 @@ export function createEchoMcpServer({
             id: z.string(),
             name: z.string(),
             language: z.string(),
+            translation_language: z.string(),
             description: z.string().nullable().optional(),
           })
         ),
@@ -139,7 +140,7 @@ export function createEchoMcpServer({
     async () => {
       const { data: decks, error } = await supabase
         .from('decks')
-        .select('id, name, language, description')
+        .select('id, name, language, translation_language, description')
         .eq('user_id', userId)
         .order('created_at', { ascending: true })
 
@@ -168,6 +169,7 @@ export function createEchoMcpServer({
           id: z.string(),
           name: z.string(),
           language: z.string(),
+          translation_language: z.string(),
           description: z.string().nullable().optional(),
         }),
         contract: z.object({
@@ -189,7 +191,7 @@ export function createEchoMcpServer({
     async ({ deckId }) => {
       const { data: deckData, error } = await supabase
         .from('decks')
-        .select('id, name, language, description')
+        .select('id, name, language, translation_language, description')
         .eq('id', deckId)
         .eq('user_id', userId)
         .single()
@@ -203,7 +205,7 @@ export function createEchoMcpServer({
       const contract = getDraftFieldContract(deck.language as Language)
 
       return toTextResult(
-        `Deck ${deck.name} uses the ${deck.language} field contract.`,
+        `Deck ${deck.name} studies ${deck.language} with translations in ${deck.translation_language}.`,
         {
           deck,
           contract: {

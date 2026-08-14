@@ -18,6 +18,9 @@ export async function generateAndCacheAudio(
 
   const config = getTtsLanguageConfig(language)
   if (!config) {
+    if (language === 'turkish') {
+      return { error: 'ELEVENLABS_TURKISH_VOICE_ID is not configured' }
+    }
     return { error: `TTS is not supported for ${language} decks` }
   }
 

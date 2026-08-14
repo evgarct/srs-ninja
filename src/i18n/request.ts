@@ -2,7 +2,7 @@ import { getRequestConfig } from 'next-intl/server'
 import { cookies, headers } from 'next/headers'
 import { defaultLocale, locales, type Locale } from './config'
 
-function detectLocaleFromAcceptLanguage(acceptLanguage: string | null): Locale | null {
+export function detectLocaleFromAcceptLanguage(acceptLanguage: string | null): Locale | null {
   if (!acceptLanguage) return null
   const preferred = acceptLanguage
     .split(',')

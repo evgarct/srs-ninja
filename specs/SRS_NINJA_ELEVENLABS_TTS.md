@@ -2,7 +2,7 @@
 
 ## Context
 
-Add text-to-speech audio to supported decks using ElevenLabs API. The first supported languages are English and Czech. Free tier: 10,000 characters/month.
+Add text-to-speech audio to supported decks using ElevenLabs API. Supported languages are English, Czech, and Turkish. Turkish uses a dedicated voice supplied through `ELEVENLABS_TURKISH_VOICE_ID`. Free tier: 10,000 characters/month.
 The API key should already be in `.env.local` as `ELEVENLABS_API_KEY`.
 
 **English Voice ID:** `JBFqnCBsd6RMkjVDRZzb`

@@ -17,6 +17,7 @@ const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
   { locale: 'en', label: '🇬🇧 English' },
   { locale: 'ru', label: '🇷🇺 Русский' },
   { locale: 'cs', label: '🇨🇿 Čeština' },
+  { locale: 'tr', label: '🇹🇷 Türkçe' },
 ]
 
 function LanguageSwitcherDemo({ locale: activeLoc }: { locale?: Locale }) {
@@ -24,7 +25,7 @@ function LanguageSwitcherDemo({ locale: activeLoc }: { locale?: Locale }) {
   const locale = useLocale() as Locale
 
   return (
-    <div className="dark flex items-center justify-center min-h-[200px] bg-black/90 rounded-xl p-8">
+    <div data-locale={activeLoc} className="dark flex items-center justify-center min-h-[200px] bg-black/90 rounded-xl p-8">
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
@@ -66,10 +67,11 @@ function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
     await userEvent.click(trigger)
     // Menu renders in a portal
     const body = within(document.body)
-    // All three language options are present
+    // All language options are present
     await body.findByText('🇬🇧 English')
     await body.findByText('🇷🇺 Русский')
     await body.findByText('🇨🇿 Čeština')
+    await body.findByText('🇹🇷 Türkçe')
     // Logout is translated
     await body.findByText(t.nav.logout)
   }
@@ -112,6 +114,13 @@ export const LocaleEn: Story = {
 export const LocaleCs: Story = {
   args: { locale: 'cs' },
   play: makePlay('cs'),
+  tags: ['!dev'],
+  parameters: { a11y: { test: 'error' } },
+}
+
+export const LocaleTr: Story = {
+  args: { locale: 'tr' },
+  play: makePlay('tr'),
   tags: ['!dev'],
   parameters: { a11y: { test: 'error' } },
 }

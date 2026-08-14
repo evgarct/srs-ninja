@@ -60,7 +60,7 @@ export function getDraftNoteDisplayState(
   const normalizedFields = normalizeNoteFields(fields, language)
   const labelMap = getFieldLabelMap(language)
 
-  if (language === 'english') {
+  if (language !== 'czech') {
     const meta: DraftNoteDisplayMetaItem[] = []
     const lists: DraftNoteDisplayListItem[] = []
     const fallback: DraftNoteDisplayMetaItem[] = []

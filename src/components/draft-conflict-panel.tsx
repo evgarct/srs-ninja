@@ -36,7 +36,7 @@ export function DraftConflictPanel({
   const matchedTranslation = matchedNote && typeof matchedNote.fields.translation === 'string'
     ? matchedNote.fields.translation
     : ''
-  const languageLabel = language === 'english' ? 'English' : 'Czech'
+  const languageLabel = language === 'english' ? 'English' : language === 'turkish' ? 'Turkish' : 'Czech'
 
   async function runAction(
     action: 'update' | 'separate' | 'ignore',

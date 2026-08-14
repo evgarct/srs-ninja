@@ -76,7 +76,7 @@ export function AnkiImporter({ decks }: { decks: Deck[] }) {
         await createNote(
           deckId,
           targetDeck.language as Language,
-          targetDeck.language === 'english'
+          targetDeck.language !== 'czech'
             ? {
                 word: note.word,
                 translation: note.translation,

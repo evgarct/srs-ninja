@@ -3,18 +3,20 @@ import { NextIntlClientProvider } from 'next-intl'
 import enMessages from '../../../messages/en.json'
 import ruMessages from '../../../messages/ru.json'
 import csMessages from '../../../messages/cs.json'
+import trMessages from '../../../messages/tr.json'
 import type { Locale } from '@/i18n/config'
 
 export const messagesByLocale: Record<Locale, typeof enMessages> = {
   en: enMessages,
   ru: ruMessages,
   cs: csMessages,
+  tr: trMessages,
 }
 
 export const localeArgType: ArgTypes = {
   locale: {
     control: 'select',
-    options: ['ru', 'en', 'cs'] satisfies Locale[],
+    options: ['ru', 'en', 'cs', 'tr'] satisfies Locale[],
     description: 'Язык интерфейса',
     table: { defaultValue: { summary: 'ru' } },
   },

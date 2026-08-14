@@ -4,10 +4,10 @@ import { useTranslations } from 'next-intl'
 import { withLocale, localeArgType, messagesByLocale } from './withLocale'
 import type { Locale } from '@/i18n/config'
 
-function HomeEmptyState(_: { locale?: Locale }) {
+function HomeEmptyState({ locale }: { locale?: Locale }) {
   const t = useTranslations('home')
   return (
-    <div className="dark flex items-center justify-center min-h-[200px] bg-[#0a0a0a] p-8 rounded-xl">
+    <div data-locale={locale} className="dark flex items-center justify-center min-h-[200px] bg-[#0a0a0a] p-8 rounded-xl">
       <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-16 text-center text-white/72">
         <p className="mb-2 text-lg text-white">{t('noDecks')}</p>
         <p className="text-sm">{t('createFirst')}</p>
@@ -62,6 +62,13 @@ export const LocaleEn: Story = {
 export const LocaleCs: Story = {
   args: { locale: 'cs' },
   play: makePlay('cs'),
+  tags: ['!dev'],
+  parameters: { a11y: { test: 'error' } },
+}
+
+export const LocaleTr: Story = {
+  args: { locale: 'tr' },
+  play: makePlay('tr'),
   tags: ['!dev'],
   parameters: { a11y: { test: 'error' } },
 }

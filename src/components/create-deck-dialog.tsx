@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Language } from '@/lib/types'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { Language, TranslationLanguage } from '@/lib/types'
+import { getAvailableTranslationLanguages } from '@/lib/deck-languages'
 import { useTranslations } from 'next-intl'
 
 interface CreateDeckDialogProps {
@@ -19,16 +20,39 @@ export function CreateDeckDialog({ trigger }: CreateDeckDialogProps) {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [language, setLanguage] = useState<Language>('czech')
+  const [translationLanguage, setTranslationLanguage] = useState<TranslationLanguage>('russian')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const t = useTranslations('createDeck')
+  const languageItems = [
+    { value: 'czech' as const, label: t('langCzech') },
+    { value: 'english' as const, label: t('langEnglish') },
+    { value: 'turkish' as const, label: t('langTurkish') },
+  ]
+  const translationLabelKeys: Record<TranslationLanguage, 'translationRussian' | 'translationEnglish' | 'translationCzech' | 'translationTurkish'> = {
+    russian: 'translationRussian',
+    english: 'translationEnglish',
+    czech: 'translationCzech',
+    turkish: 'translationTurkish',
+  }
+  const translationItems = getAvailableTranslationLanguages(language).map((value) => ({
+    value,
+    label: t(translationLabelKeys[value]),
+  }))
+
+  function handleLanguageChange(value: Language) {
+    setLanguage(value)
+    if (value === translationLanguage) {
+      setTranslationLanguage('russian')
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim()) return
     setLoading(true)
     try {
-      await createDeck(name.trim(), language)
+      await createDeck(name.trim(), language, translationLanguage)
       setOpen(false)
       setName('')
       router.refresh()
@@ -59,13 +83,35 @@ export function CreateDeckDialog({ trigger }: CreateDeckDialogProps) {
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="deck-language">{t('language')}</Label>
-            <Select value={language} onValueChange={(v) => v && setLanguage(v as Language)}>
+            <Select items={languageItems} value={language} onValueChange={(v) => v && handleLanguageChange(v as Language)}>
               <SelectTrigger id="deck-language">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="czech">{t('langCzech')}</SelectItem>
-                <SelectItem value="english">{t('langEnglish')}</SelectItem>
+                <SelectGroup>
+                  {languageItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="translation-language">{t('translationLanguage')}</Label>
+            <Select
+              items={translationItems}
+              value={translationLanguage}
+              onValueChange={(v) => v && setTranslationLanguage(v as TranslationLanguage)}
+            >
+              <SelectTrigger id="translation-language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {translationItems.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>

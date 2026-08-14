@@ -11,7 +11,11 @@
   },
   "home": {
     "noDecks": "No decks",
-    "createFirst": "Create your first deck to get started."
+    "createFirst": "Create your first deck to get started.",
+    "drafts": "{count, plural, one {# draft} other {# drafts}}",
+    "due": "due",
+    "startReview": "Start review",
+    "open": "Open"
   },
   "auth": {
     "loading": "Loading...",
@@ -21,7 +25,12 @@
     "hasAccount": "Already have an account? Sign in",
     "orContinueWith": "Or continue with",
     "createAccount": "Create your account",
-    "signInAccount": "Sign in to your account"
+    "signInAccount": "Sign in to your account",
+    "email": "Email",
+    "password": "Password",
+    "google": "Google",
+    "checkEmail": "Check your email for the confirmation link.",
+    "configurationError": "Authentication is not configured correctly. Please contact support."
   },
   "createDeck": {
     "title": "Create deck",
@@ -32,7 +41,13 @@
     "creating": "Creating...",
     "create": "Create",
     "langCzech": "🇨🇿 Czech",
-    "langEnglish": "🇬🇧 English"
+    "langEnglish": "🇬🇧 English",
+    "langTurkish": "🇹🇷 Turkish",
+    "translationLanguage": "Translation language",
+    "translationRussian": "🇷🇺 Russian",
+    "translationEnglish": "🇬🇧 English",
+    "translationCzech": "🇨🇿 Czech",
+    "translationTurkish": "🇹🇷 Turkish"
   },
   "review": {
     "noNewWords": "No new words!",
@@ -45,7 +60,9 @@
     "ratingAgain": "Again",
     "ratingHard": "Hard",
     "ratingGood": "Good",
-    "ratingEasy": "Easy"
+    "ratingEasy": "Easy",
+    "rateRecall": "Rate your recall",
+    "keyboardKey": "key {key}"
   },
   "deck": {
     "backHome": "← Home",
@@ -66,6 +83,15 @@
     "editNote": "Edit",
     "deleteNote": "Delete",
     "showCard": "Show card"
+  },
+  "flashcard": {
+    "synonyms": "Synonyms",
+    "antonyms": "Antonyms",
+    "note": "Note",
+    "examples": "Example sentences",
+    "playPronunciation": "Play pronunciation",
+    "reveal": "Reveal answer (Space)",
+    "revealHint": "Press {key} or click to reveal"
   },
   "stats": {
     "profile": "Profile",

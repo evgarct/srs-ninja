@@ -88,6 +88,50 @@ describe('generateAndCacheAudio', () => {
     )
   })
 
+  it('requires a configured Turkish voice', async () => {
+    vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
+
+    const result = await generateAndCacheAudio(
+      createSupabaseMock() as never,
+      'user-1',
+      'note-1',
+      'merhaba',
+      'turkish'
+    )
+
+    expect(result).toEqual({ error: 'ELEVENLABS_TURKISH_VOICE_ID is not configured' })
+  })
+
+  it('uses the configured Turkish voice and language code', async () => {
+    vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
+    vi.stubEnv('ELEVENLABS_TURKISH_VOICE_ID', 'turkish-voice')
+    const fetchMock = vi.fn(async () => ({
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(8),
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const result = await generateAndCacheAudio(
+      createSupabaseMock() as never,
+      'user-1',
+      'note-1',
+      'merhaba',
+      'turkish'
+    )
+
+    expect(result).toHaveProperty('audioUrl')
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.elevenlabs.io/v1/text-to-speech/turkish-voice',
+      expect.objectContaining({
+        body: JSON.stringify({
+          text: 'merhaba',
+          model_id: 'eleven_flash_v2_5',
+          language_code: 'tr',
+        }),
+      })
+    )
+  })
+
   it('surfaces audio_cache write failures instead of pretending success', async () => {
     vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
     vi.stubGlobal(

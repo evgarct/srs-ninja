@@ -7,10 +7,12 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { buttonVariants } from '@/lib/button-variants'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 const DECK_FLAG: Record<string, { src: string; alt: string }> = {
   czech: { src: '/flags/cz.svg', alt: 'Czech flag' },
   english: { src: '/flags/gb.svg', alt: 'United Kingdom flag' },
+  turkish: { src: '/flags/tr.svg', alt: 'Turkish flag' },
 }
 
 export interface HomeDeckCardProps {
@@ -18,6 +20,7 @@ export interface HomeDeckCardProps {
     id: string
     name: string
     language: string
+    translation_language: string
   }
   due: number
   drafts: number
@@ -29,6 +32,14 @@ export function HomeDeckCard({
   due,
   drafts,
 }: HomeDeckCardProps) {
+  const t = useTranslations('home')
+  const languageT = useTranslations('createDeck')
+  const languageLabelKeys: Record<string, 'translationRussian' | 'translationEnglish' | 'translationCzech' | 'translationTurkish'> = {
+    russian: 'translationRussian',
+    english: 'translationEnglish',
+    czech: 'translationCzech',
+    turkish: 'translationTurkish',
+  }
   const accentClassName =
     deck.language === 'english'
       ? 'from-sky-400/22 via-violet-400/10 to-transparent'
@@ -53,7 +64,9 @@ export function HomeDeckCard({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-2">
             <span className="text-xs font-medium uppercase tracking-[0.22em] text-white/42">
-              {deck.language}
+              {languageT(languageLabelKeys[deck.language] ?? 'translationEnglish')}
+              {' → '}
+              {languageT(languageLabelKeys[deck.translation_language] ?? 'translationRussian')}
             </span>
             <CardTitle className="min-w-0 text-[1.75rem] font-semibold tracking-[-0.04em] text-white break-words">
               <span className="inline-flex items-center gap-2">
@@ -75,13 +88,13 @@ export function HomeDeckCard({
                 variant="outline"
                 className="rounded-full border-white/12 bg-white/[0.05] px-3 py-1 text-white"
               >
-                {drafts} drafts
+                {t('drafts', { count: drafts })}
               </Badge>
             ) : null}
           </div>
 
           <div className="shrink-0 rounded-[22px] border border-white/10 bg-black/25 px-4 py-2.5 text-right backdrop-blur-md">
-            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-white/42">due</p>
+            <p className="text-[0.65rem] uppercase tracking-[0.2em] text-white/42">{t('due')}</p>
             <p className="mt-1 text-3xl font-semibold tracking-[-0.06em] text-white">{due}</p>
           </div>
         </div>
@@ -91,12 +104,12 @@ export function HomeDeckCard({
         {due > 0 ? (
           <div className="mt-auto flex flex-col gap-2 sm:flex-row">
             <Link href={`/decks/${deck.id}/review`} className={cn(primaryActionClassName, 'flex-1')}>
-              <span>Начать review</span>
+              <span>{t('startReview')}</span>
               <ArrowRight className="size-4 text-primary-foreground/80" />
             </Link>
             <Link href={`/deck/${deck.id}`} className={secondaryActionClassName}>
               <FolderOpen className="size-4" />
-              Открыть
+              {t('open')}
             </Link>
           </div>
         ) : (

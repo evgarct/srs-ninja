@@ -2,7 +2,8 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { Deck, Language } from '@/lib/types'
+import type { Deck, Language, TranslationLanguage } from '@/lib/types'
+import { assertValidLanguagePair } from '@/lib/deck-languages'
 import { countVisibleDueCardsByDeck, getStartOfDayInTimeZone } from '@/lib/dashboard-review'
 import {
   getCompletedTodayDeckIds,
@@ -171,14 +172,19 @@ export async function getDashboardStats(timeZone = 'UTC') {
  * @throws Error - Throws if the user is not authenticated or if the insert operation fails.
  * @returns A promise resolving to the newly created deck data.
  */
-export async function createDeck(name: string, language: Language) {
+export async function createDeck(
+  name: string,
+  language: Language,
+  translationLanguage: TranslationLanguage
+) {
+  assertValidLanguagePair(language, translationLanguage)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
   const { data, error } = await supabase
     .from('decks')
-    .insert({ name, language, user_id: user.id })
+    .insert({ name, language, translation_language: translationLanguage, user_id: user.id })
     .select()
     .single()
   if (error) throw error

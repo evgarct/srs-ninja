@@ -20,7 +20,7 @@ export async function GET(
 
   const { data: deck, error } = await supabase
     .from('decks')
-    .select('id, name, language, description')
+    .select('id, name, language, translation_language, description')
     .eq('id', deckId)
     .eq('user_id', user.id)
     .single()

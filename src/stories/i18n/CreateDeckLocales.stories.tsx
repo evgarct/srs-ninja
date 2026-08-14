@@ -23,6 +23,8 @@ function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
     const body = within(document.body)
     await body.findByText(t.createDeck.title)
     await body.findByPlaceholderText(t.createDeck.namePlaceholder)
+    await body.findByText(t.createDeck.language)
+    await body.findByText(t.createDeck.translationLanguage)
     await body.findByRole('button', { name: t.createDeck.create })
   }
 }
@@ -71,6 +73,13 @@ export const LocaleEn: Story = {
 export const LocaleCs: Story = {
   args: { locale: 'cs' },
   play: makePlay('cs'),
+  tags: ['!dev'],
+  parameters: { a11y: { test: 'error' } },
+}
+
+export const LocaleTr: Story = {
+  args: { locale: 'tr' },
+  play: makePlay('tr'),
   tags: ['!dev'],
   parameters: { a11y: { test: 'error' } },
 }

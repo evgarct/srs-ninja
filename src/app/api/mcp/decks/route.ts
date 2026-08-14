@@ -13,7 +13,7 @@ export async function GET() {
 
   const { data: decks, error } = await supabase
     .from('decks')
-    .select('id, name, language, description')
+    .select('id, name, language, translation_language, description')
     .eq('user_id', user.id)
     .order('created_at', { ascending: true })
 
