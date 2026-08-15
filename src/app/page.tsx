@@ -1,4 +1,4 @@
-import { HomeDeckCard } from '@/components/home-deck-card'
+import { HomeDeckList } from '@/components/home-deck-list'
 import { HomeViewportLock } from '@/components/home-viewport-lock'
 import { getDashboardStats } from '@/lib/actions/decks'
 import { createClient } from '@/lib/supabase/server'
@@ -40,19 +40,7 @@ export default async function Home() {
             </div>
           </div>
         ) : (
-          <section className="flex min-h-0 flex-1 flex-col">
-            <div className="grid min-h-0 auto-rows-fr gap-3 md:grid-cols-2">
-              {deckStats.map(({ deck, due, drafts, completedToday }) => (
-                <HomeDeckCard
-                  key={deck.id}
-                  deck={deck}
-                  due={due}
-                  drafts={drafts}
-                  completedToday={completedToday}
-                />
-              ))}
-            </div>
-          </section>
+          <HomeDeckList deckStats={deckStats} />
         )}
       </main>
     </>

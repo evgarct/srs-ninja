@@ -58,7 +58,7 @@ export function HomeDeckCard({
   )
 
   return (
-    <Card className="app-panel flex h-full overflow-hidden border-white/10 bg-white/[0.055] py-0">
+    <Card className="app-panel flex overflow-hidden border-white/10 bg-white/[0.055] py-0">
       <div className={cn('pointer-events-none absolute inset-0 bg-gradient-to-br opacity-100', accentClassName)} />
       <div className="pointer-events-none absolute -right-8 top-0 h-28 w-28 rounded-full bg-primary/18 blur-3xl" />
 
