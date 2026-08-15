@@ -1,11 +1,25 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
-import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { Eye, Pencil } from 'lucide-react'
+import { Eye, Pencil, Trash2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Spinner } from '@/components/ui/spinner'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import { PendingLink } from '@/components/pending-link'
 import { GenerateAudioButton } from '@/components/generate-audio-button'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
 import { DeleteNoteButton } from '@/components/delete-note-button'
@@ -20,7 +34,9 @@ import {
   getAllDeckTags,
   getNoteMemoryScore,
   getNoteFsrsState,
+  getVisibleSelectionState,
   isFsrsState,
+  toggleNoteIdSelection,
   type AudioFilter,
   type DeckNoteRow,
   type FsrsState,
@@ -28,6 +44,8 @@ import {
 import type { Language } from '@/lib/types'
 import { buildReviewSessionHref } from '@/lib/review-session-route'
 import { supportsTtsLanguage } from '@/lib/tts-config'
+import { deleteNotes } from '@/lib/actions/notes'
+import { cn } from '@/lib/utils'
 
 type BatchResult = {
   total: number
@@ -89,6 +107,9 @@ export function DeckPageClient({
       .filter(isFsrsState) as FsrsState[]
   )
   const [activeAudioFilter, setActiveAudioFilter] = useState<AudioFilter>(initialAudioFilter)
+  const [selectedNoteIds, setSelectedNoteIds] = useState<Set<string>>(new Set())
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
 
   const availableTags = useMemo(() => getAllDeckTags(notes), [notes])
   const visibleNotes = useMemo(
@@ -113,6 +134,10 @@ export function DeckPageClient({
     () => visibleNotes.filter((note) => !audioMap[note.id]).length,
     [visibleNotes, audioMap]
   )
+  const {
+    allSelected: allVisibleSelected,
+    indeterminate: someVisibleSelected,
+  } = getVisibleSelectionState(selectedNoteIds, visibleNoteIds)
 
   const manualReviewHref = useMemo(() => {
     return buildReviewSessionHref(deckId, {
@@ -155,10 +180,40 @@ export function DeckPageClient({
     nextStates: FsrsState[],
     nextAudioFilter: AudioFilter = activeAudioFilter
   ) {
+    setSelectedNoteIds(new Set())
     setActiveTags(nextTags)
     setActiveStates(nextStates)
     setActiveAudioFilter(nextAudioFilter)
     syncUrl(nextTags, nextStates, nextAudioFilter)
+  }
+
+  function toggleNoteSelection(noteId: string) {
+    setSelectedNoteIds((current) => toggleNoteIdSelection(current, noteId))
+  }
+
+  function toggleAllVisible() {
+    setSelectedNoteIds(allVisibleSelected ? new Set() : new Set(visibleNoteIds))
+  }
+
+  async function handleBulkDelete() {
+    if (selectedNoteIds.size === 0) return
+    setIsBulkDeleting(true)
+    try {
+      const { deletedIds } = await deleteNotes([...selectedNoteIds], deckId)
+      const deleted = new Set(deletedIds)
+      setNotes((current) => current.filter((note) => !deleted.has(note.id)))
+      setAudioMap((current) =>
+        Object.fromEntries(Object.entries(current).filter(([noteId]) => !deleted.has(noteId)))
+      )
+      setSelectedNoteIds(new Set())
+      setDeleteDialogOpen(false)
+      toast.success(t('bulkDeleteSuccess', { count: deletedIds.length }))
+      refreshServerSnapshot()
+    } catch {
+      toast.error(t('bulkDeleteError'))
+    } finally {
+      setIsBulkDeleting(false)
+    }
   }
 
   function toggleTag(tag: string) {
@@ -229,9 +284,9 @@ export function DeckPageClient({
   return (
     <main className="w-full px-4 py-8 sm:px-6 lg:px-8">
       <div className="flex items-center gap-3 mb-1">
-        <Link href="/" className="text-muted-foreground hover:text-foreground text-sm">
+        <PendingLink href="/" pendingLabel={t('navigating')} className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm">
           {t('backHome')}
-        </Link>
+        </PendingLink>
       </div>
 
       <div className="flex flex-col gap-4 mb-6 xl:flex-row xl:items-end xl:justify-between">
@@ -245,22 +300,23 @@ export function DeckPageClient({
 
         <div className="flex flex-wrap gap-2 items-center">
           {draftNotes > 0 && (
-            <Link href={`/deck/${deckId}/drafts`} className={buttonVariants({ variant: 'outline' })}>
+            <PendingLink href={`/deck/${deckId}/drafts`} pendingLabel={t('navigating')} className={buttonVariants({ variant: 'outline' })}>
               {t('drafts')} ({draftNotes})
-            </Link>
+            </PendingLink>
           )}
           {dueCards > 0 && (
-            <Link href={buildReviewSessionHref(deckId)} className={buttonVariants()}>
+            <PendingLink href={buildReviewSessionHref(deckId)} pendingLabel={t('navigating')} className={buttonVariants()}>
               {t('study')} ({dueCards})
-            </Link>
+            </PendingLink>
           )}
           {visibleCardCount > 0 ? (
-            <Link
+            <PendingLink
               href={manualReviewHref}
+              pendingLabel={t('navigating')}
               className={buttonVariants({ variant: 'secondary' })}
             >
               {t('practiceVisible')} ({visibleCardCount})
-            </Link>
+            </PendingLink>
           ) : (
             <Button variant="secondary" disabled>
               {t('practiceVisible')} (0)
@@ -274,9 +330,9 @@ export function DeckPageClient({
               onComplete={handleBatchAudioComplete}
             />
           )}
-          <Link href={`/notes/new?deckId=${deckId}`} className={buttonVariants({ variant: 'outline' })}>
+          <PendingLink href={`/notes/new?deckId=${deckId}`} pendingLabel={t('navigating')} className={buttonVariants({ variant: 'outline' })}>
             {t('addNote')}
-          </Link>
+          </PendingLink>
         </div>
       </div>
 
@@ -285,12 +341,12 @@ export function DeckPageClient({
           <p className="text-lg mb-2">{t('noNotes')}</p>
           <p className="text-sm">{t('noNotesHint')}</p>
           <div className="flex gap-2 justify-center mt-4">
-            <Link href={`/notes/new?deckId=${deckId}`} className={buttonVariants({ variant: 'outline' })}>
+            <PendingLink href={`/notes/new?deckId=${deckId}`} pendingLabel={t('navigating')} className={buttonVariants({ variant: 'outline' })}>
               {t('addNoteBtn')}
-            </Link>
-            <Link href="/import" className={buttonVariants({ variant: 'outline' })}>
+            </PendingLink>
+            <PendingLink href="/import" pendingLabel={t('navigating')} className={buttonVariants({ variant: 'outline' })}>
               {t('importAnki')}
-            </Link>
+            </PendingLink>
           </div>
         </div>
       ) : (
@@ -321,12 +377,54 @@ export function DeckPageClient({
                   {t('showing', { count: visibleNotes.length, cards: visibleCardCount })}
                 </p>
               </div>
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogTrigger
+                  render={
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      disabled={selectedNoteIds.size === 0}
+                    />
+                  }
+                >
+                  <Trash2 data-icon="inline-start" />
+                  {t('deleteSelected', { count: selectedNoteIds.size })}
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>{t('bulkDeleteTitle', { count: selectedNoteIds.size })}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t('bulkDeleteDescription', { count: selectedNoteIds.size })}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isBulkDeleting}>{t('cancel')}</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      disabled={isBulkDeleting}
+                      onClick={() => void handleBulkDelete()}
+                    >
+                      {isBulkDeleting ? <Spinner data-icon="inline-start" /> : <Trash2 data-icon="inline-start" />}
+                      {isBulkDeleting ? t('deleting') : t('confirmDelete')}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
 
             <div className="overflow-x-auto">
               <table className="min-w-[1180px] w-full text-sm">
                 <thead className="bg-muted/50 text-left">
                   <tr className="border-b">
+                    <th className="w-12 px-4 py-3 font-medium">
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        indeterminate={someVisibleSelected}
+                        onCheckedChange={toggleAllVisible}
+                        disabled={visibleNotes.length === 0}
+                        aria-label={t('selectAllVisible')}
+                      />
+                    </th>
                     <th className="px-4 py-3 font-medium">Audio</th>
                     <th className="px-4 py-3 font-medium">Word</th>
                     <th className="px-4 py-3 font-medium">Status</th>
@@ -336,7 +434,7 @@ export function DeckPageClient({
                 <tbody>
                   {visibleNotes.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-4 py-12 text-center text-muted-foreground">
+                      <td colSpan={5} className="px-4 py-12 text-center text-muted-foreground">
                         {t('noNotesFiltered')}
                       </td>
                     </tr>
@@ -351,7 +449,14 @@ export function DeckPageClient({
                       const memoryScore = getNoteMemoryScore(note.cards)
 
                       return (
-                        <tr key={note.id} className="border-b align-top hover:bg-muted/20">
+                        <tr key={note.id} className={cn('border-b align-top hover:bg-muted/20', selectedNoteIds.has(note.id) && 'bg-muted/30')}>
+                          <td className="px-4 py-3">
+                            <Checkbox
+                              checked={selectedNoteIds.has(note.id)}
+                              onCheckedChange={() => toggleNoteSelection(note.id)}
+                              aria-label={t('selectNote', { word })}
+                            />
+                          </td>
                           <td className="px-4 py-3">
                             {audioUrl ? (
                               <PlayButton

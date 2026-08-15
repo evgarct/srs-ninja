@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale } from 'next-intl/server'
-import { createClient } from '@/lib/supabase/server'
 import { deckLanguageToLocale, type Locale } from '@/i18n/config'
+import { getDeckById } from '@/lib/server/deck'
 
 export default async function DeckLayout({
   children,
@@ -13,8 +13,7 @@ export default async function DeckLayout({
   const { id } = await params
   const appLocale = await getLocale()
 
-  const supabase = await createClient()
-  const { data: deck } = await supabase.from('decks').select('language').eq('id', id).single()
+  const deck = await getDeckById(id)
 
   const deckLocale: Locale =
     deck ? (deckLanguageToLocale[deck.language] ?? (appLocale as Locale)) : (appLocale as Locale)

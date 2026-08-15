@@ -8,7 +8,8 @@
     "openMenu": "Otevřít další akce",
     "newDeckAriaLabel": "Vytvořit nový balíček",
     "language": "Jazyk",
-    "voiceSettings": "Nastavení hlasů"
+    "voiceSettings": "Nastavení hlasů",
+    "loading": "Načítání…"
   },
   "home": {
     "noDecks": "Žádné balíčky",
@@ -96,7 +97,18 @@
     "showing": "Zobrazeno {count} poznámek · {cards} kartiček",
     "editNote": "Upravit",
     "deleteNote": "Smazat",
-    "showCard": "Zobrazit kartičku"
+    "showCard": "Zobrazit kartičku",
+    "navigating": "Otevírání…",
+    "selectAllVisible": "Vybrat všechny zobrazené poznámky",
+    "selectNote": "Vybrat {word}",
+    "deleteSelected": "Smazat ({count})",
+    "bulkDeleteTitle": "Smazat {count, plural, one {# poznámku} few {# poznámky} other {# poznámek}}?",
+    "bulkDeleteDescription": "Vybrané poznámky, jejich kartičky a historie opakování budou trvale smazány.",
+    "cancel": "Zrušit",
+    "confirmDelete": "Smazat",
+    "deleting": "Mazání…",
+    "bulkDeleteSuccess": "Smazáno {count, plural, one {# poznámka} few {# poznámky} other {# poznámek}}",
+    "bulkDeleteError": "Vybrané poznámky se nepodařilo smazat"
   },
   "flashcard": {
     "synonyms": "Synonyma",

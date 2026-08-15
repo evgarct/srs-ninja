@@ -8,7 +8,8 @@
     "openMenu": "Open more actions",
     "newDeckAriaLabel": "Create new deck",
     "language": "Language",
-    "voiceSettings": "Voice settings"
+    "voiceSettings": "Voice settings",
+    "loading": "Loading…"
   },
   "home": {
     "noDecks": "No decks",
@@ -96,7 +97,18 @@
     "showing": "Showing {count} notes · {cards} cards",
     "editNote": "Edit",
     "deleteNote": "Delete",
-    "showCard": "Show card"
+    "showCard": "Show card",
+    "navigating": "Opening…",
+    "selectAllVisible": "Select all visible notes",
+    "selectNote": "Select {word}",
+    "deleteSelected": "Delete ({count})",
+    "bulkDeleteTitle": "Delete {count, plural, one {# note} other {# notes}}?",
+    "bulkDeleteDescription": "The selected notes, their cards, and review history will be permanently deleted.",
+    "cancel": "Cancel",
+    "confirmDelete": "Delete",
+    "deleting": "Deleting…",
+    "bulkDeleteSuccess": "Deleted {count, plural, one {# note} other {# notes}}",
+    "bulkDeleteError": "Could not delete the selected notes"
   },
   "flashcard": {
     "synonyms": "Synonyms",
