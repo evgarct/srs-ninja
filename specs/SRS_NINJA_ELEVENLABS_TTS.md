@@ -316,7 +316,7 @@ Add to `.env.local` (user should already have this):
 USER_CREDENTIALS_ENCRYPTION_KEY=base64-encoded-32-byte-key
 ```
 
-**IMPORTANT:** Never hardcode the API key. Always use process.env.
+**IMPORTANT:** Never hardcode provider API keys. User keys are encrypted in the existing settings table; only the server-side encryption key belongs in environment configuration.
 
 ---
 

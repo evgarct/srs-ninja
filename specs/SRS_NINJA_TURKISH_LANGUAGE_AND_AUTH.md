@@ -7,7 +7,7 @@
 - A deck cannot use the same study and translation language.
 - Existing decks keep their behavior with Russian as the translation language.
 - Turkish decks use the universal note contract, with Turkish parts of speech and Turkish TTS.
-- Turkish audio requires a Turkish-trained ElevenLabs voice configured by environment.
+- Turkish audio requires a voice selected from the current user's connected ElevenLabs account.
 - Email confirmation and OAuth callbacks use the canonical production `APP_URL`; production must never fall back to localhost.
 - Supabase Site URL, redirect allow list, and email template must agree with the application callback.
 
