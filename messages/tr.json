@@ -8,7 +8,8 @@
     "openMenu": "Diğer işlemleri aç",
     "newDeckAriaLabel": "Yeni deste oluştur",
     "language": "Dil",
-    "voiceSettings": "Ses ayarları"
+    "voiceSettings": "Ses ayarları",
+    "loading": "Yükleniyor…"
   },
   "home": {
     "noDecks": "Deste yok",
@@ -96,7 +97,18 @@
     "showing": "{count} not · {cards} kart gösteriliyor",
     "editNote": "Düzenle",
     "deleteNote": "Sil",
-    "showCard": "Kartı göster"
+    "showCard": "Kartı göster",
+    "navigating": "Açılıyor…",
+    "selectAllVisible": "Görünen tüm notları seç",
+    "selectNote": "{word} notunu seç",
+    "deleteSelected": "Sil ({count})",
+    "bulkDeleteTitle": "{count} not silinsin mi?",
+    "bulkDeleteDescription": "Seçilen notlar, kartları ve tekrar geçmişi kalıcı olarak silinecek.",
+    "cancel": "İptal",
+    "confirmDelete": "Sil",
+    "deleting": "Siliniyor…",
+    "bulkDeleteSuccess": "{count} not silindi",
+    "bulkDeleteError": "Seçilen notlar silinemedi"
   },
   "flashcard": {
     "synonyms": "Eş anlamlılar",

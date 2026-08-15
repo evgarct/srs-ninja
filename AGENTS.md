@@ -20,7 +20,7 @@
 - When changing interactive flows, check both desktop and mobile behavior, including spacing, touch targets, wrapping, and perceived responsiveness.
 - If the user rejects two consecutive UI passes on the same screen, stop iterative tweaking. Summarize the target layout, the non-goals, and why the current direction is failing before making more code changes.
 - For user-visible UI changes, perform a visual self-review against the running app or screenshots before presenting the pass as complete. If the result still shows layout artifacts, conflicting visual language, duplicated information, or broken motion, keep iterating before asking the user to review.
-- After deciding that user-visible UI development is ready for review, start the local app and local Storybook in WSL so the user can verify the real screen and the component states before final handoff.
+- After deciding that user-visible UI development is ready for review, start the local app and local Storybook natively on Windows so the user can verify the real screen and component states before final handoff.
 - For each new feature branch, start from a fresh `main`.
 - If the task asks to match external product behavior (for example Anki), verify it from primary sources before implementing.
 - If behavior changes touch shared review flows, keep the mechanics aligned across regular review, manual filtered review, and extra study unless the task explicitly says otherwise.
@@ -30,16 +30,13 @@
 - Before finalizing a branch, run the relevant verification commands for the touched area: targeted `eslint`, tests, `tsc`, and Storybook build when stories were changed.
 - At the end of each implementation task that results in a PR or status-bearing delivery, call the `$product-manager` skill to capture the shipped scope, current status, and any follow-up context in Linear.
 - After creating a PR, call the `$product-manager` skill to update the related Linear issue(s), sync the current implementation status, and add the PR link/reference in Linear.
-- For this repository, always use WSL as the default execution environment for git, gh, npm, Node, lint, test, build, and dev-server commands. Do not use Windows-side tooling for this repo unless the user explicitly asks for it.
-- When issuing WSL commands from PowerShell, do not pass multi-line scripts, heredocs, markdown, JSON payloads, or text with backticks through `wsl bash -lc '...'`.
-- For any non-trivial WSL shell script, pass the script through stdin into `/home/evgenii/bin/codex-wsl-script <cwd>`.
-- For PR creation with multi-line bodies, pass the body through stdin into `/home/evgenii/bin/codex-gh-pr-create <repo_dir> <base> <head> <title>`.
-- For `gh api` GraphQL queries/mutations or any multi-line JSON payload, use the same stdin-helper pattern instead of inline quoting through PowerShell.
-- Reserve `wsl bash -lc '...'` for short single-line commands without complex quoting.
+- For this repository, always use native Windows PowerShell, Windows Git/GitHub CLI, and Windows Node tooling for git, gh, npm, Node, lint, test, build, and dev-server commands. Never invoke WSL or use Linux helper scripts as a fallback.
+- Use `npm.cmd` and `npx.cmd` from PowerShell. If a required Windows tool is unavailable, report or fix the Windows environment instead of switching execution environments.
+- For PR descriptions and other multi-line GitHub payloads, write a temporary UTF-8 file without BOM and use `gh pr create --body-file` or the corresponding file-input API.
 - Do not run `git commit` and `git push` in parallel. Commit first, then push, then verify the remote branch head before creating or updating a PR.
-- When running `git commit -m` for this WSL repo from PowerShell, avoid nested quote patterns that can truncate the commit subject. Prefer a simple single-line message, a temporary message file, or a stdin/helper-based script when the message contains punctuation that needs escaping.
-- Before sharing local app or Storybook URLs, verify them from WSL with an HTTP request such as `curl -I`. If a process is listening but the page returns `5xx`, report that as a runtime error instead of calling the preview ready.
-- In a fresh WSL worktree, verify that `node_modules` is available before running `vitest`, `eslint`, `tsc`, or build commands. If the worktree does not have its own dependencies yet, install them there or attach the approved shared `node_modules` source first.
+- When running `git commit` from PowerShell, avoid nested quote patterns that can truncate the subject. Prefer a simple single-line message or a temporary UTF-8 commit message file.
+- Before sharing local app or Storybook URLs, verify them from Windows with `curl.exe -I`. If a process is listening but the page returns `5xx`, report that runtime failure.
+- In a fresh Windows worktree, install dependencies locally before running Vitest, ESLint, TypeScript, Storybook, or build commands.
 - In this repo, Vitest uses explicitly scoped unit and Storybook projects. Before adding a test outside an existing include glob, update the unit project's include list and verify the full `npm test -- --run` output reports the new file.
 - If `git merge --autostash` or `git pull --autostash` leaves conflicts behind, do not consider the sync finished until the conflict set is resolved or explicitly handed back to the user with the affected files listed.
 
@@ -73,7 +70,7 @@
 - Create the branch PR only after verification passes locally for the touched area.
 - Do not wait for separate user approval to open the branch PR once the implementation is ready locally; create it proactively and continue iterating on the same PR as follow-up changes land.
 - PRs must start with the final title and a complete description; immediately verify the created PR title/body instead of assuming the CLI request succeeded.
-- Prefer creating PRs through `/home/evgenii/bin/codex-gh-pr-create` when the description is multi-line or generated from markdown content, instead of assembling shell heredocs inline through PowerShell.
+- Create PRs with multi-line descriptions through a temporary UTF-8 file and `gh pr create --body-file`; do not pass generated Markdown inline through PowerShell.
 - Before sharing a PR link, verify that the PR is open and that it corresponds to the current branch head. If the previous PR for the branch is merged or closed, create a new PR instead of reusing the old link.
 - After every follow-up push to an open PR, re-check the live PR `headRefOid` against the local branch head before reporting the PR as updated.
 - When automated code review is configured, do not merge on green CI alone. Wait until the reviewer has reported on the current head SHA, then inspect and resolve every materially actionable thread before merging.

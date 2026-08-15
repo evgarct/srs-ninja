@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { BarChart3, Check, Ellipsis, House, LogOut, Plus, Settings, Upload } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
@@ -20,6 +19,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { setLocale } from '@/lib/actions/locale'
 import type { Locale } from '@/i18n/config'
+import { PendingLink } from '@/components/pending-link'
 
 const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
   { locale: 'en', label: '🇬🇧 English' },
@@ -96,21 +96,22 @@ export function Nav() {
       <header className="hidden px-4 pt-3 sm:px-5 sm:pt-4 md:block">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-full border border-white/10 bg-black/45 px-3 py-2.5 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.85)] backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-            <Link href="/" className="shrink-0">
+            <PendingLink href="/" pendingLabel={t('loading')} className="inline-flex shrink-0 items-center gap-2">
               <BrandLogo
                 tone="inverse"
                 iconClassName="size-7"
                 labelClassName="hidden text-base text-white sm:inline-flex"
               />
-            </Link>
+            </PendingLink>
 
             <nav className="hidden items-center gap-1 sm:flex">
               {links.map((link) => {
                 const isActive = pathname === link.href
                 return (
-                  <Link
+                  <PendingLink
                     key={link.href}
                     href={link.href}
+                    pendingLabel={t('loading')}
                     className={cn(
                       'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all',
                       isActive
@@ -120,7 +121,7 @@ export function Nav() {
                   >
                     <link.icon className="size-4" />
                     {link.label}
-                  </Link>
+                  </PendingLink>
                 )
               })}
             </nav>
@@ -153,9 +154,10 @@ export function Nav() {
           {links.map((link) => {
             const isActive = pathname === link.href
             return (
-              <Link
+              <PendingLink
                 key={link.href}
                 href={link.href}
+                pendingLabel={t('loading')}
                 className={cn(
                   'inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all',
                   isActive
@@ -165,7 +167,7 @@ export function Nav() {
               >
                 <link.icon className="size-4" />
                 <span>{link.label}</span>
-              </Link>
+              </PendingLink>
             )
           })}
 

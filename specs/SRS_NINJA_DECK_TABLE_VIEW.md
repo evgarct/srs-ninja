@@ -1,5 +1,13 @@
 # Echo — Feature: Deck Table View and Focused Manual Review
 
+## Mass actions
+
+- A user can select individual visible notes or all notes matching the current filters.
+- Changing a tag, FSRS-state, or audio filter clears the selection.
+- Bulk deletion requires confirmation with the selected count and a warning about related cards and review history.
+- Duplicate submission is disabled while pending. Success removes returned rows immediately; failure retains rows and selection.
+- The server scopes deletion to the authenticated user, selected deck, and requested note IDs.
+
 ## Context
 
 Страница колоды используется не только для перехода в обычный review, но и как рабочий экран для точечной навигации по словам, фильтрации по теме и быстрых операций над нотами. Карточечный список плохо подходит для такого сценария: он медленно сканируется, занимает слишком много вертикального места и мешает быстро собирать поднабор для ручной тренировки.

@@ -25,6 +25,22 @@ export interface DeckNoteFilters {
 
 export type AudioFilter = 'all' | 'with_audio' | 'without_audio'
 
+export function toggleNoteIdSelection(selectedIds: Set<string>, noteId: string) {
+  const next = new Set(selectedIds)
+  if (next.has(noteId)) next.delete(noteId)
+  else next.add(noteId)
+  return next
+}
+
+export function getVisibleSelectionState(selectedIds: Set<string>, visibleIds: string[]) {
+  const selectedCount = visibleIds.filter((id) => selectedIds.has(id)).length
+  return {
+    selectedCount,
+    allSelected: visibleIds.length > 0 && selectedCount === visibleIds.length,
+    indeterminate: selectedCount > 0 && selectedCount < visibleIds.length,
+  }
+}
+
 const FSRS_STATE_PRIORITY: FsrsState[] = ['relearning', 'learning', 'new', 'review']
 
 export function isFsrsState(value: string): value is FsrsState {

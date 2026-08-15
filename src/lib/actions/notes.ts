@@ -138,6 +138,28 @@ export async function deleteNote(noteId: string, deckId: string) {
   revalidatePath(`/deck/${deckId}`)
 }
 
+export async function deleteNotes(noteIds: string[], deckId: string) {
+  const uniqueNoteIds = [...new Set(noteIds.filter(Boolean))]
+  if (uniqueNoteIds.length === 0) throw new Error('No notes selected')
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { data, error } = await supabase
+    .from('notes')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('deck_id', deckId)
+    .in('id', uniqueNoteIds)
+    .select('id')
+
+  if (error) throw error
+
+  revalidatePath(`/deck/${deckId}`)
+  return { deletedIds: (data ?? []).map((note) => note.id) }
+}
+
 /**
  * Updates a note's fields (from the inline Note Editor) and regenerates TTS audio if needed.
  * 

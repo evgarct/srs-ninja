@@ -5,8 +5,10 @@ import {
   getAllDeckTags,
   getNoteFsrsState,
   getNoteMemoryScore,
+  getVisibleSelectionState,
   isFsrsState,
   normalizeAudioFilter,
+  toggleNoteIdSelection,
   type AudioFilter,
   type DeckNoteRow,
 } from './deck-notes'
@@ -48,6 +50,30 @@ describe('isFsrsState', () => {
     expect(isFsrsState('review')).toBe(true)
     expect(isFsrsState('due')).toBe(false)
     expect(isFsrsState('')).toBe(false)
+  })
+})
+
+describe('deck note selection', () => {
+  it('toggles individual note ids without mutating the original set', () => {
+    const original = new Set(['note-1'])
+    const selected = toggleNoteIdSelection(original, 'note-2')
+
+    expect([...original]).toEqual(['note-1'])
+    expect([...selected]).toEqual(['note-1', 'note-2'])
+    expect([...toggleNoteIdSelection(selected, 'note-1')]).toEqual(['note-2'])
+  })
+
+  it('reports partial and complete selection only for visible ids', () => {
+    expect(getVisibleSelectionState(new Set(['note-1', 'hidden']), ['note-1', 'note-2'])).toEqual({
+      selectedCount: 1,
+      allSelected: false,
+      indeterminate: true,
+    })
+    expect(getVisibleSelectionState(new Set(['note-1', 'note-2']), ['note-1', 'note-2'])).toEqual({
+      selectedCount: 2,
+      allSelected: true,
+      indeterminate: false,
+    })
   })
 })
 

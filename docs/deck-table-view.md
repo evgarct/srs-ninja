@@ -1,5 +1,11 @@
 # Deck Table View
 
+## Bulk selection and deletion
+
+The first table column contains row checkboxes and a header checkbox. The header selects every note in the current client-side filter result; changing any tag, FSRS-state, or audio filter clears the selection. Partial selection uses the checkbox indeterminate state.
+
+Bulk deletion calls one authenticated server action constrained by the verified user, deck ID, and selected note IDs. The client removes only the returned rows, clears their cached audio entries, refreshes the server snapshot, and preserves the current data when the request fails. An `AlertDialog` confirms the count and warns about cascading card and review-history deletion.
+
 ## Summary
 
 Страница колоды переведена из карточечного списка в full-width таблицу. Экран теперь ориентирован на быстрый обзор нотов, локальные действия и ручную тренировку только по текущему отфильтрованному набору.

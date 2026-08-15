@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { ArrowRight, FolderOpen } from 'lucide-react'
 
 import { ExtraStudyBox } from '@/components/extra-study-box'
@@ -9,6 +8,7 @@ import { buttonVariants } from '@/lib/button-variants'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { buildReviewSessionHref } from '@/lib/review-session-route'
+import { PendingLink } from '@/components/pending-link'
 
 const DECK_FLAG: Record<string, { src: string; alt: string }> = {
   czech: { src: '/flags/cz.svg', alt: 'Czech flag' },
@@ -34,6 +34,7 @@ export function HomeDeckCard({
   drafts,
 }: HomeDeckCardProps) {
   const t = useTranslations('home')
+  const navT = useTranslations('nav')
   const languageT = useTranslations('createDeck')
   const languageLabelKeys: Record<string, 'translationRussian' | 'translationEnglish' | 'translationCzech' | 'translationTurkish'> = {
     russian: 'translationRussian',
@@ -104,14 +105,14 @@ export function HomeDeckCard({
       <CardContent className="relative flex flex-1 flex-col py-3">
         {due > 0 ? (
           <div className="mt-auto flex flex-col gap-2 sm:flex-row">
-            <Link href={buildReviewSessionHref(deck.id)} className={cn(primaryActionClassName, 'flex-1')}>
+            <PendingLink href={buildReviewSessionHref(deck.id)} pendingLabel={navT('loading')} className={cn(primaryActionClassName, 'flex-1')}>
               <span>{t('startReview')}</span>
               <ArrowRight className="size-4 text-primary-foreground/80" />
-            </Link>
-            <Link href={`/deck/${deck.id}`} className={secondaryActionClassName}>
+            </PendingLink>
+            <PendingLink href={`/deck/${deck.id}`} pendingLabel={navT('loading')} className={secondaryActionClassName}>
               <FolderOpen className="size-4" />
               {t('open')}
-            </Link>
+            </PendingLink>
           </div>
         ) : (
           <div className="mt-auto">

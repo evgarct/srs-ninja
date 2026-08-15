@@ -8,7 +8,8 @@
     "openMenu": "Открыть дополнительные действия",
     "newDeckAriaLabel": "Создать новую колоду",
     "language": "Язык",
-    "voiceSettings": "Настройки голосов"
+    "voiceSettings": "Настройки голосов",
+    "loading": "Загрузка…"
   },
   "home": {
     "noDecks": "Нет колод",
@@ -96,7 +97,18 @@
     "showing": "Показано {count} нотов · {cards} карточек",
     "editNote": "Редактировать",
     "deleteNote": "Удалить",
-    "showCard": "Показать карточку"
+    "showCard": "Показать карточку",
+    "navigating": "Открываем…",
+    "selectAllVisible": "Выбрать все показанные ноты",
+    "selectNote": "Выбрать {word}",
+    "deleteSelected": "Удалить ({count})",
+    "bulkDeleteTitle": "Удалить {count, plural, one {# нот} few {# нота} many {# нотов} other {# нота}}?",
+    "bulkDeleteDescription": "Выбранные ноты, связанные карточки и история повторений будут удалены без возможности восстановления.",
+    "cancel": "Отмена",
+    "confirmDelete": "Удалить",
+    "deleting": "Удаляем…",
+    "bulkDeleteSuccess": "Удалено {count, plural, one {# нот} few {# нота} many {# нотов} other {# нота}}",
+    "bulkDeleteError": "Не удалось удалить выбранные ноты"
   },
   "flashcard": {
     "synonyms": "Синонимы",

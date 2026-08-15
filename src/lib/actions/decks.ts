@@ -9,6 +9,7 @@ import {
   getCompletedTodayDeckIds,
   isMissingCompletionTableError,
 } from '@/lib/review-session-completions'
+import { getDeckById } from '@/lib/server/deck'
 
 /**
  * Retrieves all decks for the current user.
@@ -39,10 +40,9 @@ export async function getDeckWithStats(deckId: string) {
   const supabase = await createClient()
   const now = new Date().toISOString()
 
-  const { data: deck } = await supabase.from('decks').select('*').eq('id', deckId).single()
-
-  const [{ count: totalNotes }, { count: draftNotes }, { count: totalCards }, { count: dueCards }] =
+  const [deck, { count: totalNotes }, { count: draftNotes }, { count: totalCards }, { count: dueCards }] =
     await Promise.all([
+      getDeckById(deckId),
       supabase
         .from('notes')
         .select('*', { count: 'exact', head: true })
