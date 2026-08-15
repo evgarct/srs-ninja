@@ -21,7 +21,7 @@ export interface FlashcardProps {
   gender?: string // Czech only (mužský, ženský, střední)
   frequency: number // 1-10
   style: string // e.g. '🎓 Neutrální'
-  note?: string // Grammar note, Czech only
+  note?: string // Language-specific grammar note
   synonyms?: string[]
   antonyms?: string[]
   audioUrl?: string
@@ -274,8 +274,8 @@ export function Flashcard({
           {/* ── Style label ── */}
           <p className="text-xs text-muted-foreground -mt-2">{style}</p>
 
-          {/* ── Grammar note (Czech only) ── */}
-          {isCzech && note && (
+          {/* ── Language-specific grammar note ── */}
+          {note && (
             <div className="rounded-lg border border-foreground/8 bg-muted/40 px-3 py-2">
               <p className="text-xs text-muted-foreground">
                 <span className="font-semibold text-foreground/60">{t("note")}: </span>

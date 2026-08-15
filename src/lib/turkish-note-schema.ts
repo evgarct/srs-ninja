@@ -26,6 +26,18 @@ export const TURKISH_NOTE_FIELDS: FieldDef[] = [
     type: 'html',
     hint: 'Çalışılan kelimeyi <b> etiketiyle vurgulayın.',
   },
+  {
+    key: 'usage_pattern',
+    label: 'Kullanım kalıbı',
+    type: 'text',
+    hint: 'Gerekli durum eki veya tipik yapı; ör. birine yardım etmek.',
+  },
+  {
+    key: 'grammar_note',
+    label: 'Dil bilgisi notu',
+    type: 'textarea',
+    hint: 'Ünlü uyumu, kök değişimi veya öğrenilmesi gereken bir istisna.',
+  },
 ]
 
 function normalizeTurkishPartOfSpeech(value: unknown) {
@@ -37,6 +49,14 @@ export function normalizeTurkishNoteFields(fields: Record<string, unknown>) {
   const normalized = normalizeEnglishNoteFields(fields)
   const partOfSpeech = normalizeTurkishPartOfSpeech(fields.part_of_speech)
   if (partOfSpeech) normalized.part_of_speech = partOfSpeech
+  const usagePattern = typeof fields.usage_pattern === 'string' ? fields.usage_pattern.trim() : ''
+  const grammarNote = typeof fields.grammar_note === 'string'
+    ? fields.grammar_note.trim()
+    : typeof fields.note === 'string'
+      ? fields.note.trim()
+      : ''
+  if (usagePattern) normalized.usage_pattern = usagePattern
+  if (grammarNote) normalized.grammar_note = grammarNote
   return normalized
 }
 
@@ -45,5 +65,15 @@ export function getTurkishNoteFormValues(fields: Record<string, unknown>) {
   return {
     ...getEnglishNoteFormValues(normalized),
     part_of_speech: typeof normalized.part_of_speech === 'string' ? normalized.part_of_speech : '',
+    usage_pattern: typeof normalized.usage_pattern === 'string' ? normalized.usage_pattern : '',
+    grammar_note: typeof normalized.grammar_note === 'string' ? normalized.grammar_note : '',
   }
+}
+
+export function buildTurkishFlashcardNote(fields: Record<string, unknown>): string | undefined {
+  const normalized = normalizeTurkishNoteFields(fields)
+  const parts: string[] = []
+  if (normalized.usage_pattern) parts.push(`Kalıp: ${String(normalized.usage_pattern)}`)
+  if (normalized.grammar_note) parts.push(String(normalized.grammar_note))
+  return parts.length > 0 ? parts.join(' • ') : undefined
 }

@@ -21,7 +21,13 @@ Turkish notes use the universal canonical contract: `word`, `translation`, `leve
 
 ## Turkish TTS
 
-Turkish audio uses ElevenLabs with `language_code = tr` and the existing `eleven_flash_v2_5` model. Configure a Turkish-trained voice through `ELEVENLABS_TURKISH_VOICE_ID`. When it is missing, Turkish audio generation returns a configuration error rather than silently using a voice for another language.
+Turkish audio uses ElevenLabs with `language_code = tr` and the existing `eleven_flash_v2_5` model. Every user selects a Turkish-trained voice in `/settings/elevenlabs`; a missing selection produces an explicit configuration error.
+
+## Turkish note-field audit
+
+The universal vocabulary fields remain useful and are preserved. Turkish adds two optional language-specific fields: `usage_pattern` for governed case/suffix and common constructions, and `grammar_note` for vowel harmony, stem alternations, and exceptions. `sayı` is a supported part of speech. Regular plural/case tables and full tense paradigms are intentionally excluded because they would add repetitive form data to ordinary vocabulary cards.
+
+Both fields are normalized through create/edit/import/MCP paths and appear in the grammar note area of the flashcard. Existing notes without them remain valid.
 
 Single-note generation, batch generation, review prefetch, caching, and autoplay use the same language-aware pipeline as English and Czech.
 

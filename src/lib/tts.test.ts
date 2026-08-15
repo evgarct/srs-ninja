@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+const { resolveElevenLabsTts } = vi.hoisted(() => ({ resolveElevenLabsTts: vi.fn() }))
+vi.mock('@/lib/server/elevenlabs-account', () => ({ resolveElevenLabsTts }))
+
 import { generateAndCacheAudio } from './tts'
 
 function createSupabaseMock({
@@ -26,12 +29,12 @@ function createSupabaseMock({
 
 describe('generateAndCacheAudio', () => {
   beforeEach(() => {
-    vi.stubEnv('ELEVENLABS_OWNER_USER_ID', 'user-1')
+    resolveElevenLabsTts.mockResolvedValue(null)
   })
 
   afterEach(() => {
     vi.unstubAllGlobals()
-    vi.unstubAllEnvs()
+    vi.clearAllMocks()
   })
 
   it('returns a config error when ElevenLabs key is missing', async () => {
@@ -47,8 +50,6 @@ describe('generateAndCacheAudio', () => {
   })
 
   it('returns a language error for unsupported decks', async () => {
-    vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
-
     const result = await generateAndCacheAudio(
       createSupabaseMock() as never,
       'user-1',
@@ -61,7 +62,10 @@ describe('generateAndCacheAudio', () => {
   })
 
   it('uses Czech voice and language settings for Czech notes', async () => {
-    vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
+    resolveElevenLabsTts.mockResolvedValue({
+      apiKey: 'test-key',
+      config: { voiceId: 'czech-voice', modelId: 'eleven_flash_v2_5', languageCode: 'cs' },
+    })
     const fetchMock = vi.fn(async () => ({
       ok: true,
       arrayBuffer: async () => new ArrayBuffer(8),
@@ -78,7 +82,7 @@ describe('generateAndCacheAudio', () => {
 
     expect(result).toHaveProperty('audioUrl')
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.elevenlabs.io/v1/text-to-speech/TX3LPaxmHKxFdv7VOQHJ',
+      'https://api.elevenlabs.io/v1/text-to-speech/czech-voice',
       expect.objectContaining({
         method: 'POST',
         body: JSON.stringify({
@@ -91,8 +95,6 @@ describe('generateAndCacheAudio', () => {
   })
 
   it('requires a configured Turkish voice', async () => {
-    vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
-
     const result = await generateAndCacheAudio(
       createSupabaseMock() as never,
       'user-1',
@@ -105,8 +107,10 @@ describe('generateAndCacheAudio', () => {
   })
 
   it('uses the configured Turkish voice and language code', async () => {
-    vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
-    vi.stubEnv('ELEVENLABS_TURKISH_VOICE_ID', 'turkish-voice')
+    resolveElevenLabsTts.mockResolvedValue({
+      apiKey: 'test-key',
+      config: { voiceId: 'turkish-voice', modelId: 'eleven_flash_v2_5', languageCode: 'tr' },
+    })
     const fetchMock = vi.fn(async () => ({
       ok: true,
       arrayBuffer: async () => new ArrayBuffer(8),
@@ -135,7 +139,10 @@ describe('generateAndCacheAudio', () => {
   })
 
   it('surfaces audio_cache write failures instead of pretending success', async () => {
-    vi.stubEnv('ELEVENLABS_API_KEY', 'test-key')
+    resolveElevenLabsTts.mockResolvedValue({
+      apiKey: 'test-key',
+      config: { voiceId: 'english-voice', modelId: 'eleven_flash_v2_5', languageCode: 'en' },
+    })
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => ({

@@ -49,7 +49,7 @@ export const PARTS_OF_SPEECH_ENGLISH = [
 
 export const PARTS_OF_SPEECH_TURKISH = [
   'isim', 'fiil', 'sıfat', 'zarf', 'zamir', 'edat',
-  'bağlaç', 'ünlem', 'deyim', 'ifade',
+  'bağlaç', 'ünlem', 'sayı', 'deyim', 'ifade',
 ] as const
 
 // Style/register

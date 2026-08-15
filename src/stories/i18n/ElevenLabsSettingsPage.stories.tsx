@@ -8,7 +8,7 @@ import { localeArgType, messagesByLocale, withLocale } from './withLocale'
 
 type Props = {
   locale?: Locale
-  state: 'disconnected' | 'connected' | 'connection-error' | 'owner'
+  state: 'disconnected' | 'connected' | 'connection-error' | 'empty-voices'
 }
 
 const voices = [
@@ -18,21 +18,21 @@ const voices = [
 
 function SettingsPageDemo({ state }: Props) {
   const t = useTranslations('elevenlabsSettings')
-  const initial = state === 'owner'
-    ? { isOwner: true, connected: true, tier: 'owner', voices: [], selections: {} }
-    : state === 'connected' || state === 'connection-error'
+  const initial = state === 'connected' || state === 'connection-error'
       ? {
-          isOwner: false,
           connected: true,
           tier: 'creator',
           voices,
           selections: { english: 'voice-2', turkish: 'voice-1' },
           connectionError: state === 'connection-error',
         }
-      : { isOwner: false, connected: false, tier: null, voices: [], selections: {} }
+      : state === 'empty-voices'
+        ? { connected: true, tier: 'free', voices: [], selections: {} }
+        : { connected: false, tier: null, voices: [], selections: {} }
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-10 pb-28">
+    <main className="dark min-h-screen w-full bg-background px-4 py-10 pb-28 text-foreground">
+      <div className="mx-auto w-full max-w-5xl">
       <h1 className="mb-2 text-3xl font-semibold">{t('pageTitle')}</h1>
       <p className="mb-6 text-muted-foreground">{t('pageDescription')}</p>
       <ElevenLabsSettingsView initial={initial} actions={{
@@ -40,6 +40,7 @@ function SettingsPageDemo({ state }: Props) {
         saveVoices: async () => {},
         disconnect: async () => {},
       }} />
+      </div>
     </main>
   )
 }
@@ -54,7 +55,7 @@ const meta = {
   },
   argTypes: {
     ...localeArgType,
-    state: { control: 'radio', options: ['disconnected', 'connected', 'connection-error', 'owner'] },
+    state: { control: 'radio', options: ['disconnected', 'connected', 'connection-error', 'empty-voices'] },
   },
   args: { locale: 'en', state: 'disconnected' },
 } satisfies Meta<typeof SettingsPageDemo>
@@ -83,7 +84,7 @@ export const ConnectionError: Story = {
     })).toBeEnabled()
   },
 }
-export const Owner: Story = { args: { state: 'owner' } }
+export const EmptyVoices: Story = { args: { state: 'empty-voices' } }
 
 export const TurkishMobile: Story = {
   args: { locale: 'tr', state: 'connected' },

@@ -540,7 +540,9 @@ Remote MCP endpoint недостаточно реализовать только
 
 ### Website Onboarding UI Should Live
 
-Для MVP допустимо расположить этот flow на странице `/import`, рядом с существующим import surface.
+User-facing connection flow расположен на отдельной локализованной странице `/mcp`; `/import` содержит компактную ссылку на guide, review черновиков и Anki import.
+
+MCP guide показывает endpoint, OAuth readiness, draft-only permissions, инструкции для ChatGPT, Claude, Codex/Cursor и generic remote client, а также копируемые промты для discovery, генерации и review.
 
 ## Documentation Requirements
 

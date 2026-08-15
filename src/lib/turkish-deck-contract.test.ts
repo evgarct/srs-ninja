@@ -17,6 +17,8 @@ describe('Turkish deck integration', () => {
         translation: 'привет',
         part_of_speech: 'ifade',
         popularity: 10,
+        usage_pattern: 'birine merhaba demek',
+        grammar_note: 'Yönelme hâliyle kullanılabilir.',
         examples_html: '<ul><li><b>Merhaba</b> arkadaşlar.</li></ul>',
       },
     })
@@ -28,6 +30,7 @@ describe('Turkish deck integration', () => {
       translation: 'привет',
       partOfSpeech: 'ifade',
       frequency: 10,
+      note: 'Kalıp: birine merhaba demek • Yönelme hâliyle kullanılabilir.',
       examples: ['<b>Merhaba</b> arkadaşlar.'],
     })
   })

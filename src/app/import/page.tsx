@@ -1,13 +1,14 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { headers } from 'next/headers'
+import Link from 'next/link'
+import { ArrowRight, Bot } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import { getDecks } from '@/lib/actions/decks'
 import { AnkiImporter } from '@/components/anki-importer'
 import { ImportReviewBatchCard } from '@/components/import-review-batch-card'
-import { McpConnectPanel } from '@/components/mcp-connect-panel'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { cleanupEmptyImportBatchesForUser } from '@/lib/draft-import-service'
-import { buildMcpConnectionConfig, resolveAppOrigin } from '@/lib/mcp-connection'
+import { buttonVariants } from '@/lib/button-variants'
 import type { Database } from '@/lib/supabase/database.types'
 
 type RecentBatchRow = Database['public']['Tables']['import_batches']['Row'] & {
@@ -20,18 +21,7 @@ export default async function ImportPage() {
   if (!user) redirect('/login')
 
   const decks = await getDecks()
-  const requestHeaders = await headers()
-  const appOrigin = resolveAppOrigin({
-    envOrigin: process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? null,
-    forwardedProto: requestHeaders.get('x-forwarded-proto'),
-    forwardedHost: requestHeaders.get('x-forwarded-host'),
-    host: requestHeaders.get('host'),
-  })
-  const mcpConfig = buildMcpConnectionConfig({
-    appOrigin,
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    legacyEnabled: process.env.MCP_LEGACY_TOKEN_ENABLED === 'true',
-  })
+  const tMcp = await getTranslations('importMcp')
 
   await cleanupEmptyImportBatchesForUser(supabase, user.id)
 
@@ -79,15 +69,17 @@ export default async function ImportPage() {
         </p>
       </div>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold">AI Agent Connection</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Connect ChatGPT to the remote MCP endpoint, save generated notes as drafts, then review them safely in the app.
-          </p>
-        </div>
-        <McpConnectPanel {...mcpConfig} />
-      </section>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2"><Bot aria-hidden="true" /><CardTitle>{tMcp('title')}</CardTitle></div>
+          <CardDescription>{tMcp('description')}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/mcp" className={buttonVariants()}>
+            {tMcp('action')}<ArrowRight data-icon="inline-end" />
+          </Link>
+        </CardContent>
+      </Card>
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">

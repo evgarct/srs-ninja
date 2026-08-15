@@ -701,37 +701,19 @@ AI-import не запускает TTS автоматически.
 
 Для более безопасного и масштабируемого сценария следующим этапом стоит перейти на OAuth.
 
-## Import UI
+## MCP guide UI
 
-Помимо backend transport, в приложении теперь есть user-facing onboarding flow на `/import`.
+User-facing onboarding находится на отдельной локализованной странице `/mcp`. Она показывает OAuth endpoint, состояние server configuration, границы draft-only доступа и пошаговые инструкции для ChatGPT, Claude, Codex/Cursor и generic remote HTTP MCP client.
 
-Он нужен, чтобы пользователь мог не искать MCP руками по документации, а подключить ChatGPT прямо из интерфейса.
+На странице находятся копируемые промты для проверки подключения, создания тематического draft batch и просмотра последних черновиков. `/import` остаётся центром review черновиков и Anki import и содержит компактную ссылку на guide.
 
-### Что показывает UI
+Пользовательский flow:
 
-- выбор AI agent;
-- текущий app origin;
-- remote MCP endpoint;
-- готовый connection URL для ChatGPT в personal MCP mode;
-- copy buttons для endpoint и connection URL;
-- явный config status, если не хватает `MCP_SHARED_SECRET` или `MCP_USER_ID`;
-- предупреждение, если приложение открыто только на `localhost` и ChatGPT не сможет достучаться до него напрямую.
-
-### Current Agent Support
-
-В первой версии реально подключается `ChatGPT`.
-
-Другие агенты в UI могут быть показаны как future placeholders, но не должны выглядеть как готовая интеграция.
-
-### UX Goal
-
-Пользовательский flow должен выглядеть так:
-
-1. Открыть `/import`.
-2. Выбрать `ChatGPT`.
-3. Скопировать готовый connection URL.
-4. Добавить server в ChatGPT как custom MCP connection.
-5. Скопировать English import prompt из onboarding и один раз задать ChatGPT canonical schema.
+1. Открыть `/mcp` напрямую или через пункт `AI / MCP` в меню.
+2. Скопировать remote MCP endpoint и добавить его в поддерживаемый клиент.
+3. Завершить OAuth sign-in и consent в Echo.
+4. Вызвать `get_echo_guide`, затем `get_deck_contract` для выбранной колоды.
+5. Создать draft batch и проверить его в Echo перед публикацией.
 
 ### English Prompt Guidance
 
