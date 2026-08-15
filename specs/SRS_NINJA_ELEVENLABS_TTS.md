@@ -15,7 +15,9 @@ Every authenticated user connects their own ElevenLabs API key and selects voice
 ### 0. Per-user ElevenLabs connection
 
 - Add `/settings/elevenlabs` with disconnected, connected, connection-error, and empty-voice states.
-- Every user submits a restricted ElevenLabs API key, then assigns editable English, Czech, and Turkish voice IDs suggested by that account.
+- Every user submits a restricted ElevenLabs API key, then assigns editable English, Czech, and Turkish voice IDs suggested by the paginated `/v2/voices` response for that account.
+- The picker groups language-verified voices first and other account-accessible voices second. The second group remains selectable with a pronunciation warning.
+- The mobile-safe picker uses a portal Combobox with search and manual opaque-ID entry; native `datalist` is not used.
 - Validate the key with ElevenLabs and validate saved voice IDs against that key's available voices.
 - Encrypt each API key at rest with AES-256-GCM and a server-only `USER_CREDENTIALS_ENCRYPTION_KEY`.
 - Never return saved keys to the browser, include them in logs, or expose provider response bodies.
@@ -358,6 +360,7 @@ Free tier: 10,000 chars/month.
 - [ ] Every user connects a personal key and chooses personal voices for supported languages
 - [ ] User API keys are encrypted at rest and are never returned to the client
 - [ ] Invalid or foreign voice IDs are rejected server-side
+- [ ] Saving reloads every `/v2/voices` page; `available_for_tiers` never incorrectly hides owned or cloned voices returned for the account
 - [ ] Missing personal configuration has no system fallback
 - [ ] A revoked or invalid saved key does not break settings rendering; the user can disconnect and reconnect it
 - [ ] Batch generation validates the account and language voice once before loading and iterating notes

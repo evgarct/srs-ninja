@@ -1,18 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { within, userEvent } from 'storybook/test'
-import type { ReactElement } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CreateDeckDialog } from '@/components/create-deck-dialog'
 import { withLocale, localeArgType, messagesByLocale } from './withLocale'
 import type { Locale } from '@/i18n/config'
 
-interface CreateDeckDemoProps {
-  locale?: Locale
-  trigger?: ReactElement
-}
-
-function CreateDeckDialogDemo({ trigger }: CreateDeckDemoProps) {
-  return <CreateDeckDialog trigger={trigger} />
+function CreateDeckDialogDemo() {
+  const [open, setOpen] = useState(false)
+  return <><Button onClick={() => setOpen(true)}>+ Trigger</Button><CreateDeckDialog open={open} onOpenChange={setOpen} /></>
 }
 
 function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
@@ -44,7 +40,6 @@ const meta = {
   argTypes: localeArgType,
   args: {
     locale: 'ru',
-    trigger: <Button>+ Trigger</Button>,
   },
   tags: ['autodocs'],
 } satisfies Meta<typeof CreateDeckDialogDemo>

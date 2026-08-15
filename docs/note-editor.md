@@ -58,6 +58,8 @@ Note editor позволяет редактировать поля ноты в �
 - save with forced audio regeneration;
 - immediate audio preview playback при успешной регенерации.
 
+Все labels, hints, buttons, toast и ARIA-тексты редактора читаются из глобального locale интерфейса. Язык колоды выбирает только набор полей, validation, normalization, TTS и учебное содержимое; он не создаёт вложенный `NextIntlClientProvider` и не меняет язык chrome.
+
 ## Shared Field Contract
 
 Форма не работает с raw field keys напрямую. Вместо этого используются shared helpers:

@@ -31,3 +31,4 @@
 - **Validation Parity**: Кнопка `Save & Regenerate Audio` должна проходить ту же обязательную browser validation, что и обычный submit. Путь forced save не должен позволять сохранить ноту с пустыми required-полями.
 - **UI Components**: Использовать shadcn/ui компоненты (Dialog/Sheet, Form, Input, Textarea, Button, Slider).
 - **State Management**: Осторожно работать со стейтом сессии, чтобы изменения в ноте корректно отражались в текущем компоненте `ReviewSession`.
+- **Locale Isolation**: Deck, review и standalone note routes всегда наследуют глобальный `NEXT_LOCALE`. Язык колоды определяет schema/content/TTS, но не переводит интерфейс, labels, hints, dialogs, toast или ARIA-тексты.

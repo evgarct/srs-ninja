@@ -45,3 +45,5 @@ Avoid adding section titles, dashboard KPIs, or duplicated status copy above tho
 - [ ] Review routes do not render the global shell navigation.
 - [ ] Home no longer shows the `Home / What to study next` heading block.
 - [ ] The deck grid is the first primary actionable surface on Home.
+- [ ] Create deck is one controlled dialog rendered outside dropdown content; desktop menu and mobile `+` open the same persistent form.
+- [ ] Failed creation keeps the dialog usable and reports a localized error.

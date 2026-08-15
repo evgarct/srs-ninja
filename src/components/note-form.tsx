@@ -37,6 +37,7 @@ interface NoteFormProps {
  */
 export function NoteForm({ deckId, language, noteId, initialFields = {}, initialTags = [] }: NoteFormProps) {
   const t = useTranslations('noteForm')
+  const tFields = useTranslations('noteFields')
   const fields = getFields(language)
   const [values, setValues] = useState<Record<string, string>>(getNoteFormValues(language, initialFields))
   const [tagsInput, setTagsInput] = useState(initialTags.join(', '))
@@ -78,11 +79,11 @@ export function NoteForm({ deckId, language, noteId, initialFields = {}, initial
       {fields.map((field) => (
         <div key={field.key} className="flex flex-col gap-1.5">
           <Label htmlFor={field.key}>
-            {field.label}
+            {tFields(`${field.key}.label` as never)}
             {field.required && <span className="text-destructive ml-1">*</span>}
           </Label>
           {field.hint && (
-            <p className="text-xs text-muted-foreground">{field.hint}</p>
+            <p className="text-xs text-muted-foreground">{tFields.raw(`${field.key}.hint`)}</p>
           )}
           {field.type === 'select' && field.options ? (
             <Select

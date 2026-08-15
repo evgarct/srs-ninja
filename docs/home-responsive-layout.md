@@ -24,6 +24,8 @@ The shell now has a simpler split by viewport:
 2. mobile: bottom navigation with decks, stats, create, and overflow actions;
 3. review routes: no global shell navigation, because review owns its own session chrome.
 
+Create deck is a single controlled dialog rendered outside both dropdown menus. Desktop menu selection closes the menu and opens that persistent dialog; the mobile `+` button opens the same dialog directly. Failed creation keeps the form usable and reports a localized toast.
+
 This removes the previous double-navigation feeling on phones.
 
 ## Home Hierarchy
