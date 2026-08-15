@@ -34,14 +34,6 @@ export async function fetchElevenLabsAccount(apiKey: string) {
 }
 
 export async function resolveElevenLabsTts(userId: string, language: Language): Promise<ResolvedElevenLabsTts | null> {
-  const ownerId = process.env.ELEVENLABS_OWNER_USER_ID?.trim()
-  if (ownerId && userId === ownerId) {
-    const apiKey = process.env.ELEVENLABS_API_KEY?.trim()
-    const config = getTtsLanguageConfig(language)
-    if (!apiKey || !config) return null
-    return { apiKey, config }
-  }
-
   const admin = createAdminClient()
   const { data, error } = await admin.from('user_elevenlabs_settings').select('*').eq('user_id', userId).maybeSingle()
   if (error || !data) return null

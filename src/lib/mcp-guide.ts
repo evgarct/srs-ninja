@@ -22,6 +22,7 @@ const examples: Record<Language, DraftCandidateInput> = {
     fields: {
       word: 'yolculuk', translation: 'путешествие', level: 'A2', part_of_speech: 'isim',
       popularity: '8', style: 'neutral', synonyms: ['seyahat'], antonyms: [],
+      usage_pattern: 'yolculuğa çıkmak', grammar_note: 'Yönelme hâliyle sık kullanılır.',
       examples_html: '<ul><li><b>Yolculuk</b> yarın başlıyor.</li><li>Uzun <b>yolculuk</b> güzeldi.</li></ul>',
     },
     tags: ['seyahat', 'A2'],

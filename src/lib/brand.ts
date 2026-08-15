@@ -73,6 +73,13 @@ export function buildBrandManifest(): MetadataRoute.Manifest {
         src: brand.assets.icon512,
         sizes: '512x512',
         type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: brand.assets.iconMaskable512,
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
       },
       {
         src: brand.assets.appleTouchIcon,

@@ -17,12 +17,15 @@ Echo must keep product naming, browser metadata, installed-app naming, and icon 
   - favicon `.ico`
   - favicon `.svg`
   - 16x16 and 32x32 PNG favicons
+  - adaptive light/dark SVG favicon
   - a square Apple/install icon generated from the canonical source artwork
   - 192 and 512 install icons
+  - a 512 maskable install icon
   - Safari pinned tab icon
 - The repository may keep a wider source-artwork handoff file for branding reference, but runtime metadata must point to the generated square app/install assets.
 - MCP surfaces must identify the product as `Echo`.
 - Brand-facing strings should be driven from one central configuration source instead of duplicated ad hoc across the app.
+- The canonical mark combines repeated flashcards and an outbound echo signal and remains legible at 16 px.
 
 ## Non-Goals
 

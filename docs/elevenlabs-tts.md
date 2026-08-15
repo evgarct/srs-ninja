@@ -13,8 +13,8 @@
 
 ElevenLabs расходуется отдельно для каждого пользователя:
 
-- только пользователь с UUID из `ELEVENLABS_OWNER_USER_ID` использует существующий серверный `ELEVENLABS_API_KEY` и системные voice IDs;
-- остальные пользователи подключают собственный restricted API key на `/settings/elevenlabs` и выбирают доступные в своём аккаунте голоса для английского, чешского и турецкого;
+- каждый пользователь подключает собственный restricted API key на `/settings/elevenlabs` и выбирает доступные в своём аккаунте голоса для английского, чешского и турецкого;
+- системного owner/fallback подключения нет: квота, доступные голоса и ошибки всегда относятся к аккаунту текущего пользователя;
 - сервер проверяет ключ через ElevenLabs `/v1/user` и получает список голосов через `/v1/voices`;
 - пользовательский ключ шифруется AES-256-GCM ключом `USER_CREDENTIALS_ENCRYPTION_KEY` и никогда не возвращается клиенту;
 - таблица `user_elevenlabs_settings` закрыта для `anon` и `authenticated`; чтение и запись выполняются только сервером через service role после проверки Supabase-сессии;
@@ -30,7 +30,9 @@ ElevenLabs расходуется отдельно для каждого пол�
 
 - `english` через voice `JBFqnCBsd6RMkjVDRZzb` и `language_code = 'en'`;
 - `czech` через voice `TX3LPaxmHKxFdv7VOQHJ` и `language_code = 'cs'`.
-- `turkish` через профессиональный Voice Library voice Gökçe Deniz (`oPC5I9GKjMReiaM29gjY`) из `ELEVENLABS_TURKISH_VOICE_ID` и `language_code = 'tr'`; переменная обязательна для турецкого TTS.
+- `turkish` использует выбранный пользователем voice ID и `language_code = 'tr'`.
+
+Страница настроек объясняет создание restricted key, шифрование и выбор голосов. Для каждого языка используется редактируемое поле с подсказками из `/v1/voices`: ID можно вставить вручную, но сервер перед сохранением и batch TTS повторно проверяет, что голос доступен в подключённом аккаунте.
 
 Все три языковые конфигурации используют один и тот же ElevenLabs model:
 

@@ -1,5 +1,6 @@
 import { getNotePrimaryText, normalizeNoteFields } from '@/lib/note-fields'
 import { buildCzechFlashcardNote } from '@/lib/czech-note-schema'
+import { buildTurkishFlashcardNote } from '@/lib/turkish-note-schema'
 import {
   extractExamplesFromHtml,
   formatEnglishStyleLabel,
@@ -34,9 +35,11 @@ export function mapFieldsToFlashcard(
   const gender = language === 'czech' ? (normalizedFields.gender ? String(normalizedFields.gender) : undefined) : undefined
   const note = language === 'czech'
     ? buildCzechFlashcardNote(normalizedFields)
-    : normalizedFields.note
-      ? String(normalizedFields.note)
-      : undefined
+    : language === 'turkish'
+      ? buildTurkishFlashcardNote(normalizedFields)
+      : normalizedFields.note
+        ? String(normalizedFields.note)
+        : undefined
   const imageUrl =
     normalizedFields.image_url || fields.image_url ? String(normalizedFields.image_url ?? fields.image_url) : undefined
 

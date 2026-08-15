@@ -4,10 +4,7 @@
 
 Add text-to-speech audio to supported decks using ElevenLabs API. Supported languages are English, Czech, and Turkish.
 
-The existing platform API key is a personal owner connection. It may be used only when the authenticated Supabase user ID equals `ELEVENLABS_OWNER_USER_ID`. Every other user must connect their own ElevenLabs API key and select voices from their own account. There is no fallback from a user connection to the owner connection.
-
-**English Voice ID:** `JBFqnCBsd6RMkjVDRZzb`
-**Czech Voice ID:** `TX3LPaxmHKxFdv7VOQHJ`
+Every authenticated user connects their own ElevenLabs API key and selects voices from that account. There is no system owner connection or fallback key.
 **Languages:** English (`en`), Czech (`cs`), and Turkish (`tr`)
 **Model:** `eleven_flash_v2_5` (fast, 0.5 credits per character)
 
@@ -17,8 +14,8 @@ The existing platform API key is a personal owner connection. It may be used onl
 
 ### 0. Per-user ElevenLabs connection
 
-- Add `/settings/elevenlabs` with disconnected, connected, and owner-only states.
-- A non-owner can submit a restricted ElevenLabs API key, then choose English, Czech, and Turkish voices returned by that account.
+- Add `/settings/elevenlabs` with disconnected, connected, connection-error, and empty-voice states.
+- Every user submits a restricted ElevenLabs API key, then assigns editable English, Czech, and Turkish voice IDs suggested by that account.
 - Validate the key with ElevenLabs and validate saved voice IDs against that key's available voices.
 - Encrypt each API key at rest with AES-256-GCM and a server-only `USER_CREDENTIALS_ENCRYPTION_KEY`.
 - Never return saved keys to the browser, include them in logs, or expose provider response bodies.
@@ -44,16 +41,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing noteId or text' }, { status: 400 })
   }
 
-  // Voice comes from language-aware TTS config
-  const voiceId = getVoiceIdForLanguage(language)
+  // Key and voice come from the authenticated user's encrypted settings.
+  const resolved = await resolveElevenLabsTts(user.id, language)
+  if (!resolved) return NextResponse.json({ error: 'Configure ElevenLabs first' }, { status: 400 })
 
   // Call ElevenLabs API
   const ttsResponse = await fetch(
-    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+    `https://api.elevenlabs.io/v1/text-to-speech/${resolved.config.voiceId}`,
     {
       method: 'POST',
       headers: {
-        'xi-api-key': process.env.ELEVENLABS_API_KEY!,
+        'xi-api-key': resolved.apiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -315,8 +313,6 @@ Add a button that triggers batch audio generation:
 
 Add to `.env.local` (user should already have this):
 ```
-ELEVENLABS_API_KEY=sk_your_key_here
-ELEVENLABS_OWNER_USER_ID=the-owner-supabase-user-uuid
 USER_CREDENTIALS_ENCRYPTION_KEY=base64-encoded-32-byte-key
 ```
 
@@ -336,10 +332,11 @@ Free tier: 10,000 chars/month.
 
 ## Voice
 
-| Language | Voice ID | Notes |
+| Language | Voice ID source | Notes |
 |---|---|---|
-| English | JBFqnCBsd6RMkjVDRZzb | Shared English deck voice |
-| Czech | TX3LPaxmHKxFdv7VOQHJ | User-selected Czech voice |
+| English | User setting | Must exist in the connected account |
+| Czech | User setting | Must exist in the connected account |
+| Turkish | User setting | Must exist in the connected account |
 
 ---
 
@@ -358,13 +355,10 @@ Free tier: 10,000 chars/month.
 - [ ] Graceful handling of browser autoplay restrictions
 - [ ] Rate limiting between API calls (500ms delay)
 - [ ] Error handling for API failures
-- [ ] Uses voice ID `JBFqnCBsd6RMkjVDRZzb` for English cards
-- [ ] Uses voice ID `TX3LPaxmHKxFdv7VOQHJ` for Czech cards
-- [ ] Only `ELEVENLABS_OWNER_USER_ID` can consume the platform ElevenLabs key
-- [ ] Every other user must connect a personal key and choose personal voices
+- [ ] Every user connects a personal key and chooses personal voices for supported languages
 - [ ] User API keys are encrypted at rest and are never returned to the client
 - [ ] Invalid or foreign voice IDs are rejected server-side
-- [ ] Missing personal configuration never falls back to owner quota
+- [ ] Missing personal configuration has no system fallback
 - [ ] A revoked or invalid saved key does not break settings rendering; the user can disconnect and reconnect it
 - [ ] Batch generation validates the account and language voice once before loading and iterating notes
 - [ ] Character usage awareness (don't burn free tier)

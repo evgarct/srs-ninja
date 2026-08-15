@@ -13,6 +13,7 @@
     "appleTouchIcon": "/icon-180.png",
     "icon192": "/icon-192.png",
     "icon512": "/icon-512.png",
+    "iconMaskable512": "/icon-maskable-512.png",
     "safariPinnedTab": "/safari-pinned-tab.svg",
     "browserConfig": "/browserconfig.xml",
     "openGraphImage": "/opengraph-image",

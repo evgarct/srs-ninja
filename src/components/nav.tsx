@@ -1,7 +1,8 @@
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'
-import { BarChart3, Check, Ellipsis, House, LogOut, Plus, Settings, Upload } from 'lucide-react'
+import Link from 'next/link'
+import { BarChart3, Bot, Check, Ellipsis, House, LogOut, Plus, Settings, Upload } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
@@ -19,7 +20,6 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { setLocale } from '@/lib/actions/locale'
 import type { Locale } from '@/i18n/config'
-import { PendingLink } from '@/components/pending-link'
 
 const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
   { locale: 'en', label: '🇬🇧 English' },
@@ -69,6 +69,10 @@ export function Nav() {
           <Upload className="size-4" />
           {t('import')}
         </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/mcp')}>
+          <Bot className="size-4" />
+          {t('mcpGuide')}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/settings/elevenlabs')}>
           <Settings className="size-4" />
           {t('voiceSettings')}
@@ -96,22 +100,22 @@ export function Nav() {
       <header className="hidden px-4 pt-3 sm:px-5 sm:pt-4 md:block">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-full border border-white/10 bg-black/45 px-3 py-2.5 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.85)] backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
-            <PendingLink href="/" pendingLabel={t('loading')} className="inline-flex shrink-0 items-center gap-2">
+            <Link href="/" prefetch className="inline-flex shrink-0 items-center gap-2">
               <BrandLogo
                 tone="inverse"
                 iconClassName="size-7"
                 labelClassName="hidden text-base text-white sm:inline-flex"
               />
-            </PendingLink>
+            </Link>
 
             <nav className="hidden items-center gap-1 sm:flex">
               {links.map((link) => {
                 const isActive = pathname === link.href
                 return (
-                  <PendingLink
+                  <Link
                     key={link.href}
                     href={link.href}
-                    pendingLabel={t('loading')}
+                    prefetch
                     className={cn(
                       'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all',
                       isActive
@@ -121,7 +125,7 @@ export function Nav() {
                   >
                     <link.icon className="size-4" />
                     {link.label}
-                  </PendingLink>
+                  </Link>
                 )
               })}
             </nav>
@@ -154,10 +158,10 @@ export function Nav() {
           {links.map((link) => {
             const isActive = pathname === link.href
             return (
-              <PendingLink
+              <Link
                 key={link.href}
                 href={link.href}
-                pendingLabel={t('loading')}
+                prefetch
                 className={cn(
                   'inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all',
                   isActive
@@ -167,7 +171,7 @@ export function Nav() {
               >
                 <link.icon className="size-4" />
                 <span>{link.label}</span>
-              </PendingLink>
+              </Link>
             )
           })}
 

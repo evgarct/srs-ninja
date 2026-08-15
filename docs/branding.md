@@ -56,7 +56,10 @@ The runtime metadata points Apple touch / installed-app icon usage at the genera
 ## Rebrand Workflow
 
 1. Update `brand.config.json`.
-2. Replace the source artwork in `public/apple-touch-icon.png` if the product icon changes.
+2. Update the vector sources `public/echo-mark.svg`, `public/echo-app-icon.svg`, and `public/echo-maskable.svg` if the product icon changes.
+3. Run `node scripts/generate_brand_assets.mjs` to rebuild PNG and ICO outputs.
+
+The current Echo mark combines repeated flashcards with an outbound echo signal. `favicon.svg` adapts to light and dark browser themes, while the iPhone/PWA icon uses a single high-contrast composition with generous safe area. `apple-touch-icon.png` is generated as a true 180×180 square; the manifest also exposes a 512×512 maskable variant.
 3. Update `src/components/brand/brand-logo.tsx` if the in-app mark must match the new icon shape.
 4. Run `npm run generate:brand-assets`.
 5. Verify:

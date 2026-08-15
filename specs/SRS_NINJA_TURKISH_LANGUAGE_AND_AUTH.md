@@ -20,6 +20,8 @@
 - Expected note save failures display localized product copy and do not expose raw server or provider errors.
 - Turkish → Russian/English/Czech decks can be created; Turkish → Turkish is rejected in both domain validation and the database.
 - Turkish notes pass import/MCP validation, render cards, and generate/cache audio using `language_code = tr`.
-- Missing `ELEVENLABS_TURKISH_VOICE_ID` produces an explicit error.
+- Missing per-user Turkish voice selection produces an explicit error.
+- Turkish notes optionally support `usage_pattern` and `grammar_note`; existing universal-schema notes remain valid.
+- Turkish parts of speech include `sayı`.
 - Turkish batch TTS preflights the current user's account and selected Turkish voice before iterating notes.
 - A production registration email resolves to `${APP_URL}/auth/callback`, never localhost.
