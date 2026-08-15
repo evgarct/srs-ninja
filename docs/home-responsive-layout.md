@@ -9,6 +9,7 @@ Home now behaves like a focused launcher instead of a mini dashboard:
 - Home no longer renders a `Home / What to study next` heading block;
 - the deck grid starts immediately and stays the primary surface;
 - deck cards keep one due signal and two actions without extra chrome.
+- three or more decks retain their natural card height and scroll inside the content area above the fixed mobile navigation.
 
 ## Files
 
@@ -37,6 +38,8 @@ The page now opens directly into the actionable grid so the user can:
 - see available decks immediately;
 - compare due counts at a glance;
 - start review without reading decorative copy first.
+
+The viewport remains locked to prevent body bounce, while `HomeDeckList` owns vertical scrolling. Grid rows use their content height instead of sharing the available viewport height, so additional decks are never compressed or clipped. The page shell reserves the mobile navigation and safe-area space outside the scroll region.
 
 ## Deck Card Pattern
 
