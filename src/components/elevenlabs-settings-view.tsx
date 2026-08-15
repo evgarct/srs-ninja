@@ -12,7 +12,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxLabel,
+  ComboboxList,
+  ComboboxSeparator,
+} from '@/components/ui/combobox'
+import {
   ELEVENLABS_LANGUAGES,
+  groupVoicesForLanguage,
+  voiceIsVerifiedForLanguage,
   type ElevenLabsLanguage,
   type ElevenLabsVoice,
   type ElevenLabsVoiceSelections,
@@ -212,28 +225,91 @@ function VoiceField({ language, voices, value, disabled, onChange }: {
 }) {
   const t = useTranslations('elevenlabsSettings')
   const selectedVoice = voices.find((voice) => voice.voice_id === value)
-  const listId = `${language}-voice-options`
+  const normalizedQuery = value.toLocaleLowerCase()
+  const displayedVoices = !value || selectedVoice
+    ? voices
+    : voices.filter((voice) => [
+      voice.voice_id,
+      voice.name,
+      voice.category,
+      ...Object.values(voice.labels),
+      ...voice.verified_languages.map(({ language: code, locale }) => `${code} ${locale ?? ''}`),
+    ].filter(Boolean).join(' ').toLocaleLowerCase().includes(normalizedQuery))
+  const groups = groupVoicesForLanguage(displayedVoices, language)
+  const languageCodes = (selectedVoice?.verified_languages ?? []).map(({ language }) => language.toUpperCase()).join(', ')
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border p-4">
       <Label htmlFor={`${language}-voice`}>{t(`${language}Voice`)}</Label>
-      <Input
-        id={`${language}-voice`}
-        list={listId}
-        value={value}
+      <Combobox
+        value={value || null}
+        inputValue={value}
+        onValueChange={(nextValue) => onChange(typeof nextValue === 'string' ? nextValue : '')}
+        onInputValueChange={(nextValue) => onChange(nextValue.trim())}
+        items={voices.map((voice) => voice.voice_id)}
+        filter={(voiceId, query) => {
+          const voice = voices.find((candidate) => candidate.voice_id === voiceId)
+          const haystack = [
+            voiceId,
+            voice?.name,
+            voice?.category,
+            ...Object.values(voice?.labels ?? {}),
+            ...(voice?.verified_languages.map(({ language, locale }) => `${language} ${locale ?? ''}`) ?? []),
+          ].filter(Boolean).join(' ').toLocaleLowerCase()
+          return haystack.includes(query.trim().toLocaleLowerCase())
+        }}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.value.trim())}
-        placeholder={t('voiceIdPlaceholder')}
-        className="font-mono text-xs"
-      />
-      <datalist id={listId}>
-        {voices.map((voice) => <option key={voice.voice_id} value={voice.voice_id}>{voice.name}</option>)}
-      </datalist>
-      <p className="min-h-10 text-xs text-muted-foreground">
+      >
+        <ComboboxInput
+          id={`${language}-voice`}
+          placeholder={t('voiceIdPlaceholder')}
+          triggerLabel={t(`${language}Voice`)}
+          className="w-full font-mono text-xs"
+        />
+        <ComboboxContent>
+          <ComboboxEmpty>{t('voiceSearchEmpty')}</ComboboxEmpty>
+          <ComboboxList>
+            {groups.verified.length > 0 ? (
+              <ComboboxGroup>
+                <ComboboxLabel>{t('verifiedForLanguage')}</ComboboxLabel>
+                {groups.verified.map((voice) => <VoiceOption key={voice.voice_id} voice={voice} />)}
+              </ComboboxGroup>
+            ) : null}
+            {groups.verified.length > 0 && groups.other.length > 0 ? <ComboboxSeparator /> : null}
+            {groups.other.length > 0 ? (
+              <ComboboxGroup>
+                <ComboboxLabel>{t('otherAvailableVoices')}</ComboboxLabel>
+                {groups.other.map((voice) => <VoiceOption key={voice.voice_id} voice={voice} />)}
+              </ComboboxGroup>
+            ) : null}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+      <div className="min-h-12 text-xs text-muted-foreground">
         {selectedVoice
-          ? t('selectedVoice', { name: selectedVoice.name, category: selectedVoice.category ?? t('unknownCategory') })
+          ? <>
+              <p>{t('selectedVoice', { name: selectedVoice.name, category: selectedVoice.category ?? t('unknownCategory') })}</p>
+              <p>{t('voiceMetadata', { id: selectedVoice.voice_id, languages: languageCodes || t('noneVerified') })}</p>
+              {!voiceIsVerifiedForLanguage(selectedVoice, language) ? <p className="mt-1 text-amber-700 dark:text-amber-400">{t('languageNotVerified')}</p> : null}
+            </>
           : value ? t('unknownVoiceId') : t('voiceFieldHint')}
-      </p>
+      </div>
     </div>
+  )
+}
+
+function VoiceOption({ voice }: { voice: ElevenLabsVoice }) {
+  const t = useTranslations('elevenlabsSettings')
+  const languages = voice.verified_languages.map(({ language }) => language.toUpperCase()).join(', ')
+  return (
+    <ComboboxItem value={voice.voice_id} className="items-start py-2">
+      <span className="flex min-w-0 flex-col">
+        <span className="truncate font-medium">{voice.name}</span>
+        <span className="truncate font-mono text-[11px] text-muted-foreground">{voice.voice_id}</span>
+        <span className="text-[11px] text-muted-foreground">
+          {voice.category ?? t('unknownCategory')} · {languages || t('noneVerified')}
+        </span>
+      </span>
+    </ComboboxItem>
   )
 }

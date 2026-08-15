@@ -38,15 +38,28 @@ describe('ElevenLabs account resolution', () => {
 
   it('filters malformed voices returned by the provider', async () => {
     vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ subscription: { tier: 'creator' } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ tier: 'creator' }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ voices: [
-        { voice_id: 'voice-1', name: 'Voice One', category: 'premade' },
+        { voice_id: 'voice-1', name: 'Voice One', category: 'premade', labels: { accent: 'neutral', invalid: 1 }, available_for_tiers: ['free'], verified_languages: [{ language: 'en', locale: 'en-US' }] },
         { voice_id: 42, name: 'Invalid' },
-      ] }) }))
+      ], has_more: false }) }))
 
     await expect(fetchElevenLabsAccount('personal-secret')).resolves.toEqual({
-      tier: 'creator', voices: [{ voice_id: 'voice-1', name: 'Voice One', category: 'premade' }],
+      tier: 'creator', voices: [{ voice_id: 'voice-1', name: 'Voice One', category: 'premade', labels: { accent: 'neutral' }, available_for_tiers: ['free'], verified_languages: [{ language: 'en', locale: 'en-US' }] }],
     })
+  })
+
+  it('loads every v2 voices page available to the authenticated account', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ tier: 'free' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ voices: [{ voice_id: 'first', name: 'First' }], has_more: true, next_page_token: 'page-2' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ voices: [{ voice_id: 'second', name: 'Second' }], has_more: false }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const account = await fetchElevenLabsAccount('personal-secret')
+    expect(account.tier).toBe('free')
+    expect(account.voices.map((voice) => voice.voice_id)).toEqual(['first', 'second'])
+    expect(String(fetchMock.mock.calls[2][0])).toContain('next_page_token=page-2')
   })
 
   it('rejects a selected voice that is no longer available', async () => {
@@ -55,8 +68,8 @@ describe('ElevenLabs account resolution', () => {
       czech_voice_id: null, turkish_voice_id: null,
     }, error: null })
     vi.stubGlobal('fetch', vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ subscription: { tier: 'creator' } }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ voices: [{ voice_id: 'different-voice', name: 'Different Voice' }] }) }))
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ tier: 'creator' }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ voices: [{ voice_id: 'different-voice', name: 'Different Voice' }], has_more: false }) }))
 
     await expect(resolveValidatedElevenLabsTts('user-1', 'english')).resolves.toBeNull()
   })

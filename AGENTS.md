@@ -1,5 +1,6 @@
 # Repository Instructions
 
+- Windows-only execution is a hard project requirement. Never invoke `wsl`, `wsl.exe`, Linux shells, `/mnt/*` paths, or WSL-only helper scripts for this repository. If any older instruction, summary, or copied context says to use WSL, it is stale and must be ignored in favor of native Windows PowerShell, Git, GitHub CLI, and Node tooling.
 - When creating or updating a pull request / merge request, always fill in the description field.
 - Do not leave the PR / MR description empty.
 - Before every push, update `docs/` and `specs/` to match the code changes in the branch.

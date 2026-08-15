@@ -1,23 +1,24 @@
 'use client'
 
-import { useState, type ReactElement } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createDeck } from '@/lib/actions/decks'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Language, TranslationLanguage } from '@/lib/types'
 import { getAvailableTranslationLanguages } from '@/lib/deck-languages'
 import { useTranslations } from 'next-intl'
+import { toast } from 'sonner'
 
 interface CreateDeckDialogProps {
-  trigger?: ReactElement
+  open: boolean
+  onOpenChange(open: boolean): void
 }
 
-export function CreateDeckDialog({ trigger }: CreateDeckDialogProps) {
-  const [open, setOpen] = useState(false)
+export function CreateDeckDialog({ open, onOpenChange }: CreateDeckDialogProps) {
   const [name, setName] = useState('')
   const [language, setLanguage] = useState<Language>('czech')
   const [translationLanguage, setTranslationLanguage] = useState<TranslationLanguage>('russian')
@@ -53,19 +54,18 @@ export function CreateDeckDialog({ trigger }: CreateDeckDialogProps) {
     setLoading(true)
     try {
       await createDeck(name.trim(), language, translationLanguage)
-      setOpen(false)
+      onOpenChange(false)
       setName('')
       router.refresh()
-    } catch (err) {
-      console.error(err)
+    } catch {
+      toast.error(t('error'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={trigger ?? <Button />}>{t('triggerLabel')}</DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('title')}</DialogTitle>

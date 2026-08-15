@@ -84,6 +84,19 @@ export const OverflowMenuOpen: Story = {
   },
 }
 
+export const CreateDeckFromDesktopMenu: Story = {
+  tags: ['!dev'],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await userEvent.click(await canvas.findByRole('button', { name: /Открыть дополнительные действия/i }))
+    const body = within(document.body)
+    await userEvent.click(await body.findByText('Новая колода'))
+    await body.findByRole('dialog')
+    await body.findByText('Создать колоду')
+    await body.findByPlaceholderText('Например: Чешский B1')
+  },
+}
+
 // ── Review route — nav hidden ─────────────────────────────────────────────────
 
 export const HiddenOnReviewRoute: Story = {

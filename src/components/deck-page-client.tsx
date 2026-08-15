@@ -425,10 +425,10 @@ export function DeckPageClient({
                         aria-label={t('selectAllVisible')}
                       />
                     </th>
-                    <th className="px-4 py-3 font-medium">Audio</th>
-                    <th className="px-4 py-3 font-medium">Word</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium text-right">Actions</th>
+                    <th className="px-4 py-3 font-medium">{t('audioColumn')}</th>
+                    <th className="px-4 py-3 font-medium">{t('wordColumn')}</th>
+                    <th className="px-4 py-3 font-medium">{t('statusColumn')}</th>
+                    <th className="px-4 py-3 font-medium text-right">{t('actionsColumn')}</th>
                   </tr>
                 </thead>
                 <tbody>

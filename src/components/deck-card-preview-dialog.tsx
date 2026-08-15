@@ -8,6 +8,7 @@ import { Flashcard } from '@/components/flashcard'
 import { playAudioUrl } from '@/lib/audio'
 import { mapFieldsToFlashcard } from '@/lib/flashcard-mapping'
 import type { Language } from '@/lib/types'
+import { useTranslations } from 'next-intl'
 
 interface DeckCardPreviewDialogProps {
   fields: Record<string, unknown>
@@ -24,13 +25,14 @@ export function DeckCardPreviewDialog({
   triggerLabel,
   trigger,
 }: DeckCardPreviewDialogProps) {
+  const t = useTranslations('deck')
   const [open, setOpen] = useState(false)
   const [side, setSide] = useState<'front' | 'back'>('front')
   const flashcardProps = mapFieldsToFlashcard(fields, language)
   const description =
     side === 'front'
-      ? 'Предпросмотр лицевой стороны карточки'
-      : 'Предпросмотр обратной стороны карточки'
+      ? t('previewFront')
+      : t('previewBack')
 
   return (
     <Dialog
@@ -66,7 +68,7 @@ export function DeckCardPreviewDialog({
               onClick={() => setSide((current) => (current === 'front' ? 'back' : 'front'))}
             >
               <FlipHorizontal2 className="w-4 h-4" />
-              {side === 'front' ? 'Показать оборот' : 'Показать лицо'}
+              {side === 'front' ? t('showBack') : t('showFront')}
             </Button>
           </div>
         </DialogHeader>

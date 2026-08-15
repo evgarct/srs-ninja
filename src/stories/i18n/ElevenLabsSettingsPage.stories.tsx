@@ -3,6 +3,7 @@ import { expect, within } from 'storybook/test'
 import { useTranslations } from 'next-intl'
 
 import { ElevenLabsSettingsView } from '@/components/elevenlabs-settings-view'
+import type { ElevenLabsVoice } from '@/lib/elevenlabs-types'
 import type { Locale } from '@/i18n/config'
 import { localeArgType, messagesByLocale, withLocale } from './withLocale'
 
@@ -11,9 +12,9 @@ type Props = {
   state: 'disconnected' | 'connected' | 'connection-error' | 'empty-voices'
 }
 
-const voices = [
-  { voice_id: 'voice-1', name: 'Gökçe Deniz' },
-  { voice_id: 'voice-2', name: 'Lily' },
+const voices: ElevenLabsVoice[] = [
+  { voice_id: 'voice-1', name: 'Gökçe Deniz', category: 'premade', labels: { accent: 'standard' }, preview_url: 'https://example.com/tr.mp3', available_for_tiers: ['free'], verified_languages: [{ language: 'tr', locale: 'tr-TR' }] },
+  { voice_id: 'voice-2', name: 'Lily', category: 'premade', labels: {}, available_for_tiers: ['free'], verified_languages: [{ language: 'en', locale: 'en-US' }] },
 ]
 
 function SettingsPageDemo({ state }: Props) {

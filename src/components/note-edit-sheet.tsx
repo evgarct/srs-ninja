@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sheet'
 import { NoteEditorForm } from './note-editor-form'
 import type { Language } from '@/lib/types'
+import { useTranslations } from 'next-intl'
 
 interface NoteEditSheetProps {
   noteId: string
@@ -40,6 +41,7 @@ export function NoteEditSheet({
   trigger,
   onSaveSuccess,
 }: NoteEditSheetProps) {
+  const t = useTranslations('deck')
   const [open, setOpen] = useState(false)
 
   return (
@@ -47,9 +49,9 @@ export function NoteEditSheet({
       <SheetTrigger render={trigger} />
       <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Edit Flashcard Note</SheetTitle>
+          <SheetTitle>{t('editSheetTitle')}</SheetTitle>
           <SheetDescription>
-            Make changes to your flashcard note. Changes apply immediately upon saving.
+            {t('editSheetDescription')}
           </SheetDescription>
         </SheetHeader>
         {open && (

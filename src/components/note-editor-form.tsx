@@ -15,6 +15,7 @@ import type { Language } from '@/lib/types'
 import { PlayButton } from '@/components/flashcard/PlayButton'
 import { playAudioUrl } from '@/lib/audio'
 import { supportsTtsLanguage } from '@/lib/tts-config'
+import { useTranslations } from 'next-intl'
 
 interface NoteEditorFormProps {
   noteId: string
@@ -44,6 +45,8 @@ export function NoteEditorForm({
   onSuccess,
   onCancel,
 }: NoteEditorFormProps) {
+  const t = useTranslations('noteForm')
+  const tFields = useTranslations('noteFields')
   const fields = getFields(language)
   const [values, setValues] = useState<Record<string, string>>(getNoteFormValues(language, initialFields))
   const [tagsInput, setTagsInput] = useState(initialTags.join(', '))
@@ -83,10 +86,10 @@ export function NoteEditorForm({
       )
 
       if (success) {
-        toast.success('Fields updated successfully!')
+        toast.success(t('updated'))
         if (audioUrl) {
           setCurrentAudioUrl(audioUrl)
-          toast.success('Audio regenerated successfully!')
+          toast.success(t('audioRegenerated'))
           void playAudioUrl(audioUrl)
         }
         if (audioError) {
@@ -97,8 +100,8 @@ export function NoteEditorForm({
       }
     } catch (err) {
       console.error(err)
-      setError(err instanceof Error ? err.message : 'Error updating note')
-      toast.error('Failed to update note')
+      setError(err instanceof Error ? err.message : t('error'))
+      toast.error(t('error'))
     } finally {
       setLoading(false)
     }
@@ -116,9 +119,9 @@ export function NoteEditorForm({
       {canGenerateAudio && currentAudioUrl && (
         <div className="flex items-center justify-between rounded-lg border px-3 py-2">
           <div>
-            <p className="text-sm font-medium">Audio preview</p>
+            <p className="text-sm font-medium">{t('audioPreview')}</p>
             <p className="text-xs text-muted-foreground">
-              Проигрывает актуальное аудио для этой ноты
+              {t('audioPreviewDescription')}
             </p>
           </div>
           <PlayButton
@@ -133,11 +136,11 @@ export function NoteEditorForm({
       {fields.map((field) => (
         <div key={field.key} className="flex flex-col gap-1.5">
           <Label htmlFor={field.key}>
-            {field.label}
+            {tFields(`${field.key}.label` as never)}
             {field.required && <span className="text-destructive ml-1">*</span>}
           </Label>
           {field.hint && (
-            <p className="text-xs text-muted-foreground">{field.hint}</p>
+            <p className="text-xs text-muted-foreground">{tFields.raw(`${field.key}.hint`)}</p>
           )}
           {field.type === 'select' && field.options ? (
             <Select
@@ -145,7 +148,7 @@ export function NoteEditorForm({
               onValueChange={(v) => v && setValue(field.key, v)}
             >
               <SelectTrigger id={field.key}>
-                <SelectValue placeholder="Select..." />
+                <SelectValue placeholder={t('selectPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {field.options.map((opt) => (
@@ -173,12 +176,12 @@ export function NoteEditorForm({
       ))}
 
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="tags">Tags</Label>
+        <Label htmlFor="tags">{t('tagsLabel')}</Label>
         <Input
           id="tags"
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
-          placeholder="ENGLISH::topic.travel, ENGLISH::level.b1, ENGLISH::style.neutral"
+          placeholder={t('tagsPlaceholder')}
         />
       </div>
 
@@ -193,16 +196,16 @@ export function NoteEditorForm({
             disabled={loading} 
             className="w-full"
           >
-            {loading ? 'Saving...' : 'Save & Regenerate Audio'}
+            {loading ? t('saving') : t('saveAndRegenerate')}
           </Button>
         )}
         <div className="flex gap-2 w-full">
           <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Saving...' : 'Save Changes'}
+            {loading ? t('saving') : t('saveChanges')}
           </Button>
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={loading} className="flex-1">
-              Cancel
+              {t('cancel')}
             </Button>
           )}
         </div>

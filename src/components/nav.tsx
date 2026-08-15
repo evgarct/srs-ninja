@@ -20,6 +20,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { setLocale } from '@/lib/actions/locale'
 import type { Locale } from '@/i18n/config'
+import { useState } from 'react'
 
 const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
   { locale: 'en', label: '🇬🇧 English' },
@@ -29,6 +30,7 @@ const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
 ]
 
 export function Nav() {
+  const [createDeckOpen, setCreateDeckOpen] = useState(false)
   const t = useTranslations('nav')
   const locale = useLocale()
   const pathname = usePathname()
@@ -57,14 +59,10 @@ export function Nav() {
   const overflowMenu = (
     <>
       <DropdownMenuGroup>
-        <CreateDeckDialog
-          trigger={
-            <DropdownMenuItem>
-              <Plus className="size-4" />
-              {t('newDeck')}
-            </DropdownMenuItem>
-          }
-        />
+        <DropdownMenuItem onClick={() => setCreateDeckOpen(true)}>
+          <Plus className="size-4" />
+          {t('newDeck')}
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push('/import')}>
           <Upload className="size-4" />
           {t('import')}
@@ -97,6 +95,7 @@ export function Nav() {
 
   return (
     <>
+      <CreateDeckDialog open={createDeckOpen} onOpenChange={setCreateDeckOpen} />
       <header className="hidden px-4 pt-3 sm:px-5 sm:pt-4 md:block">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-full border border-white/10 bg-black/45 px-3 py-2.5 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.85)] backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
@@ -175,17 +174,14 @@ export function Nav() {
             )
           })}
 
-          <CreateDeckDialog
-            trigger={
-              <button
-                type="button"
-                className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12]"
-                aria-label={t('newDeckAriaLabel')}
-              >
-                <Plus className="size-4" />
-              </button>
-            }
-          />
+          <button
+            type="button"
+            className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12]"
+            aria-label={t('newDeckAriaLabel')}
+            onClick={() => setCreateDeckOpen(true)}
+          >
+            <Plus className="size-4" />
+          </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger

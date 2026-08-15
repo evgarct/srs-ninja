@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { deleteNote } from '@/lib/actions/notes'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 
 export function DeleteNoteButton({
   noteId,
@@ -20,10 +21,11 @@ export function DeleteNoteButton({
   title?: string
 }) {
   const [loading, setLoading] = useState(false)
+  const t = useTranslations('deck')
   const router = useRouter()
 
   async function handleDelete() {
-    if (!confirm('Удалить нот и все его карточки?')) return
+    if (!confirm(t('deleteConfirm'))) return
     setLoading(true)
     try {
       await deleteNote(noteId, deckId)
@@ -43,7 +45,7 @@ export function DeleteNoteButton({
       title={title}
       className="text-destructive hover:text-destructive"
     >
-      {loading ? '...' : iconOnly ? <Trash2 className="w-4 h-4" /> : 'Удалить'}
+      {loading ? '…' : iconOnly ? <Trash2 className="w-4 h-4" /> : t('deleteNote')}
     </Button>
   )
 }

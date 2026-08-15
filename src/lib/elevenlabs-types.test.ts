@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { getUnavailableVoiceIds } from './elevenlabs-types'
+import { getUnavailableVoiceIds, groupVoicesForLanguage } from './elevenlabs-types'
 
 const voices = [
-  { voice_id: 'voice-en', name: 'English' },
-  { voice_id: 'voice-cs', name: 'Czech' },
-  { voice_id: 'voice-tr', name: 'Turkish' },
+  { voice_id: 'voice-en', name: 'English', labels: {}, available_for_tiers: ['free'], verified_languages: [{ language: 'en' }] },
+  { voice_id: 'voice-cs', name: 'Czech', labels: {}, available_for_tiers: ['starter'], verified_languages: [{ language: 'cs' }] },
+  { voice_id: 'voice-tr', name: 'Turkish', labels: {}, available_for_tiers: [], verified_languages: [{ language: 'tr' }] },
 ]
 
 describe('ElevenLabs voice selections', () => {
@@ -23,5 +23,12 @@ describe('ElevenLabs voice selections', () => {
   it('allows a language to remain unconfigured', () => {
     expect(getUnavailableVoiceIds({ english: null, czech: '', turkish: 'voice-tr' }, voices))
       .toEqual([])
+  })
+
+  it('puts only language-verified voices in the first group without filtering account voices by tier metadata', () => {
+    expect(groupVoicesForLanguage(voices, 'turkish')).toEqual({
+      verified: [voices[2]],
+      other: [voices[0], voices[1]],
+    })
   })
 })
