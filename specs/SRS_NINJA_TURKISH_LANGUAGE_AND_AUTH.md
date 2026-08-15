@@ -19,6 +19,7 @@
 - Dashboard and restart actions use the deck-localized `/review/[deckId]` route for every study language.
 - Expected note save failures display localized product copy and do not expose raw server or provider errors.
 - Turkish → Russian/English/Czech decks can be created; Turkish → Turkish is rejected in both domain validation and the database.
+- The persisted `decks.language` constraint includes every supported study language, including `turkish`; application and database language contracts must stay aligned.
 - Turkish notes pass import/MCP validation, render cards, and generate/cache audio using `language_code = tr`.
 - Missing per-user Turkish voice selection produces an explicit error.
 - Turkish notes optionally support `usage_pattern` and `grammar_note`; existing universal-schema notes remain valid.
