@@ -17,6 +17,8 @@ All dashboard and completion actions enter review through `/review/[deckId]`, wh
 
 Every deck stores both `language` and `translation_language`. Supported study languages are `czech`, `english`, and `turkish`; supported translation languages are `russian`, `english`, `czech`, and `turkish`. The two values must differ. Existing decks receive `russian` during migration.
 
+The database `decks_language_check` constraint mirrors the complete study-language list. Migration `20260815103325_allow_turkish_decks.sql` expands the original Czech/English constraint so Turkish deck inserts are accepted by Supabase as well as by application validation.
+
 Turkish notes use the universal canonical contract: `word`, `translation`, `level`, `part_of_speech`, `popularity`, `style`, `synonyms`, `antonyms`, and `examples_html`. Turkish-specific parts of speech are validated while storage remains compatible with the English contract.
 
 ## Turkish TTS
