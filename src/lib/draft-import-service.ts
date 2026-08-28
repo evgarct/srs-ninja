@@ -609,6 +609,94 @@ export async function approveDraftNoteForUser(
   }
 }
 
+export interface ApproveDraftBatchResult {
+  batchId: string
+  deckId: string
+  approvedNoteIds: string[]
+  skippedNoteIds: string[]
+  batchDeleted: boolean
+  batchStatus: DraftNoteStatus | 'partially_approved' | 'archived' | null
+}
+
+export async function approveDraftBatchForUser(
+  supabase: SupabaseClient,
+  userId: string,
+  batchId: string
+): Promise<ApproveDraftBatchResult> {
+  const { data: batch, error: batchError } = await supabase
+    .from('import_batches')
+    .select('id, deck_id')
+    .eq('id', batchId)
+    .eq('user_id', userId)
+    .single()
+
+  if (batchError || !batch) throw batchError ?? new Error('Draft batch not found')
+
+  const { data: notes, error: notesError } = await supabase
+    .from('notes')
+    .select('*')
+    .eq('import_batch_id', batchId)
+    .eq('user_id', userId)
+    .eq('status', 'draft')
+
+  if (notesError) throw notesError
+
+  const draftNotes = ((notes ?? []) as NoteRow[]).filter((note) => {
+    const conflict = parseDraftConflict((note as NoteRow & { draft_conflict?: unknown }).draft_conflict)
+    return conflict?.resolution !== 'open'
+  })
+  const skippedNoteIds = ((notes ?? []) as NoteRow[])
+    .filter((note) => !draftNotes.some((draft) => draft.id === note.id))
+    .map((note) => note.id)
+
+  if (draftNotes.length === 0) {
+    return {
+      batchId,
+      deckId: batch.deck_id,
+      approvedNoteIds: [],
+      skippedNoteIds,
+      batchDeleted: false,
+      batchStatus: null,
+    }
+  }
+
+  const noteIds = draftNotes.map((note) => note.id)
+
+  const { data: updatedNotes, error: updateError } = await supabase
+    .from('notes')
+    .update({ status: 'approved' })
+    .eq('user_id', userId)
+    .eq('import_batch_id', batchId)
+    .eq('status', 'draft')
+    .in('id', noteIds)
+    .select('id')
+
+  if (updateError) throw updateError
+
+  const approvedNoteIds = ((updatedNotes ?? []) as Array<{ id: string }>).map((note) => note.id)
+
+  if (approvedNoteIds.length > 0) {
+    const cards = approvedNoteIds.flatMap((noteId) => buildInitialNoteCards(noteId, userId))
+    const { error: cardsError } = await supabase.from('cards').insert(cards)
+    if (cardsError) throw cardsError
+  }
+
+  const syncResult = await syncImportBatchState(supabase, batchId)
+
+  revalidatePath(`/deck/${batch.deck_id}`)
+  revalidatePath(`/deck/${batch.deck_id}/drafts`)
+  revalidatePath('/import')
+
+  return {
+    batchId,
+    deckId: batch.deck_id,
+    approvedNoteIds,
+    skippedNoteIds,
+    batchDeleted: syncResult.deleted,
+    batchStatus: syncResult.deleted ? null : (syncResult.status as ApproveDraftBatchResult['batchStatus']),
+  }
+}
+
 export async function deleteDraftNoteForUser(
   supabase: SupabaseClient,
   userId: string,

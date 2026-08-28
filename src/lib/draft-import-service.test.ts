@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { cleanupEmptyImportBatchesForUser, saveDraftNotesForUser } from '@/lib/draft-import-service'
+import {
+  approveDraftBatchForUser,
+  cleanupEmptyImportBatchesForUser,
+  saveDraftNotesForUser,
+} from '@/lib/draft-import-service'
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
@@ -125,6 +129,127 @@ describe('cleanupEmptyImportBatchesForUser', () => {
     expect(deleteChunkCalls).toHaveLength(3)
     expect(deleteChunkCalls.map((chunk) => chunk.length)).toEqual([100, 100, 4])
     expect(deleteChunkCalls.flat()).not.toContain('batch-1')
+  })
+})
+
+class ChainableResult<T> implements PromiseLike<T> {
+  constructor(private readonly resolver: () => T | Promise<T>) {}
+  eq() {
+    return this
+  }
+  in() {
+    return this
+  }
+  order() {
+    return this
+  }
+  select() {
+    return this
+  }
+  then<TResult1 = T, TResult2 = never>(
+    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+  ): PromiseLike<TResult1 | TResult2> {
+    return Promise.resolve(this.resolver()).then(onfulfilled, onrejected)
+  }
+}
+
+describe('approveDraftBatchForUser', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('approves every eligible draft note and skips open conflicts', async () => {
+    const batchNotes = [
+      { id: 'note-1', status: 'draft', draft_conflict: null },
+      {
+        id: 'note-2',
+        status: 'draft',
+        draft_conflict: {
+          kind: 'similar_existing_note',
+          matchedNoteId: 'existing-1',
+          matchedPrimaryText: 'hi',
+          similarityScore: 0.9,
+          resolution: 'open',
+        },
+      },
+      { id: 'note-3', status: 'draft', draft_conflict: null },
+    ]
+    const insertedCards: unknown[] = []
+    let batchStatusUpdate: string | null = null
+
+    const client = {
+      from(table: string) {
+        if (table === 'import_batches') {
+          return {
+            select() {
+              return {
+                eq() {
+                  return this
+                },
+                single: async () => ({
+                  data: { id: 'batch-1', deck_id: 'deck-1' },
+                  error: null,
+                }),
+              }
+            },
+            update(payload: { status: string }) {
+              return new ChainableResult(() => {
+                batchStatusUpdate = payload.status
+                return { error: null }
+              })
+            },
+          }
+        }
+
+        if (table === 'notes') {
+          return {
+            select(selection: string) {
+              if (selection === '*') {
+                return new ChainableResult(() => ({ data: batchNotes, error: null }))
+              }
+              if (selection === 'status') {
+                return new ChainableResult(() => ({
+                  data: [
+                    { status: 'approved' },
+                    { status: 'draft' },
+                    { status: 'approved' },
+                  ],
+                  error: null,
+                }))
+              }
+              throw new Error(`Unexpected notes select: ${selection}`)
+            },
+            update() {
+              return new ChainableResult(() => ({
+                data: [{ id: 'note-1' }, { id: 'note-3' }],
+                error: null,
+              }))
+            },
+          }
+        }
+
+        if (table === 'cards') {
+          return {
+            insert(rows: unknown[]) {
+              insertedCards.push(...rows)
+              return new ChainableResult(() => ({ error: null }))
+            },
+          }
+        }
+
+        throw new Error(`Unexpected table ${table}`)
+      },
+    } as unknown as SupabaseClient
+
+    const result = await approveDraftBatchForUser(client, 'user-1', 'batch-1')
+
+    expect(result.approvedNoteIds).toEqual(['note-1', 'note-3'])
+    expect(result.skippedNoteIds).toEqual(['note-2'])
+    expect(result.batchDeleted).toBe(false)
+    expect(result.batchStatus).toBe('partially_approved')
+    expect(batchStatusUpdate).toBe('partially_approved')
+    expect(insertedCards).toHaveLength(4)
   })
 })
 

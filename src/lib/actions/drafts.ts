@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import {
   applyDraftConflictToExistingNoteForUser,
+  approveDraftBatchForUser,
   approveDraftNoteForUser,
   deleteDraftBatchForUser,
   deleteDraftNoteForUser,
@@ -60,6 +61,17 @@ export async function approveDraftNote(noteId: string) {
   if (!user) throw new Error('Not authenticated')
 
   return approveDraftNoteForUser(supabase, user.id, noteId)
+}
+
+export async function approveDraftBatch(batchId: string) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) throw new Error('Not authenticated')
+
+  return approveDraftBatchForUser(supabase, user.id, batchId)
 }
 
 export async function deleteDraftNote(noteId: string) {

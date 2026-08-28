@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { DraftStatusBadge } from '@/components/draft-status-badge'
 import { ApproveDraftButton } from '@/components/approve-draft-button'
+import { ApproveDraftBatchButton } from '@/components/approve-draft-batch-button'
 import { DeleteDraftBatchButton } from '@/components/delete-draft-batch-button'
 import { DeleteDraftNoteButton } from '@/components/delete-draft-note-button'
 import { DraftConflictPanel } from '@/components/draft-conflict-panel'
@@ -17,7 +18,7 @@ import { applyDraftConflictToExistingNote, resolveDraftConflict } from '@/lib/ac
 import { isOpenDraftConflict } from '@/lib/draft-import'
 import { getDraftNoteDisplayState } from '@/lib/draft-note-display'
 import { getNotePrimaryText } from '@/lib/note-fields'
-import type { DraftNoteListItem } from '@/lib/draft-import-service'
+import type { ApproveDraftBatchResult, DraftNoteListItem } from '@/lib/draft-import-service'
 import { toast } from 'sonner'
 import type { Language } from '@/lib/types'
 import type { Database } from '@/lib/supabase/database.types'
@@ -103,6 +104,18 @@ export function DraftReviewClient({
     ? null
     : batches.find((batch) => batch.id === selectedBatchId) ?? null
 
+  const currentBatchNotes = useMemo(
+    () =>
+      currentBatch
+        ? notes.filter((note) => note.import_batch_id === currentBatch.id)
+        : [],
+    [notes, currentBatch]
+  )
+  const currentBatchPendingCount = currentBatchNotes.length
+  const currentBatchApprovableCount = currentBatchNotes.filter(
+    (note) => !isOpenDraftConflict(note.draft_conflict)
+  ).length
+
   function handleApproved(noteId: string) {
     const approvedNote = notes.find((note) => note.id === noteId)
     if (!approvedNote) return
@@ -128,6 +141,33 @@ export function DraftReviewClient({
         )
         .filter((batch) => batch.status !== 'approved' || batch.notes_count > 0)
     )
+  }
+
+  function handleBatchApproved(result: ApproveDraftBatchResult) {
+    if (result.approvedNoteIds.length === 0) return
+
+    const approvedIds = new Set(result.approvedNoteIds)
+    setNotes((prev) => prev.filter((note) => !approvedIds.has(note.id)))
+
+    setBatches((prev) =>
+      prev
+        .map((batch) =>
+          batch.id === result.batchId
+            ? {
+                ...batch,
+                notes_count: Math.max(batch.notes_count - result.approvedNoteIds.length, 0),
+                status: result.batchDeleted
+                  ? batch.status
+                  : (result.batchStatus ?? batch.status),
+              }
+            : batch
+        )
+        .filter((batch) => !(result.batchDeleted && batch.id === result.batchId))
+    )
+
+    if (result.batchDeleted && selectedBatchId === result.batchId) {
+      setSelectedBatchId('all')
+    }
   }
 
   function handleSaved(
@@ -262,8 +302,14 @@ export function DraftReviewClient({
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-3">
               <CardTitle className="text-lg">Selected batch</CardTitle>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <DraftStatusBadge status={currentBatch.status as 'draft' | 'partially_approved' | 'approved' | 'archived'} />
+                <ApproveDraftBatchButton
+                  batchId={currentBatch.id}
+                  pendingCount={currentBatchPendingCount}
+                  disabled={currentBatchApprovableCount === 0}
+                  onApproved={handleBatchApproved}
+                />
                 {currentBatch.status === 'draft' && (
                   <DeleteDraftBatchButton
                     batchId={currentBatch.id}
