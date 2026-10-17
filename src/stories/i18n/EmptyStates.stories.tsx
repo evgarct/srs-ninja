@@ -8,7 +8,7 @@ import type { Locale } from '@/i18n/config'
 function HomeEmptyState({ locale }: { locale?: Locale }) {
   const t = useTranslations('home')
   return (
-    <div data-locale={locale} className="dark flex items-center justify-center min-h-[200px] bg-background p-8 rounded-xl">
+    <div data-locale={locale} className="flex items-center justify-center min-h-[200px] bg-background p-8 rounded-xl">
       <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-6 py-16 text-center text-muted-foreground">
         <Library className="size-8 text-muted-foreground/70" aria-hidden />
         <p className="text-lg text-foreground">{t('noDecks')}</p>

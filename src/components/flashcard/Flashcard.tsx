@@ -246,13 +246,13 @@ export function Flashcard({
                   <div className="flex flex-col gap-1 pt-0.5 text-xs text-muted-foreground">
                     {synonyms && synonyms.length > 0 && (
                       <p>
-                        <span className="font-medium text-foreground/60">{t("synonyms")}: </span>
+                        <span className="font-medium text-foreground/85">{t("synonyms")}: </span>
                         {synonyms.join(', ')}
                       </p>
                     )}
                     {antonyms && antonyms.length > 0 && (
                       <p>
-                        <span className="font-medium text-foreground/60">{t("antonyms")}: </span>
+                        <span className="font-medium text-foreground/85">{t("antonyms")}: </span>
                         {antonyms.join(', ')}
                       </p>
                     )}
@@ -291,7 +291,7 @@ export function Flashcard({
             {note && (
               <div className="rounded-lg border border-foreground/8 bg-muted/40 px-3 py-2">
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground/60">{t("note")}: </span>
+                  <span className="font-semibold text-foreground/85">{t("note")}: </span>
                   {note}
                 </p>
               </div>
@@ -300,7 +300,7 @@ export function Flashcard({
             {/* ── Reveal hint (front only) ── */}
             {!previewMode && !isRevealed && (
               <div className="flex justify-center pt-1">
-                <span className="text-xs text-muted-foreground/50 tracking-wide">
+                <span className="text-xs text-muted-foreground tracking-wide">
                   {t("revealHint", { key: "Space" })}
                 </span>
               </div>

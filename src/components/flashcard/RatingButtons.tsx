@@ -46,7 +46,7 @@ const BUTTON_CONFIG: {
     key: "1",
     icon: RotateCcw,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-rose-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(244,63,94,0.5)]",
+    shellClass: "bg-white text-rose-700 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(244,63,94,0.5)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-16px_rgba(244,63,94,0.46)]",
     intervalKey: "again",
@@ -57,7 +57,7 @@ const BUTTON_CONFIG: {
     key: "2",
     icon: X,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-orange-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(249,115,22,0.5)]",
+    shellClass: "bg-white text-orange-800 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(249,115,22,0.5)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_22px_34px_-16px_rgba(249,115,22,0.45)]",
     intervalKey: "hard",
@@ -68,7 +68,7 @@ const BUTTON_CONFIG: {
     key: "3",
     icon: Sparkles,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-sky-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(14,165,233,0.5)]",
+    shellClass: "bg-white text-sky-700 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(14,165,233,0.5)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_25px_40px_-16px_rgba(14,165,233,0.45)]",
     intervalKey: "good",
@@ -79,7 +79,7 @@ const BUTTON_CONFIG: {
     key: "4",
     icon: Heart,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-emerald-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(16,185,129,0.48)]",
+    shellClass: "bg-white text-emerald-700 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(16,185,129,0.48)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_22px_34px_-16px_rgba(16,185,129,0.42)]",
     intervalKey: "easy",
@@ -222,7 +222,7 @@ export function RatingButtons({
             >
               <Icon className={iconClass} />
               {intervals && (
-                <span className="mt-1 text-[10px] font-normal leading-none tabular-nums opacity-70 sm:text-[11px]">
+                <span className="mt-1 text-[10px] font-normal leading-none tabular-nums sm:text-[11px]">
                   {intervals[intervalKey]}
                 </span>
               )}
