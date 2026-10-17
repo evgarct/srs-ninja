@@ -176,9 +176,9 @@ export function Flashcard({
             : undefined
         }
         className={[
-          "relative rounded-[28px] border border-white/10",
-          "bg-[rgba(20,16,33,0.96)] text-card-foreground",
-          "shadow-[0_28px_80px_-34px_rgba(0,0,0,0.86)] ring-1 ring-white/6",
+          "relative rounded-[28px] border border-foreground/10",
+          "bg-card text-card-foreground",
+          "shadow-[0_28px_80px_-34px_rgba(0,0,0,0.35)] dark:shadow-[0_28px_80px_-34px_rgba(0,0,0,0.86)] ring-1 ring-foreground/6",
           "touch-manipulation [webkit-tap-highlight-color:transparent] transition-[transform,box-shadow,ring-color,background-color] duration-150",
           !previewMode && !isRevealed
             ? "cursor-pointer hover:shadow-md hover:ring-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -200,6 +200,7 @@ export function Flashcard({
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={isRevealed ? "back" : "front"}
+            data-testid="flashcard-face"
             initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: 90 }}
             animate={{ opacity: 1, rotateY: 0 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: -90 }}
@@ -246,13 +247,13 @@ export function Flashcard({
                   <div className="flex flex-col gap-1 pt-0.5 text-xs text-muted-foreground">
                     {synonyms && synonyms.length > 0 && (
                       <p>
-                        <span className="font-medium text-foreground/60">{t("synonyms")}: </span>
+                        <span className="font-medium text-foreground/85">{t("synonyms")}: </span>
                         {synonyms.join(', ')}
                       </p>
                     )}
                     {antonyms && antonyms.length > 0 && (
                       <p>
-                        <span className="font-medium text-foreground/60">{t("antonyms")}: </span>
+                        <span className="font-medium text-foreground/85">{t("antonyms")}: </span>
                         {antonyms.join(', ')}
                       </p>
                     )}
@@ -291,7 +292,7 @@ export function Flashcard({
             {note && (
               <div className="rounded-lg border border-foreground/8 bg-muted/40 px-3 py-2">
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground/60">{t("note")}: </span>
+                  <span className="font-semibold text-foreground/85">{t("note")}: </span>
                   {note}
                 </p>
               </div>
@@ -300,7 +301,7 @@ export function Flashcard({
             {/* ── Reveal hint (front only) ── */}
             {!previewMode && !isRevealed && (
               <div className="flex justify-center pt-1">
-                <span className="text-xs text-muted-foreground/50 tracking-wide">
+                <span className="text-xs text-muted-foreground tracking-wide">
                   {t("revealHint", { key: "Space" })}
                 </span>
               </div>

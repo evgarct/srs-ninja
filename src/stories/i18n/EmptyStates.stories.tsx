@@ -1,16 +1,17 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { within } from 'storybook/test'
 import { useTranslations } from 'next-intl'
+import { Library } from 'lucide-react'
 import { withLocale, localeArgType, messagesByLocale } from './withLocale'
 import type { Locale } from '@/i18n/config'
 
 function HomeEmptyState({ locale }: { locale?: Locale }) {
   const t = useTranslations('home')
   return (
-    <div data-locale={locale} className="dark flex items-center justify-center min-h-[200px] bg-[#0a0a0a] p-8 rounded-xl">
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-16 text-center text-white/72">
-        <p className="mb-2 text-lg text-white">{t('noDecks')}</p>
-        <p className="text-sm">{t('createFirst')}</p>
+    <div data-locale={locale} className="flex items-center justify-center min-h-[200px] bg-background p-8 rounded-xl">
+      <div className="flex w-full max-w-sm flex-col items-center gap-3 rounded-2xl border border-foreground/10 bg-foreground/[0.03] px-6 py-16 text-center text-muted-foreground">
+        <Library className="size-8 text-muted-foreground/70" aria-hidden />
+        <p className="text-lg text-foreground">{t('noDecks')}</p>
       </div>
     </div>
   )
@@ -21,7 +22,6 @@ function makePlay(locale: Locale): StoryObj<typeof meta>['play'] {
     const canvas = within(canvasElement)
     const t = messagesByLocale[locale]
     await canvas.findByText(t.home.noDecks)
-    await canvas.findByText(t.home.createFirst)
   }
 }
 

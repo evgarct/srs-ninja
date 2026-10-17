@@ -338,9 +338,8 @@ export function DeckPageClient({
 
       {notes.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-lg mb-2">{t('noNotes')}</p>
-          <p className="text-sm">{t('noNotesHint')}</p>
-          <div className="flex gap-2 justify-center mt-4">
+          <p className="text-lg mb-4">{t('noNotes')}</p>
+          <div className="flex gap-2 justify-center">
             <PendingLink href={`/notes/new?deckId=${deckId}`} pendingLabel={t('navigating')} className={buttonVariants({ variant: 'outline' })}>
               {t('addNoteBtn')}
             </PendingLink>
@@ -371,12 +370,9 @@ export function DeckPageClient({
 
           <section className="rounded-2xl border bg-card shadow-sm overflow-hidden">
             <div className="flex items-center justify-between gap-4 border-b px-4 py-3">
-              <div>
-                <p className="text-sm font-medium">{t('notesTable')}</p>
-                <p className="text-xs text-muted-foreground">
-                  {t('showing', { count: visibleNotes.length, cards: visibleCardCount })}
-                </p>
-              </div>
+              <p className="text-sm font-medium">
+                {t('showing', { count: visibleNotes.length, cards: visibleCardCount })}
+              </p>
               <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogTrigger
                   render={

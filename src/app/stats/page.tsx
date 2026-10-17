@@ -63,34 +63,28 @@ export default async function StatsPage() {
       key: 'accuracy',
       value: `${overallAccuracy}%`,
       label: t('accuracy'),
-      className: 'bg-white/[0.06] text-white',
+      className: 'bg-foreground/[0.05] text-foreground',
     },
     {
       key: 'cards',
       value: totalCards,
       label: t('cards'),
-      className: 'bg-white/[0.06] text-white',
+      className: 'bg-foreground/[0.05] text-foreground',
     },
   ]
 
   return (
     <main className="app-shell">
       <section className="app-panel px-5 py-5 sm:px-6 sm:py-6">
-        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(203,130,255,0.35),transparent_72%)] blur-3xl" />
-        <div className="relative space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-white/52">{t('profile')}</p>
-              <h1 className="text-3xl font-semibold tracking-[-0.05em] text-white">{t('progress')}</h1>
-            </div>
-            <span className="app-pill border-primary/30 bg-primary/10 text-primary">
-              {todayStats.total} {t('today')}
-            </span>
+        <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-[radial-gradient(circle,rgba(203,130,255,0.25),transparent_72%)] blur-3xl" />
+        <div className="relative flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{t('profile')}</p>
+            <h1 className="text-3xl font-semibold tracking-[-0.05em] text-foreground">{t('progress')}</h1>
           </div>
-
-          <p className="max-w-lg text-sm leading-6 text-white/62">
-            {t('shortDescription')}
-          </p>
+          <span className="app-pill border-primary/30 bg-primary/10 text-primary">
+            {todayStats.total} {t('today')}
+          </span>
         </div>
       </section>
 
@@ -108,14 +102,11 @@ export default async function StatsPage() {
       </section>
 
       <section className="app-panel px-4 py-4 sm:px-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-white">{t('streakGoal')}</p>
-            <p className="text-sm text-white/54">
-              {t('activeDays', { count: weeklyActivity.activeDays })}
-            </p>
-          </div>
-          <span className="app-pill">{weeklyActivity.streak} streak</span>
+        <div className="mb-4">
+          <p className="text-sm font-medium text-foreground">{t('streakGoal')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t('activeDays', { count: weeklyActivity.activeDays })}
+          </p>
         </div>
         <WeeklyActivity days={weeklyActivity.days} streak={weeklyActivity.streak} />
       </section>
@@ -123,8 +114,8 @@ export default async function StatsPage() {
       <section className="app-panel px-4 py-4 sm:px-5">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-medium text-white capitalize">{currentMonthLabel}</p>
-            <p className="text-sm text-white/54">{t('reviewHistory')}</p>
+            <p className="text-sm font-medium text-foreground capitalize">{currentMonthLabel}</p>
+            <p className="text-sm text-muted-foreground">{t('reviewHistory')}</p>
           </div>
           <span className="app-pill">{totalReviews} {t('reviews')}</span>
         </div>
@@ -134,21 +125,21 @@ export default async function StatsPage() {
       <section className="grid gap-3 sm:grid-cols-2">
         <Card className="app-panel py-0">
           <CardContent className="px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/42">{t('today')}</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{t('today')}</p>
             <div className="mt-3 grid grid-cols-3 gap-3">
               <div>
-                <p className="text-2xl font-semibold tracking-[-0.05em] text-white">{todayStats.total}</p>
-                <p className="text-xs text-white/48">{t('reviews')}</p>
+                <p className="text-2xl font-semibold tracking-[-0.05em] text-foreground">{todayStats.total}</p>
+                <p className="text-xs text-muted-foreground">{t('reviews')}</p>
               </div>
               <div>
-                <p className="text-2xl font-semibold tracking-[-0.05em] text-white">{todayStats.accuracy}%</p>
-                <p className="text-xs text-white/48">{t('accuracy')}</p>
+                <p className="text-2xl font-semibold tracking-[-0.05em] text-foreground">{todayStats.accuracy}%</p>
+                <p className="text-xs text-muted-foreground">{t('accuracy')}</p>
               </div>
               <div>
-                <p className="text-2xl font-semibold tracking-[-0.05em] text-white">
+                <p className="text-2xl font-semibold tracking-[-0.05em] text-foreground">
                   {todayStats.avgDuration > 0 ? `${(todayStats.avgDuration / 1000).toFixed(1)}s` : '—'}
                 </p>
-                <p className="text-xs text-white/48">{t('avgTime')}</p>
+                <p className="text-xs text-muted-foreground">{t('avgTime')}</p>
               </div>
             </div>
           </CardContent>
@@ -156,13 +147,13 @@ export default async function StatsPage() {
 
         <Card className="app-panel py-0">
           <CardContent className="px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-white/42">{t('library')}</p>
+            <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">{t('library')}</p>
             <div className="mt-3 grid grid-cols-2 gap-3">
               {(Object.entries(distribution) as Array<[string, number]>).map(([state, count]) => (
                 <div key={state} className="app-panel-muted px-3 py-3">
-                  <p className="text-xs capitalize text-white/48">{state}</p>
-                  <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-white">{count}</p>
-                  <p className="text-xs text-white/42">
+                  <p className="text-xs capitalize text-muted-foreground">{state}</p>
+                  <p className="mt-2 text-2xl font-semibold tracking-[-0.05em] text-foreground">{count}</p>
+                  <p className="text-xs text-muted-foreground">
                     {totalCards > 0 ? Math.round((count / totalCards) * 100) : 0}%
                   </p>
                 </div>

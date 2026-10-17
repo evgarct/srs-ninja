@@ -75,7 +75,7 @@ export function ReactBitsReviewStack({
             initial={false}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
           >
-            <div className="h-full w-full rounded-[28px] border border-white/10 bg-[rgba(20,16,33,0.7)] shadow-sm ring-1 ring-white/6" />
+            <div className="h-full w-full rounded-[28px] border border-foreground/10 bg-card/70 shadow-sm ring-1 ring-foreground/6" />
           </motion.div>
         )
       })}

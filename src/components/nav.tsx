@@ -5,9 +5,11 @@ import Link from 'next/link'
 import { motion, useReducedMotion } from 'motion/react'
 import { BarChart3, Bot, Check, Ellipsis, House, LogOut, Plus, Settings, Upload } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
+import { useTheme } from 'next-themes'
 
 import { BrandLogo } from '@/components/brand/brand-logo'
 import { CreateDeckDialog } from '@/components/create-deck-dialog'
+import { ThemeMenuItems } from '@/components/theme-toggle-menu'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +42,13 @@ export function Nav() {
   const locale = useLocale()
   const pathname = usePathname()
   const router = useRouter()
+  const { resolvedTheme } = useTheme()
   const isReviewRoute = pathname.startsWith('/review/') || /^\/decks\/[^/]+\/review$/.test(pathname)
+
+  // `resolvedTheme` is undefined until after hydration (next-themes limitation);
+  // defaults to the "inverse" (dark-bg) logo tone, matching the app's
+  // defaultTheme, until the ThemeProvider resolves and re-renders.
+  const logoTone = resolvedTheme === 'light' ? 'default' : 'inverse'
 
   const links = [
     { href: '/', label: t('decks'), icon: House },
@@ -91,6 +99,8 @@ export function Nav() {
         ))}
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
+      <ThemeMenuItems />
+      <DropdownMenuSeparator />
       <DropdownMenuItem variant="destructive" onClick={signOut}>
         <LogOut className="size-4" />
         {t('logout')}
@@ -102,13 +112,13 @@ export function Nav() {
     <>
       <CreateDeckDialog open={createDeckOpen} onOpenChange={setCreateDeckOpen} />
       <header className="hidden px-4 pt-3 sm:px-5 sm:pt-4 md:block">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-full border border-white/10 bg-black/45 px-3 py-2.5 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.85)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 rounded-full border border-border bg-background/70 px-3 py-2.5 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.45)] backdrop-blur-xl">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <Link href="/" prefetch className="inline-flex shrink-0 items-center gap-2">
               <BrandLogo
-                tone="inverse"
+                tone={logoTone}
                 iconClassName="size-7"
-                labelClassName="hidden text-base text-white sm:inline-flex"
+                labelClassName="hidden text-base text-foreground sm:inline-flex"
               />
             </Link>
 
@@ -122,13 +132,13 @@ export function Nav() {
                     prefetch
                     className={cn(
                       'relative inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
-                      isActive ? 'text-white' : 'text-white/58 hover:bg-white/[0.06] hover:text-white'
+                      isActive ? 'text-accent-foreground' : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground'
                     )}
                   >
                     {isActive ? (
                       <motion.span
                         layoutId="nav-active-pill-desktop"
-                        className="absolute inset-0 rounded-full bg-white/[0.12] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                        className="absolute inset-0 rounded-full bg-accent shadow-[inset_0_0_0_1px_rgba(127,127,127,0.12)]"
                         transition={navPillTransition}
                       />
                     ) : null}
@@ -148,7 +158,7 @@ export function Nav() {
                   aria-label={t('openMenu')}
                   className={cn(
                     buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
-                    'rounded-full border border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1] hover:text-white'
+                    'rounded-full border border-border bg-foreground/[0.04] text-foreground hover:bg-foreground/[0.08] hover:text-foreground'
                   )}
                 >
                   <Ellipsis className="size-4" />
@@ -163,7 +173,7 @@ export function Nav() {
       </header>
 
       <div className="pointer-events-none fixed inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-50 flex justify-center px-4 md:hidden">
-        <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/10 bg-black/72 p-2 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.92)] backdrop-blur-2xl">
+        <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-background/85 p-2 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
           {links.map((link) => {
             const isActive = pathname === link.href
             return (
@@ -173,7 +183,7 @@ export function Nav() {
                 prefetch
                 className={cn(
                   'relative inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors',
-                  isActive ? 'text-primary-foreground' : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
+                  isActive ? 'text-primary-foreground' : 'text-muted-foreground hover:bg-foreground/[0.06] hover:text-foreground'
                 )}
               >
                 {isActive ? (
@@ -191,7 +201,7 @@ export function Nav() {
 
           <button
             type="button"
-            className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12]"
+            className="inline-flex size-10 items-center justify-center rounded-full bg-foreground/[0.06] text-foreground transition hover:bg-foreground/[0.1]"
             aria-label={t('newDeckAriaLabel')}
             onClick={() => setCreateDeckOpen(true)}
           >
@@ -204,7 +214,7 @@ export function Nav() {
                 <button
                   type="button"
                   aria-label={t('openMenu')}
-                  className="inline-flex size-10 items-center justify-center rounded-full bg-white/[0.08] text-white transition hover:bg-white/[0.12]"
+                  className="inline-flex size-10 items-center justify-center rounded-full bg-foreground/[0.06] text-foreground transition hover:bg-foreground/[0.1]"
                 >
                   <Ellipsis className="size-4" />
                 </button>

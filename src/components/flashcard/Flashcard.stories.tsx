@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite"
 import { useState } from "react"
-import { fn, within, userEvent, expect } from "storybook/test"
+import { fn, within, userEvent, expect, waitFor } from "storybook/test"
 import { Flashcard } from "./Flashcard"
 import type { FlashcardProps } from "./Flashcard"
 import type { CEFRLevel } from "./LevelBadge"
@@ -302,6 +302,19 @@ export const RevealFlow: Story = {
     expect(within(ratingGroup).getAllByRole("button")).toHaveLength(4)
     await canvas.findByRole("button", { name: /Снова/i })
     await canvas.findByRole("button", { name: /Хорошо/i })
+    // The reveal is a 3D flip (spring transition); the back face's content
+    // mounts (and its role/text become queryable) before the spring settles
+    // to full opacity. Wait for the spring to settle before the automatic
+    // a11y check runs, or it can snapshot genuinely-transient low-contrast
+    // mid-flip text.
+    await waitFor(
+      () => {
+        const face = canvasElement.querySelector('[data-testid="flashcard-face"]')
+        expect(face).not.toBeNull()
+        expect(getComputedStyle(face as Element).opacity).toBe("1")
+      },
+      { timeout: 3000 }
+    )
   },
 }
 

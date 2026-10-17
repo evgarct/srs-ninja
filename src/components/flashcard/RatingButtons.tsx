@@ -46,7 +46,7 @@ const BUTTON_CONFIG: {
     key: "1",
     icon: RotateCcw,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-rose-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(244,63,94,0.5)]",
+    shellClass: "bg-white text-rose-700 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(244,63,94,0.5)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_18px_32px_-16px_rgba(244,63,94,0.46)]",
     intervalKey: "again",
@@ -57,7 +57,7 @@ const BUTTON_CONFIG: {
     key: "2",
     icon: X,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-orange-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(249,115,22,0.5)]",
+    shellClass: "bg-white text-orange-800 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(249,115,22,0.5)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_22px_34px_-16px_rgba(249,115,22,0.45)]",
     intervalKey: "hard",
@@ -68,7 +68,7 @@ const BUTTON_CONFIG: {
     key: "3",
     icon: Sparkles,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-sky-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(14,165,233,0.5)]",
+    shellClass: "bg-white text-sky-700 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(14,165,233,0.5)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_25px_40px_-16px_rgba(14,165,233,0.45)]",
     intervalKey: "good",
@@ -79,7 +79,7 @@ const BUTTON_CONFIG: {
     key: "4",
     icon: Heart,
     sizeClass: "h-[4.15rem] w-[4.15rem] sm:h-[4.4rem] sm:w-[4.4rem]",
-    shellClass: "bg-white text-emerald-500 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(16,185,129,0.48)]",
+    shellClass: "bg-white text-emerald-700 shadow-[0_22px_34px_-18px_rgba(15,23,42,0.22),0_10px_22px_-14px_rgba(16,185,129,0.48)]",
     iconClass: "h-[1.35rem] w-[1.35rem]",
     hoverClass: "hover:-translate-y-0.5 hover:shadow-[0_22px_34px_-16px_rgba(16,185,129,0.42)]",
     intervalKey: "easy",
@@ -154,12 +154,12 @@ export function RatingButtons({
           if (isFloating) {
             const floatingToneClass =
               rating === 1
-                ? "text-rose-300 hover:text-rose-200 hover:border-rose-300/28 hover:bg-rose-300/10"
+                ? "text-rose-600 hover:text-rose-700 hover:border-rose-600/28 hover:bg-rose-600/10 dark:text-rose-300 dark:hover:text-rose-200 dark:hover:border-rose-300/28 dark:hover:bg-rose-300/10"
                 : rating === 2
-                  ? "text-orange-300 hover:text-orange-200 hover:border-orange-300/28 hover:bg-orange-300/10"
+                  ? "text-orange-600 hover:text-orange-700 hover:border-orange-600/28 hover:bg-orange-600/10 dark:text-orange-300 dark:hover:text-orange-200 dark:hover:border-orange-300/28 dark:hover:bg-orange-300/10"
                   : rating === 3
-                    ? "text-sky-300 hover:text-sky-200 hover:border-sky-300/28 hover:bg-sky-300/10"
-                    : "text-emerald-300 hover:text-emerald-200 hover:border-emerald-300/28 hover:bg-emerald-300/10"
+                    ? "text-sky-600 hover:text-sky-700 hover:border-sky-600/28 hover:bg-sky-600/10 dark:text-sky-300 dark:hover:text-sky-200 dark:hover:border-sky-300/28 dark:hover:bg-sky-300/10"
+                    : "text-emerald-600 hover:text-emerald-700 hover:border-emerald-600/28 hover:bg-emerald-600/10 dark:text-emerald-300 dark:hover:text-emerald-200 dark:hover:border-emerald-300/28 dark:hover:bg-emerald-300/10"
 
             return (
               <MagneticRatingButton key={rating} mouseX={mouseX} disabled={shouldReduceMotion}>
@@ -178,7 +178,7 @@ export function RatingButtons({
                           inline-flex items-center justify-center rounded-full
                           touch-manipulation [webkit-tap-highlight-color:transparent]
                           transition-all duration-200
-                          border border-white/10 bg-white/[0.04]
+                          border border-foreground/10 bg-foreground/[0.03]
                           active:scale-95 active:translate-y-0.5
                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
                           shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]
@@ -214,7 +214,7 @@ export function RatingButtons({
                 transition-all duration-150
                 active:scale-95 active:brightness-95
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-                border-white/55 bg-white/92 backdrop-blur-sm
+                border-white/55 bg-white
                 shadow-[0_16px_30px_-22px_hsl(var(--foreground)/0.45)]
                 ${shellClass}
                 ${hoverClass}
@@ -222,7 +222,7 @@ export function RatingButtons({
             >
               <Icon className={iconClass} />
               {intervals && (
-                <span className="mt-1 text-[10px] font-normal leading-none tabular-nums opacity-70 sm:text-[11px]">
+                <span className="mt-1 text-[10px] font-normal leading-none tabular-nums sm:text-[11px]">
                   {intervals[intervalKey]}
                 </span>
               )}

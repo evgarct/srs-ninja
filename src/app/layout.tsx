@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { buildBrandMetadata, brandViewport } from '@/lib/brand'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
+import { ThemeProvider } from 'next-themes'
 
 const inter = Inter({ subsets: ['latin', 'latin-ext', 'cyrillic'] })
 export const metadata = buildBrandMetadata()
@@ -21,13 +22,15 @@ export default async function RootLayout({
   const messages = await getMessages()
 
   return (
-    <html lang={locale} className="dark">
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <Nav />
-          {children}
-          <Toaster richColors position="top-right" />
-        </NextIntlClientProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Nav />
+            {children}
+            <Toaster richColors position="top-right" />
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -17,7 +17,7 @@ const meta: Meta<typeof ReviewHeatmap> = {
   },
   decorators: [
     (Story) => (
-      <div className="dark rounded-[28px] bg-[#080511] p-4">
+      <div className="rounded-[28px] bg-background p-4">
         <Story />
       </div>
     ),

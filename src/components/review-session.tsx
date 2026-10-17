@@ -515,12 +515,12 @@ export function ReviewSession({
 
   return (
     <div
-      className="relative min-h-0 flex-1 overflow-hidden bg-[#090511]"
+      className="relative min-h-0 flex-1 overflow-hidden bg-background"
       style={{ overscrollBehaviorY: done ? 'auto' : 'none' }}
     >
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(159,92,255,0.22)_0%,transparent_32%),radial-gradient(circle_at_bottom,rgba(242,255,119,0.08)_0%,transparent_26%),linear-gradient(180deg,#090511_0%,#0b0714_45%,#08050f_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(0,0,0,0.34),transparent)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(168,85,247,0.1)_0%,transparent_32%),radial-gradient(circle_at_bottom,rgba(234,179,8,0.06)_0%,transparent_26%)] dark:bg-[radial-gradient(circle_at_top,rgba(159,92,255,0.22)_0%,transparent_32%),radial-gradient(circle_at_bottom,rgba(242,255,119,0.08)_0%,transparent_26%)]" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-[linear-gradient(180deg,rgba(0,0,0,0.06),transparent)] dark:bg-[linear-gradient(180deg,rgba(0,0,0,0.34),transparent)]" />
       </div>
 
       <TooltipProvider delay={0} closeDelay={0}>
@@ -535,7 +535,7 @@ export function ReviewSession({
                       variant="ghost"
                       size="icon"
                       onClick={handleExitReview}
-                      className="h-10 w-10 rounded-full border border-white/10 bg-white/[0.06] text-white/76 shadow-[0_18px_30px_-22px_rgba(0,0,0,0.72)] backdrop-blur-xl hover:bg-white/[0.12] hover:text-white"
+                      className="h-10 w-10 rounded-full border border-foreground/10 bg-foreground/[0.04] text-foreground/76 shadow-[0_18px_30px_-22px_rgba(0,0,0,0.35)] backdrop-blur-xl hover:bg-foreground/[0.08] hover:text-foreground"
                       aria-label={t('exitReview')}
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -549,7 +549,7 @@ export function ReviewSession({
 
               <div className="min-w-0 text-center">
                 {showSessionHeader ? (
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/58 sm:text-xs">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground sm:text-xs">
                     {sessionLabel}
                   </div>
                 ) : null}
@@ -558,9 +558,9 @@ export function ReviewSession({
               <div className="shrink-0">
                 <AnimatedCircularProgressBar
                   value={progress}
-                  gaugePrimaryColor="rgb(244 255 95)"
-                  gaugeSecondaryColor="rgba(255, 255, 255, 0.14)"
-                  className="size-12 text-[10px] text-white sm:size-14 sm:text-xs"
+                  gaugePrimaryColor="var(--primary)"
+                  gaugeSecondaryColor="color-mix(in oklch, var(--foreground) 14%, transparent)"
+                  className="size-12 text-[10px] text-foreground sm:size-14 sm:text-xs"
                   label={`${currentStep} / ${projectedTotal || total}`}
                 />
               </div>
@@ -626,7 +626,7 @@ export function ReviewSession({
               >
                 <div
                   ref={actionBarRef}
-                  className={`relative rounded-full border border-white/10 bg-black/36 px-3 py-2 shadow-[0_28px_80px_-28px_rgba(0,0,0,0.82)] backdrop-blur-2xl transition-opacity duration-150 ${revealed ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-100'}`}
+                  className={`relative rounded-full border border-foreground/10 bg-background/80 px-3 py-2 shadow-[0_28px_80px_-28px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-opacity duration-150 ${revealed ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-100'}`}
                 >
                   <AnimatePresence>
                     {burstState ? (
