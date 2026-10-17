@@ -43,6 +43,13 @@ function getTimestamp() {
   return Date.now()
 }
 
+// The card's own max-width tracks the session container's responsive width
+// (see below) with a constant ~2rem gutter at every breakpoint, so the
+// depth-stack ghost cards — sized to the full container — stay visually
+// aligned with the active card instead of ballooning past it on desktop.
+const REVIEW_SESSION_MAX_WIDTH = 'max-w-[36rem] sm:max-w-[40rem] lg:max-w-[46rem]'
+const REVIEW_CARD_MAX_WIDTH = 'max-w-[34rem] sm:max-w-[38rem] lg:max-w-[44rem]'
+
 export function ReviewSession({
   cards,
   deckId,
@@ -496,6 +503,7 @@ export function ReviewSession({
       onRate={handleRating}
       mobileActionsSticky
       renderRatingButtons={false}
+      maxWidthClassName={REVIEW_CARD_MAX_WIDTH}
       headerAction={sharedHeaderAction}
     />
   )
@@ -517,7 +525,7 @@ export function ReviewSession({
 
       <TooltipProvider delay={0} closeDelay={0}>
         <div className="relative z-10 flex h-full min-h-0 flex-col pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pb-[calc(env(safe-area-inset-bottom)+7rem)]">
-          <div className="mx-auto flex w-full max-w-[36rem] min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:max-w-[40rem] sm:px-4 sm:pb-5 sm:pt-4 lg:max-w-[46rem]">
+          <div className={`mx-auto flex w-full min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-5 sm:pt-4 ${REVIEW_SESSION_MAX_WIDTH}`}>
             <div className="flex items-center justify-between gap-3 pb-3 sm:pb-4">
               <Tooltip>
                 <TooltipTrigger
@@ -558,7 +566,7 @@ export function ReviewSession({
               </div>
             </div>
 
-            <div className="relative mx-auto flex min-h-0 w-full max-w-[36rem] flex-1 items-center justify-center pb-2 sm:max-w-[40rem] sm:pb-4 lg:max-w-[46rem]">
+            <div className={`relative mx-auto flex min-h-0 w-full flex-1 items-center justify-center pb-2 sm:pb-4 ${REVIEW_SESSION_MAX_WIDTH}`}>
               <AnimatePresence>
                 {burstState ? (
                   <motion.div

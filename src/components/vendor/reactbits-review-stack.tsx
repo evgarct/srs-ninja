@@ -53,10 +53,6 @@ export function ReactBitsReviewStack({
 
   return (
     <div className="relative w-full" style={{ perspective: 900 }}>
-      <div aria-hidden className="invisible pointer-events-none">
-        {topCard.content}
-      </div>
-
       {backCards.map((card, index) => {
         const depth = index + 1
         const xOffset = depth * 8
@@ -87,7 +83,7 @@ export function ReactBitsReviewStack({
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={activeCardKey}
-          className={activeCardClassName ?? 'absolute inset-0 z-10'}
+          className={activeCardClassName ?? 'relative z-10 w-full'}
           initial={
             shouldReduceMotion
               ? { opacity: 0, y: 8, scale: 0.995 }

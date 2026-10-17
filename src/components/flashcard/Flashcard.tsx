@@ -48,6 +48,8 @@ export interface FlashcardProps {
   previewMode?: boolean
   mobileActionsSticky?: boolean
   renderRatingButtons?: boolean
+  /** Overrides the card's max-width (default `max-w-[34rem]`) — e.g. to track a wider host container. */
+  maxWidthClassName?: string
   className?: string
 }
 
@@ -75,6 +77,7 @@ export function Flashcard({
   previewMode = false,
   mobileActionsSticky = false,
   renderRatingButtons = true,
+  maxWidthClassName = "max-w-[34rem]",
   className,
 }: FlashcardProps) {
   const t = useTranslations("flashcard")
@@ -143,7 +146,7 @@ export function Flashcard({
     <div
       className={cn(
         "flex flex-col gap-4 w-full mx-auto select-none",
-        previewMode ? "max-w-none" : "max-w-[34rem]",
+        previewMode ? "max-w-none" : maxWidthClassName,
         className
       )}
     >

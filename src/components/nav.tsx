@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { BarChart3, Bot, Check, Ellipsis, House, LogOut, Plus, Settings, Upload } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 
@@ -32,6 +32,10 @@ const LANGUAGE_OPTIONS: { locale: Locale; label: string }[] = [
 
 export function Nav() {
   const [createDeckOpen, setCreateDeckOpen] = useState(false)
+  const shouldReduceMotion = useReducedMotion() ?? false
+  const navPillTransition = shouldReduceMotion
+    ? { duration: 0 }
+    : { type: 'spring' as const, stiffness: 400, damping: 32 }
   const t = useTranslations('nav')
   const locale = useLocale()
   const pathname = usePathname()
@@ -125,7 +129,7 @@ export function Nav() {
                       <motion.span
                         layoutId="nav-active-pill-desktop"
                         className="absolute inset-0 rounded-full bg-white/[0.12] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
-                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                        transition={navPillTransition}
                       />
                     ) : null}
                     <link.icon className="relative size-4" />
@@ -176,7 +180,7 @@ export function Nav() {
                   <motion.span
                     layoutId="nav-active-pill-mobile"
                     className="absolute inset-0 rounded-full bg-primary"
-                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    transition={navPillTransition}
                   />
                 ) : null}
                 <link.icon className="relative size-4" />

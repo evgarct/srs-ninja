@@ -5,6 +5,7 @@ import { Heart, RotateCcw, Sparkles, X } from "lucide-react"
 import {
   motion,
   useMotionValue,
+  useReducedMotion,
   useSpring,
   useTransform,
   type MotionValue,
@@ -87,19 +88,30 @@ const BUTTON_CONFIG: {
 
 function MagneticRatingButton({
   mouseX,
+  disabled = false,
   children,
 }: {
   mouseX: MotionValue<number>
+  disabled?: boolean
   children: React.ReactNode
 }) {
   const ref = React.useRef<HTMLDivElement>(null)
   const distance = useTransform(mouseX, (value) => {
+    if (disabled) return Infinity
     const rect = ref.current?.getBoundingClientRect()
     if (!rect) return Infinity
     return value - (rect.left + rect.width / 2)
   })
   const targetScale = useTransform(distance, [-140, 0, 140], [1, 1.16, 1])
   const scale = useSpring(targetScale, { mass: 0.1, stiffness: 150, damping: 12 })
+
+  if (disabled) {
+    return (
+      <div ref={ref} className="inline-flex">
+        {children}
+      </div>
+    )
+  }
 
   return (
     <motion.div ref={ref} style={{ scale }} className="inline-flex">
@@ -119,6 +131,7 @@ export function RatingButtons({
   const t = useTranslations("review")
   const isFloating = visualStyle === "floating"
   const mouseX = useMotionValue(Infinity)
+  const shouldReduceMotion = useReducedMotion() ?? false
 
   return (
     <TooltipProvider delay={0} closeDelay={0}>
@@ -149,7 +162,7 @@ export function RatingButtons({
                     : "text-emerald-300 hover:text-emerald-200 hover:border-emerald-300/28 hover:bg-emerald-300/10"
 
             return (
-              <MagneticRatingButton key={rating} mouseX={mouseX}>
+              <MagneticRatingButton key={rating} mouseX={mouseX} disabled={shouldReduceMotion}>
                 <Tooltip>
                   <TooltipTrigger
                     render={
