@@ -214,7 +214,7 @@ export function RatingButtons({
                 transition-all duration-150
                 active:scale-95 active:brightness-95
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-                border-white/55 bg-white/92 backdrop-blur-sm
+                border-white/55 bg-white
                 shadow-[0_16px_30px_-22px_hsl(var(--foreground)/0.45)]
                 ${shellClass}
                 ${hoverClass}

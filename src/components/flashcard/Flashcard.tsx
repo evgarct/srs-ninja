@@ -200,6 +200,7 @@ export function Flashcard({
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={isRevealed ? "back" : "front"}
+            data-testid="flashcard-face"
             initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: 90 }}
             animate={{ opacity: 1, rotateY: 0 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: -90 }}
