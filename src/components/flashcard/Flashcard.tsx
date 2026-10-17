@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { cn } from "@/lib/utils"
 import { LevelBadge, type CEFRLevel } from "./LevelBadge"
 import { FrequencyBar } from "./FrequencyBar"
@@ -48,6 +48,8 @@ export interface FlashcardProps {
   previewMode?: boolean
   mobileActionsSticky?: boolean
   renderRatingButtons?: boolean
+  /** Overrides the card's max-width (default `max-w-[34rem]`) — e.g. to track a wider host container. */
+  maxWidthClassName?: string
   className?: string
 }
 
@@ -75,11 +77,13 @@ export function Flashcard({
   previewMode = false,
   mobileActionsSticky = false,
   renderRatingButtons = true,
+  maxWidthClassName = "max-w-[34rem]",
   className,
 }: FlashcardProps) {
   const t = useTranslations("flashcard")
   const isCzech = language === "czech"
   const [isPressingReveal, setIsPressingReveal] = React.useState(false)
+  const shouldReduceMotion = useReducedMotion() ?? false
 
   /**
    * Visibility matrix:
@@ -142,7 +146,7 @@ export function Flashcard({
     <div
       className={cn(
         "flex flex-col gap-4 w-full mx-auto select-none",
-        previewMode ? "max-w-none" : "max-w-[34rem]",
+        previewMode ? "max-w-none" : maxWidthClassName,
         className
       )}
     >
@@ -181,47 +185,57 @@ export function Flashcard({
             : "cursor-default",
           isPressingReveal ? "scale-[0.995] shadow-xs ring-foreground/10" : "",
         ].join(" ")}
+        style={{ perspective: 1400 }}
       >
-        <div className="relative flex flex-col gap-5 p-6 sm:p-7">
-          {/* Header action (e.g. NoteEditSheet trigger) */}
-          {headerAction && (
-            <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
-              {headerAction}
-            </div>
-          )}
-
-          {/* ── Headline area ── */}
-          <div className="flex items-start gap-3">
-            {/* Play button — left of headline, only when expression visible */}
-            {showPlayButton && onPlayAudio && (
-              <div className="flex-shrink-0 mt-1">
-                <PlayButton onPlay={onPlayAudio} />
-              </div>
-            )}
-
-            <div className="flex-1 min-w-0">
-              {/* Primary headline word */}
-              <h2 className="text-3xl font-bold tracking-tight text-foreground leading-tight break-words">
-                {showProductionFront ? translation : expression}
-              </h2>
-
-              {showSecondaryTranslation ? (
-                <p className="mt-1 text-lg text-muted-foreground font-medium">
-                  {secondaryText}
-                </p>
-              ) : null}
-            </div>
+        {/* Header action (e.g. NoteEditSheet trigger) — stays put across the flip */}
+        {headerAction && (
+          <div
+            className="absolute top-4 right-4 z-20"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {headerAction}
           </div>
+        )}
 
-          <AnimatePresence initial={false}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={isRevealed ? "back" : "front"}
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: 90 }}
+            animate={{ opacity: 1, rotateY: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: -90 }}
+            transition={
+              shouldReduceMotion
+                ? { duration: 0.15, ease: "easeOut" }
+                : { type: "spring", stiffness: 200, damping: 22 }
+            }
+            style={{ backfaceVisibility: "hidden" }}
+            className="relative flex flex-col gap-5 p-6 sm:p-7"
+          >
+            {/* ── Headline area ── */}
+            <div className="flex items-start gap-3">
+              {/* Play button — left of headline, only when expression visible */}
+              {showPlayButton && onPlayAudio && (
+                <div className="flex-shrink-0 mt-1">
+                  <PlayButton onPlay={onPlayAudio} />
+                </div>
+              )}
+
+              <div className="flex-1 min-w-0">
+                {/* Primary headline word */}
+                <h2 className="text-3xl font-bold tracking-tight text-foreground leading-tight break-words">
+                  {showProductionFront ? translation : expression}
+                </h2>
+
+                {showSecondaryTranslation ? (
+                  <p className="mt-1 text-lg text-muted-foreground font-medium">
+                    {secondaryText}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
             {showExtraDetails ? (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 4 }}
-                transition={{ duration: 0.18, ease: "easeOut" }}
-                className="space-y-4"
-              >
+              <div className="space-y-4">
                 {/* ── Example sentences ── */}
                 {showExamples && examples.length > 0 ? (
                   <ExamplesList examples={examples} />
@@ -244,55 +258,55 @@ export function Flashcard({
                     )}
                   </div>
                 ) : null}
-              </motion.div>
+              </div>
             ) : null}
-          </AnimatePresence>
 
-          {/* ── Metadata ── */}
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-            <LevelBadge level={level} />
+            {/* ── Metadata ── */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <LevelBadge level={level} />
 
-            <span className="text-xs text-muted-foreground select-none">·</span>
+              <span className="text-xs text-muted-foreground select-none">·</span>
 
-            <span className="text-xs text-foreground/70 font-medium capitalize">
-              {partOfSpeech}
-            </span>
-
-            {isCzech && gender && (
-              <>
-                <span className="text-xs text-muted-foreground select-none">·</span>
-                <span className="text-xs text-foreground/70 font-medium underline decoration-dotted underline-offset-2">
-                  {gender}
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* ── Frequency bar ── */}
-          <FrequencyBar frequency={frequency} />
-
-          {/* ── Style label ── */}
-          <p className="text-xs text-muted-foreground -mt-2">{style}</p>
-
-          {/* ── Language-specific grammar note ── */}
-          {note && (
-            <div className="rounded-lg border border-foreground/8 bg-muted/40 px-3 py-2">
-              <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground/60">{t("note")}: </span>
-                {note}
-              </p>
-            </div>
-          )}
-
-          {/* ── Reveal hint (front only) ── */}
-          {!previewMode && !isRevealed && (
-            <div className="flex justify-center pt-1">
-              <span className="text-xs text-muted-foreground/50 tracking-wide">
-                {t("revealHint", { key: "Space" })}
+              <span className="text-xs text-foreground/70 font-medium capitalize">
+                {partOfSpeech}
               </span>
+
+              {isCzech && gender && (
+                <>
+                  <span className="text-xs text-muted-foreground select-none">·</span>
+                  <span className="text-xs text-foreground/70 font-medium underline decoration-dotted underline-offset-2">
+                    {gender}
+                  </span>
+                </>
+              )}
             </div>
-          )}
-        </div>
+
+            {/* ── Frequency bar ── */}
+            <FrequencyBar frequency={frequency} />
+
+            {/* ── Style label ── */}
+            <p className="text-xs text-muted-foreground -mt-2">{style}</p>
+
+            {/* ── Language-specific grammar note ── */}
+            {note && (
+              <div className="rounded-lg border border-foreground/8 bg-muted/40 px-3 py-2">
+                <p className="text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground/60">{t("note")}: </span>
+                  {note}
+                </p>
+              </div>
+            )}
+
+            {/* ── Reveal hint (front only) ── */}
+            {!previewMode && !isRevealed && (
+              <div className="flex justify-center pt-1">
+                <span className="text-xs text-muted-foreground/50 tracking-wide">
+                  {t("revealHint", { key: "Space" })}
+                </span>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* ── Rating buttons — outside the card, animate in ── */}

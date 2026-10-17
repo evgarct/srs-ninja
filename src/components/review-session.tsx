@@ -10,6 +10,7 @@ import { AnimatedCircularProgressBar } from '@/components/ui/animated-circular-p
 import { Flashcard } from '@/components/flashcard'
 import { NoteEditSheet } from '@/components/note-edit-sheet'
 import { ReviewRatingBurst } from '@/components/review-rating-burst'
+import { ReactBitsReviewStack } from '@/components/vendor/reactbits-review-stack'
 import { ArrowLeft, EyeOff, Pencil } from 'lucide-react'
 import type { Language, Rating } from '@/lib/types'
 import {
@@ -41,6 +42,13 @@ import { useTranslations } from 'next-intl'
 function getTimestamp() {
   return Date.now()
 }
+
+// The card's own max-width tracks the session container's responsive width
+// (see below) with a constant ~2rem gutter at every breakpoint, so the
+// depth-stack ghost cards — sized to the full container — stay visually
+// aligned with the active card instead of ballooning past it on desktop.
+const REVIEW_SESSION_MAX_WIDTH = 'max-w-[36rem] sm:max-w-[40rem] lg:max-w-[46rem]'
+const REVIEW_CARD_MAX_WIDTH = 'max-w-[34rem] sm:max-w-[38rem] lg:max-w-[44rem]'
 
 export function ReviewSession({
   cards,
@@ -75,7 +83,7 @@ export function ReviewSession({
   })
   const [pendingReviewCount, setPendingReviewCount] = useState(0)
   const [syncError, setSyncError] = useState<string | null>(null)
-  const [cardExitDirection, setCardExitDirection] = useState<'left' | 'right' | null>(null)
+  const [lastRating, setLastRating] = useState<Rating | null>(null)
   const [burstState, setBurstState] = useState<{ id: number; rating: Rating; anchorX: number; emoji: string } | null>(null)
   const [swipeOffsetX, setSwipeOffsetX] = useState(0)
   const swipeGestureRef = useRef<{
@@ -295,7 +303,7 @@ export function ReviewSession({
     if (!current) return
 
     resetSwipeGesture()
-    setCardExitDirection(rating <= 2 ? 'left' : 'right')
+    setLastRating(rating)
 
     const currentCardId = current.id
     const durationMs = getTimestamp() - startTimeRef.current
@@ -445,28 +453,6 @@ export function ReviewSession({
 
   if (!flashcardProps || !intervals || !currentPrepared) return null
 
-  const cardVariants = {
-    initial: shouldReduceMotion
-      ? { opacity: 0, y: 8, scale: 0.995 }
-      : { opacity: 0, y: 12, scale: 0.985 },
-    animate: { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 },
-    exit: (direction: 'left' | 'right' | null) => {
-      if (shouldReduceMotion) {
-        return { opacity: 0, y: -10, scale: 0.99 }
-      }
-
-      if (direction === 'left') {
-        return { opacity: 0, x: -460, y: 0, scale: 0.95, rotate: -16 }
-      }
-
-      if (direction === 'right') {
-        return { opacity: 0, x: 460, y: 0, scale: 0.95, rotate: 16 }
-      }
-
-      return { opacity: 0, y: -18, scale: 0.97 }
-    },
-  }
-
   const sharedHeaderAction = (
     <div className="flex items-center gap-1">
       <Button
@@ -517,9 +503,15 @@ export function ReviewSession({
       onRate={handleRating}
       mobileActionsSticky
       renderRatingButtons={false}
+      maxWidthClassName={REVIEW_CARD_MAX_WIDTH}
       headerAction={sharedHeaderAction}
     />
   )
+
+  const stackCards = queue.slice(0, 4).map((card, index) => ({
+    id: card.id,
+    content: index === 0 ? actualFlashcard : null,
+  }))
 
   return (
     <div
@@ -533,7 +525,7 @@ export function ReviewSession({
 
       <TooltipProvider delay={0} closeDelay={0}>
         <div className="relative z-10 flex h-full min-h-0 flex-col pb-[calc(env(safe-area-inset-bottom)+6.5rem)] sm:pb-[calc(env(safe-area-inset-bottom)+7rem)]">
-          <div className="mx-auto flex w-full max-w-[36rem] min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-5 sm:pt-4">
+          <div className={`mx-auto flex w-full min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-5 sm:pt-4 ${REVIEW_SESSION_MAX_WIDTH}`}>
             <div className="flex items-center justify-between gap-3 pb-3 sm:pb-4">
               <Tooltip>
                 <TooltipTrigger
@@ -574,38 +566,52 @@ export function ReviewSession({
               </div>
             </div>
 
-            <div className="relative mx-auto flex min-h-0 w-full max-w-[36rem] flex-1 items-center justify-center pb-2 sm:pb-4">
-              <AnimatePresence mode="wait" initial={false} custom={cardExitDirection}>
-                <motion.div
-                  key={current.id}
-                  custom={cardExitDirection}
-                  variants={cardVariants}
-                  initial={false}
-                  animate={
-                    isSwipeEnabled && swipeOffsetX !== 0
-                      ? {
-                          opacity: Math.max(0.74, 1 - Math.abs(swipeOffsetX) / 340),
-                          x: swipeOffsetX,
-                          y: 0,
-                          scale: 1,
-                          rotate: swipeOffsetX / 20,
-                        }
-                      : 'animate'
-                  }
-                  exit="exit"
-                  transition={{ type: 'spring', stiffness: 230, damping: 24, mass: 0.88 }}
-                  className="relative z-10 w-full"
-                  style={{
-                    touchAction: done ? 'auto' : isSwipeEnabled ? 'none' : 'manipulation',
-                  }}
-                  onPointerDown={handleCardPointerDown}
-                  onPointerMove={handleCardPointerMove}
-                  onPointerUp={handleCardPointerEnd}
-                  onPointerCancel={handleCardPointerCancel}
-                >
-                  {actualFlashcard}
-                </motion.div>
+            <div className={`relative mx-auto flex min-h-0 w-full flex-1 items-center justify-center pb-2 sm:pb-4 ${REVIEW_SESSION_MAX_WIDTH}`}>
+              <AnimatePresence>
+                {burstState ? (
+                  <motion.div
+                    key={burstState.id}
+                    aria-hidden
+                    className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center"
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: [0, 0.9, 0], scale: 1.7 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.7, ease: 'easeOut' }}
+                  >
+                    <div
+                      className="h-[70%] w-[70%] rounded-full blur-2xl"
+                      style={{
+                        background: `radial-gradient(circle, ${getReviewRatingMotion(burstState.rating).glowColor} 0%, transparent 72%)`,
+                      }}
+                    />
+                  </motion.div>
+                ) : null}
               </AnimatePresence>
+
+              <ReactBitsReviewStack
+                cards={stackCards}
+                activeCardKey={current.id}
+                lastRating={lastRating}
+                maxVisible={4}
+                activeCardAnimate={
+                  isSwipeEnabled && swipeOffsetX !== 0
+                    ? {
+                        opacity: Math.max(0.74, 1 - Math.abs(swipeOffsetX) / 340),
+                        x: swipeOffsetX,
+                        y: 0,
+                        scale: 1,
+                        rotate: swipeOffsetX / 20,
+                      }
+                    : undefined
+                }
+                activeCardStyle={{
+                  touchAction: done ? 'auto' : isSwipeEnabled ? 'none' : 'manipulation',
+                }}
+                onActivePointerDown={handleCardPointerDown}
+                onActivePointerMove={handleCardPointerMove}
+                onActivePointerUp={handleCardPointerEnd}
+                onActivePointerCancel={handleCardPointerCancel}
+              />
             </div>
           </div>
 

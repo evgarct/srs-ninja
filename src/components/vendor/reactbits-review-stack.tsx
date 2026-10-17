@@ -1,7 +1,13 @@
 'use client'
 
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useMemo } from 'react'
+// Adapted from the React Bits "Stack" pattern:
+// https://reactbits.dev/components/stack
+// Reworked for Echo's review flow: fixed depth-ghost cards behind the active
+// card, and the active card's motion is driven by the app's own swipe/rating
+// logic instead of the generic drag-to-dismiss interaction.
+
+import { AnimatePresence, motion, useReducedMotion, type TargetAndTransition } from 'motion/react'
+import { useMemo, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 
 import type { Rating } from '@/lib/types'
 import { getReviewRatingMotion } from '@/lib/review-rating-motion'
@@ -16,11 +22,26 @@ export function ReactBitsReviewStack({
   activeCardKey,
   lastRating,
   maxVisible = 4,
+  activeCardAnimate,
+  activeCardStyle,
+  activeCardClassName,
+  onActivePointerDown,
+  onActivePointerMove,
+  onActivePointerUp,
+  onActivePointerCancel,
 }: {
   cards: ReviewStackCard[]
   activeCardKey: string
   lastRating: Rating | null
   maxVisible?: number
+  /** Live override for the active card's animate target (e.g. mid-swipe drag feedback). */
+  activeCardAnimate?: TargetAndTransition
+  activeCardStyle?: CSSProperties
+  activeCardClassName?: string
+  onActivePointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void
+  onActivePointerMove?: (event: ReactPointerEvent<HTMLDivElement>) => void
+  onActivePointerUp?: (event: ReactPointerEvent<HTMLDivElement>) => void
+  onActivePointerCancel?: (event: ReactPointerEvent<HTMLDivElement>) => void
 }) {
   const shouldReduceMotion = useReducedMotion()
   const visibleCards = useMemo(() => cards.slice(0, maxVisible), [cards, maxVisible])
@@ -32,10 +53,6 @@ export function ReactBitsReviewStack({
 
   return (
     <div className="relative w-full" style={{ perspective: 900 }}>
-      <div aria-hidden className="invisible pointer-events-none">
-        {topCard.content}
-      </div>
-
       {backCards.map((card, index) => {
         const depth = index + 1
         const xOffset = depth * 8
@@ -58,7 +75,7 @@ export function ReactBitsReviewStack({
             initial={false}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
           >
-            <div className="h-full w-full rounded-2xl border border-foreground/10 bg-card shadow-sm ring-1 ring-foreground/5" />
+            <div className="h-full w-full rounded-[28px] border border-white/10 bg-[rgba(20,16,33,0.7)] shadow-sm ring-1 ring-white/6" />
           </motion.div>
         )
       })}
@@ -66,20 +83,26 @@ export function ReactBitsReviewStack({
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={activeCardKey}
-          className="absolute inset-0 z-10"
+          className={activeCardClassName ?? 'relative z-10 w-full'}
           initial={
             shouldReduceMotion
               ? { opacity: 0, y: 8, scale: 0.995 }
               : ratingMotion?.enter ?? { opacity: 0, x: 36, scale: 0.985, rotate: 2 }
           }
-          animate={{ opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }}
+          animate={
+            activeCardAnimate ?? { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0 }
+          }
           exit={
             shouldReduceMotion
               ? { opacity: 0, y: -8, scale: 0.99 }
               : ratingMotion?.exit ?? { opacity: 0, x: -260, scale: 0.96, rotate: -12 }
           }
           transition={{ type: 'spring', stiffness: 220, damping: 22, mass: 0.85 }}
-          style={{ transformOrigin: 'center 78%' }}
+          style={{ transformOrigin: 'center 78%', ...activeCardStyle }}
+          onPointerDown={onActivePointerDown}
+          onPointerMove={onActivePointerMove}
+          onPointerUp={onActivePointerUp}
+          onPointerCancel={onActivePointerCancel}
         >
           {topCard.content}
         </motion.div>
