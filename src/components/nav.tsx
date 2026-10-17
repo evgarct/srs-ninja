@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { motion } from 'motion/react'
 import { BarChart3, Bot, Check, Ellipsis, House, LogOut, Plus, Settings, Upload } from 'lucide-react'
 import { useTranslations, useLocale } from 'next-intl'
 
@@ -116,14 +117,19 @@ export function Nav() {
                     href={link.href}
                     prefetch
                     className={cn(
-                      'inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all',
-                      isActive
-                        ? 'bg-white/[0.12] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]'
-                        : 'text-white/58 hover:bg-white/[0.06] hover:text-white'
+                      'relative inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors',
+                      isActive ? 'text-white' : 'text-white/58 hover:bg-white/[0.06] hover:text-white'
                     )}
                   >
-                    <link.icon className="size-4" />
-                    {link.label}
+                    {isActive ? (
+                      <motion.span
+                        layoutId="nav-active-pill-desktop"
+                        className="absolute inset-0 rounded-full bg-white/[0.12] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      />
+                    ) : null}
+                    <link.icon className="relative size-4" />
+                    <span className="relative">{link.label}</span>
                   </Link>
                 )
               })}
@@ -162,14 +168,19 @@ export function Nav() {
                 href={link.href}
                 prefetch
                 className={cn(
-                  'inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-all',
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
+                  'relative inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium transition-colors',
+                  isActive ? 'text-primary-foreground' : 'text-white/60 hover:bg-white/[0.06] hover:text-white'
                 )}
               >
-                <link.icon className="size-4" />
-                <span>{link.label}</span>
+                {isActive ? (
+                  <motion.span
+                    layoutId="nav-active-pill-mobile"
+                    className="absolute inset-0 rounded-full bg-primary"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                ) : null}
+                <link.icon className="relative size-4" />
+                <span className="relative">{link.label}</span>
               </Link>
             )
           })}

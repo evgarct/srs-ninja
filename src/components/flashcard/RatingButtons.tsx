@@ -2,6 +2,13 @@
 
 import * as React from "react"
 import { Heart, RotateCcw, Sparkles, X } from "lucide-react"
+import {
+  motion,
+  useMotionValue,
+  useSpring,
+  useTransform,
+  type MotionValue,
+} from "motion/react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useTranslations } from "next-intl"
 
@@ -78,6 +85,29 @@ const BUTTON_CONFIG: {
   },
 ]
 
+function MagneticRatingButton({
+  mouseX,
+  children,
+}: {
+  mouseX: MotionValue<number>
+  children: React.ReactNode
+}) {
+  const ref = React.useRef<HTMLDivElement>(null)
+  const distance = useTransform(mouseX, (value) => {
+    const rect = ref.current?.getBoundingClientRect()
+    if (!rect) return Infinity
+    return value - (rect.left + rect.width / 2)
+  })
+  const targetScale = useTransform(distance, [-140, 0, 140], [1, 1.16, 1])
+  const scale = useSpring(targetScale, { mass: 0.1, stiffness: 150, damping: 12 })
+
+  return (
+    <motion.div ref={ref} style={{ scale }} className="inline-flex">
+      {children}
+    </motion.div>
+  )
+}
+
 export function RatingButtons({
   onRate,
   onRatePress,
@@ -88,10 +118,13 @@ export function RatingButtons({
 }: RatingButtonsProps) {
   const t = useTranslations("review")
   const isFloating = visualStyle === "floating"
+  const mouseX = useMotionValue(Infinity)
 
   return (
     <TooltipProvider delay={0} closeDelay={0}>
       <div
+        onMouseMove={isFloating ? (event) => mouseX.set(event.clientX) : undefined}
+        onMouseLeave={isFloating ? () => mouseX.set(Infinity) : undefined}
         className={
           isFloating
             ? `flex items-end justify-center gap-2.5 sm:gap-4 ${className ?? ""}`
@@ -116,36 +149,38 @@ export function RatingButtons({
                     : "text-emerald-300 hover:text-emerald-200 hover:border-emerald-300/28 hover:bg-emerald-300/10"
 
             return (
-              <Tooltip key={rating}>
-                <TooltipTrigger
-                  render={
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        onRatePress?.(rating, event.currentTarget)
-                        onRate(rating)
-                      }}
-                      aria-label={ariaLabel}
-                      className={`
-                        h-[3.6rem] w-[3.6rem] sm:h-[3.9rem] sm:w-[3.9rem]
-                        inline-flex items-center justify-center rounded-full
-                        touch-manipulation [webkit-tap-highlight-color:transparent]
-                        transition-all duration-200
-                        border border-white/10 bg-white/[0.04]
-                        active:scale-95 active:translate-y-0.5
-                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
-                        shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]
-                        ${floatingToneClass}
-                      `}
-                    >
-                      <Icon className={iconClass} />
-                    </button>
-                  }
-                />
-                <TooltipContent side="top" sideOffset={10}>
-                  {tooltipText}
-                </TooltipContent>
-              </Tooltip>
+              <MagneticRatingButton key={rating} mouseX={mouseX}>
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          onRatePress?.(rating, event.currentTarget)
+                          onRate(rating)
+                        }}
+                        aria-label={ariaLabel}
+                        className={`
+                          h-[3.6rem] w-[3.6rem] sm:h-[3.9rem] sm:w-[3.9rem]
+                          inline-flex items-center justify-center rounded-full
+                          touch-manipulation [webkit-tap-highlight-color:transparent]
+                          transition-all duration-200
+                          border border-white/10 bg-white/[0.04]
+                          active:scale-95 active:translate-y-0.5
+                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                          shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]
+                          ${floatingToneClass}
+                        `}
+                      >
+                        <Icon className={iconClass} />
+                      </button>
+                    }
+                  />
+                  <TooltipContent side="top" sideOffset={10}>
+                    {tooltipText}
+                  </TooltipContent>
+                </Tooltip>
+              </MagneticRatingButton>
             )
           }
 
