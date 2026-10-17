@@ -176,9 +176,9 @@ export function Flashcard({
             : undefined
         }
         className={[
-          "relative rounded-[28px] border border-white/10",
-          "bg-[rgba(20,16,33,0.96)] text-card-foreground",
-          "shadow-[0_28px_80px_-34px_rgba(0,0,0,0.86)] ring-1 ring-white/6",
+          "relative rounded-[28px] border border-foreground/10",
+          "bg-card text-card-foreground",
+          "shadow-[0_28px_80px_-34px_rgba(0,0,0,0.35)] dark:shadow-[0_28px_80px_-34px_rgba(0,0,0,0.86)] ring-1 ring-foreground/6",
           "touch-manipulation [webkit-tap-highlight-color:transparent] transition-[transform,box-shadow,ring-color,background-color] duration-150",
           !previewMode && !isRevealed
             ? "cursor-pointer hover:shadow-md hover:ring-foreground/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"

@@ -65,11 +65,11 @@ const meta: Meta<typeof HomeDeckList> = {
   },
   args: { deckStats: MANY_DECKS },
   render: (args) => (
-    <div className="dark relative h-[667px] overflow-hidden bg-[#080511] text-white">
+    <div className="relative h-[667px] overflow-hidden bg-background text-foreground">
       <main className="mx-auto flex h-full max-w-3xl flex-col overflow-hidden px-4 pb-[6.25rem] pt-4">
         <HomeDeckList {...args} />
       </main>
-      <div className="pointer-events-none absolute inset-x-4 bottom-4 h-16 rounded-full bg-black/80" />
+      <div className="pointer-events-none absolute inset-x-4 bottom-4 h-16 rounded-full bg-foreground/40" />
     </div>
   ),
 }

@@ -1,3 +1,5 @@
+import { Library } from 'lucide-react'
+
 import { HomeDeckList } from '@/components/home-deck-list'
 import { HomeViewportLock } from '@/components/home-viewport-lock'
 import { getDashboardStats } from '@/lib/actions/decks'
@@ -34,9 +36,9 @@ export default async function Home() {
       <main className="mx-auto flex h-[100svh] max-w-3xl flex-col overflow-hidden px-4 pb-[calc(env(safe-area-inset-bottom)+6.25rem)] pt-[calc(env(safe-area-inset-top)+1rem)] sm:px-5 md:h-[calc(100svh-4.5rem)] md:pb-5 md:pt-6">
         {deckStats.length === 0 ? (
           <div className="flex flex-1 items-center">
-            <div className="app-panel w-full px-6 py-16 text-center text-white/72">
-              <p className="mb-2 text-lg text-white">{t('noDecks')}</p>
-              <p className="text-sm">{t('createFirst')}</p>
+            <div className="app-panel flex w-full flex-col items-center gap-3 px-6 py-16 text-center text-muted-foreground">
+              <Library className="size-8 text-muted-foreground/70" aria-hidden />
+              <p className="text-lg text-foreground">{t('noDecks')}</p>
             </div>
           </div>
         ) : (

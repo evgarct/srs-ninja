@@ -113,18 +113,15 @@ export function ElevenLabsSettingsView({ initial, actions }: Props) {
         <CardContent>
           <ol className="grid gap-4 md:grid-cols-3">
             {([
-              ['stepKeyTitle', 'stepKeyDescription', KeyRound],
-              ['stepConnectTitle', 'stepConnectDescription', ShieldCheck],
-              ['stepVoicesTitle', 'stepVoicesDescription', Languages],
-            ] as const).map(([title, description, Icon], index) => (
-              <li key={title} className="flex gap-3 rounded-xl border p-4">
+              ['stepKeyTitle', KeyRound],
+              ['stepConnectTitle', ShieldCheck],
+              ['stepVoicesTitle', Languages],
+            ] as const).map(([title, Icon], index) => (
+              <li key={title} className="flex items-center gap-3 rounded-xl border p-4">
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
                   {index + 1}
                 </div>
-                <div className="flex min-w-0 flex-col gap-1">
-                  <p className="flex items-center gap-2 font-medium"><Icon className="size-4" aria-hidden="true" />{t(title)}</p>
-                  <p className="text-sm text-muted-foreground">{t(description)}</p>
-                </div>
+                <p className="flex min-w-0 items-center gap-2 font-medium"><Icon className="size-4 shrink-0" aria-hidden="true" />{t(title)}</p>
               </li>
             ))}
           </ol>
@@ -209,7 +206,6 @@ export function ElevenLabsSettingsView({ initial, actions }: Props) {
               </div>
             </CardContent>
           </Card>
-          <p className="text-sm text-muted-foreground">{t('voiceIdValidation')}</p>
         </>
       )}
     </div>

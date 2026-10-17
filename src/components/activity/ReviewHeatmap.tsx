@@ -1,5 +1,7 @@
 "use client"
 
+import { useTranslations } from 'next-intl'
+
 import { HeatmapCalendar, type HeatmapDatum } from '@/components/ui/calendar-heatmap'
 import { getActivityIntensity, type HeatmapWeek } from '@/lib/activity'
 
@@ -15,6 +17,7 @@ const CELL_STYLES: Record<Exclude<ReturnType<typeof getActivityIntensity>, 0>, s
 }
 
 export function ReviewHeatmap({ weeks }: ReviewHeatmapProps) {
+  const t = useTranslations('stats')
   if (weeks.length === 0) return null
 
   const hasAnyActivity = weeks.some((week) => week.days.some((day) => day.reviews > 0))
@@ -47,7 +50,7 @@ export function ReviewHeatmap({ weeks }: ReviewHeatmapProps) {
       minWeekSpacing: 2,
     },
     levelClassNames: [
-      'bg-white/[0.06]',
+      'bg-foreground/[0.06]',
       CELL_STYLES[1],
       CELL_STYLES[2],
       CELL_STYLES[3],
@@ -68,7 +71,7 @@ export function ReviewHeatmap({ weeks }: ReviewHeatmapProps) {
         </div>
       )
     },
-    className: 'w-fit text-white/70 [&_.text-muted-foreground]:text-white/42 [&_[data-slot=heatmap-axis]]:text-white/42',
+    className: 'w-fit text-foreground/70 [&_.text-muted-foreground]:text-muted-foreground [&_[data-slot=heatmap-axis]]:text-muted-foreground',
   }
 
   return (
@@ -82,9 +85,7 @@ export function ReviewHeatmap({ weeks }: ReviewHeatmapProps) {
       </div>
 
       {!hasAnyActivity ? (
-        <p className="mt-4 text-center text-sm text-white/54">
-          Активность пока не появилась. После первых review heatmap начнет показывать ритм обучения.
-        </p>
+        <p className="mt-4 text-center text-sm text-muted-foreground">{t('heatmapEmpty')}</p>
       ) : null}
     </div>
   )

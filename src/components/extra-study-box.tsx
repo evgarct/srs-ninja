@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronDown, FolderOpen } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +23,7 @@ export function ExtraStudyBox({
 }: {
   deckId: string
 }) {
+  const t = useTranslations('home')
   const router = useRouter()
   const primaryActionClassName = cn(
     buttonVariants({ size: 'lg' }),
@@ -29,7 +31,7 @@ export function ExtraStudyBox({
   )
   const secondaryActionClassName = cn(
     buttonVariants({ variant: 'outline', size: 'lg' }),
-    'min-h-12 justify-center gap-2 rounded-2xl border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm font-medium text-white hover:bg-white/[0.08]'
+    'min-h-12 justify-center gap-2 rounded-2xl border-foreground/10 bg-foreground/[0.03] px-4 py-3 text-center text-sm font-medium text-foreground hover:bg-foreground/[0.07]'
   )
 
   const startExtra = (limit: number) => {
@@ -43,26 +45,26 @@ export function ExtraStudyBox({
           <DropdownMenuTrigger
             render={
               <Button className={cn(primaryActionClassName, 'flex-1')}>
-                <span className="flex-1 text-left">Continue learning</span>
+                <span className="flex-1 text-left">{t('continueLearning')}</span>
                 <ChevronDown className="size-4 opacity-70" />
               </Button>
             }
           />
           <DropdownMenuContent>
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Extra study</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('extraStudy')}</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => startExtra(10)}>
-                +10 cards
+                {t('addCards', { count: 10 })}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => startExtra(20)}>
-                +20 cards
+                {t('addCards', { count: 20 })}
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
         <Link href={`/deck/${deckId}`} className={secondaryActionClassName}>
           <FolderOpen className="size-4" />
-          Open deck
+          {t('open')}
         </Link>
       </div>
     </div>

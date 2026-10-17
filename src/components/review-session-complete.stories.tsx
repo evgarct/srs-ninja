@@ -12,8 +12,8 @@ const meta: Meta<typeof ReviewSessionComplete> = {
   },
   decorators: [
     (Story) => (
-      <div className="min-h-screen bg-[#090511]">
-        <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col overflow-hidden bg-[#090511]">
+      <div className="min-h-screen bg-background">
+        <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col overflow-hidden bg-background">
           <Story />
         </main>
       </div>

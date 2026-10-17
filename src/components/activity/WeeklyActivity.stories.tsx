@@ -8,7 +8,7 @@ const meta: Meta<typeof WeeklyActivity> = {
   parameters: { layout: 'centered' },
   decorators: [
     (Story) => (
-      <div className="dark w-[22rem] rounded-[28px] bg-[#080511] p-4 sm:w-[32rem]">
+      <div className="w-[22rem] rounded-[28px] bg-background p-4 sm:w-[32rem]">
         <Story />
       </div>
     ),

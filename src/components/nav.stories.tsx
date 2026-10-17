@@ -16,14 +16,10 @@ const meta: Meta<typeof Nav> = {
         pathname: '/',
       },
     },
-    backgrounds: {
-      default: 'dark',
-      values: [{ name: 'dark', value: '#090511' }],
-    },
   },
   decorators: [
     (Story) => (
-      <div className="dark min-h-[200px] bg-[#090511]">
+      <div className="min-h-[200px] bg-background">
         <Story />
       </div>
     ),
