@@ -827,6 +827,6 @@ Protected-resource metadata is available at `/.well-known/oauth-protected-resour
 
 Auth middleware must bypass the well-known routes and `/oauth/consent`: discovery is public, while the consent page itself preserves `authorization_id` when redirecting an unauthenticated user to login.
 
-MCP permissions are fixed to reading owned decks/contracts/drafts and creating drafts. Approval, publishing, conflict resolution, and deletion stay in Echo. The remote tool set therefore excludes `approve_draft_note`.
+MCP permissions are fixed to reading owned decks/contracts/drafts, creating drafts, and reviewing cards (`get_review_session`, `submit_review`; see [mcp-voice-review.md](./mcp-voice-review.md)). Approval, publishing, conflict resolution, and deletion stay in Echo. The remote tool set therefore excludes `approve_draft_note`.
 
 Deck-aware tools accept `deckId`, `language`, exact normalized `name`, or narrowing combinations. Unique languages resolve automatically; ambiguous and missing selections return stable codes plus owned candidates. `get_echo_guide`, expanded contracts, and validator-backed English/Czech/Turkish examples replace hard-coded onboarding prompts and UUIDs.

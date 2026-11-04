@@ -7,6 +7,11 @@ describe('MCP guide examples', () => {
     expect(validateDraftCandidate(language, getValidDraftExample(language)).candidate).toBeDefined()
   })
 
+  it('lists the voice review tools', () => {
+    const guide = buildEchoGuide()
+    expect(Object.keys(guide.tools)).toEqual(expect.arrayContaining(['get_review_session', 'submit_review']))
+  })
+
   it('provides a self-contained save example without a real UUID', () => {
     const deck = { id: 'deck-1', name: 'Turkish A2', language: 'turkish', translation_language: 'russian' }
     expect(buildDeckContract(deck).saveExample).toMatchObject({ language: 'turkish', name: 'Turkish A2' })
