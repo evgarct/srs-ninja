@@ -1,8 +1,8 @@
 'use server'
 
-import { filterDeckNotes, type AudioFilter, type FsrsState } from '@/lib/deck-notes'
-import { scheduleCard } from '@/lib/fsrs'
+import type { AudioFilter, FsrsState } from '@/lib/deck-notes'
 import { getReviewSessionCandidateLimit } from '@/lib/review-card-selection'
+import { getDueCardsForUser, getManualStudyCardsForUser, submitReviewForUser } from '@/lib/review-service'
 import { createClient } from '@/lib/supabase/server'
 import type { Rating } from '@/lib/types'
 
@@ -19,20 +19,7 @@ function shuffleCards<T>(cards: T[]) {
 
 export async function getDueCards(deckId: string, limit = 20) {
   const supabase = await createClient()
-  const now = new Date().toISOString()
-  const candidateLimit = getReviewSessionCandidateLimit(limit)
-
-  const { data, error } = await supabase
-    .from('cards')
-    .select('*, notes!inner(fields, tags, deck_id, status)')
-    .eq('notes.deck_id', deckId)
-    .eq('notes.status', 'approved')
-    .lte('due_at', now)
-    .order('due_at', { ascending: true })
-    .limit(candidateLimit)
-
-  if (error) throw error
-  return data
+  return getDueCardsForUser(supabase, deckId, limit)
 }
 
 export async function getExtraStudyCards(deckId: string, limit = 20) {
@@ -84,56 +71,7 @@ export async function getManualStudyCards(
   }
 ) {
   const supabase = await createClient()
-
-  const { data: notes, error: notesError } = await supabase
-    .from('notes')
-    .select('id, fields, tags, cards(id, card_type, state, due_at)')
-    .eq('deck_id', deckId)
-    .eq('status', 'approved')
-
-  if (notesError || !notes) throw notesError ?? new Error('Failed to fetch notes')
-
-  const noteIds = notes.map((note) => note.id)
-  const { data: audioRows, error: audioError } = noteIds.length
-    ? await supabase
-        .from('audio_cache')
-        .select('note_id, storage_path')
-        .in('note_id', noteIds)
-        .eq('field_key', 'expression')
-    : { data: [], error: null }
-
-  if (audioError) throw audioError
-
-  const audioMap = Object.fromEntries((audioRows ?? []).map((row) => [row.note_id, row.storage_path]))
-
-  const visibleNotes = filterDeckNotes(
-    notes.map((note) => ({
-      id: note.id,
-      fields: note.fields as Record<string, unknown>,
-      tags: note.tags ?? [],
-      cards: (note.cards as Array<{ id: string; card_type: string; state: string; due_at: string }>) ?? [],
-    })),
-    {
-      tagFilters: tags,
-      stateFilters: states,
-      audioFilter,
-    },
-    audioMap
-  )
-
-  if (visibleNotes.length === 0) return []
-
-  const visibleNoteIds = visibleNotes.map((note) => note.id)
-  const { data: cards, error: cardsError } = await supabase
-    .from('cards')
-    .select('*, notes!inner(fields, tags, deck_id, status)')
-    .eq('notes.deck_id', deckId)
-    .eq('notes.status', 'approved')
-    .in('note_id', visibleNoteIds)
-    .order('due_at', { ascending: true })
-
-  if (cardsError) throw cardsError
-  return cards
+  return getManualStudyCardsForUser(supabase, deckId, { tags, states, audioFilter })
 }
 
 export async function submitReview(
@@ -148,36 +86,5 @@ export async function submitReview(
 
   if (!user) throw new Error('Not authenticated')
 
-  const { data: card, error: fetchError } = await supabase
-    .from('cards')
-    .select('*')
-    .eq('id', cardId)
-    .single()
-
-  if (fetchError) throw fetchError
-
-  const now = new Date()
-  const { updatedCard, scheduledDays, elapsedDays } = scheduleCard(card, rating, now)
-
-  const { error: updateError } = await supabase
-    .from('cards')
-    .update(updatedCard)
-    .eq('id', cardId)
-
-  if (updateError) throw updateError
-
-  const { error: reviewError } = await supabase.from('reviews').insert({
-    card_id: cardId,
-    user_id: user.id,
-    rating,
-    state: updatedCard.state ?? card.state,
-    scheduled_days: scheduledDays,
-    elapsed_days: elapsedDays,
-    review_duration_ms: durationMs,
-    reviewed_at: now.toISOString(),
-  })
-
-  if (reviewError) throw reviewError
-
-  return { updatedCard, scheduledDays }
+  return submitReviewForUser(supabase, user.id, cardId, rating, durationMs)
 }

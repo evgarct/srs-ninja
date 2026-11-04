@@ -9,6 +9,10 @@ import { listDraftBatchesForUser, listDraftNotesForUser, saveDraftNotesForUser, 
 import { addAgentSelectors, hasDeckSelector, MCP_DECK_LANGUAGES, resolveDeck, type DeckSelector, type McpDeck } from '@/lib/mcp-decks'
 import { buildDeckContract, buildEchoGuide } from '@/lib/mcp-guide'
 import { brand } from '@/lib/brand'
+import { orderCards } from '@/lib/card-ordering'
+import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
+import { buildReviewCardSides, type ReviewDirection } from '@/lib/review-answer-variants'
+import { getDueCardsForUser, getManualStudyCardsForUser, parseReviewRating, submitReviewForUser } from '@/lib/review-service'
 
 type TypedSupabaseClient = SupabaseClient<Database>
 const selectorFields = {
@@ -62,7 +66,7 @@ function selectorFromInput(input: { deckId?: string; language?: typeof MCP_DECK_
 }
 
 export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupabaseClient; userId: string }) {
-  const server = new McpServer({ name: brand.mcp.serverName, version: '0.2.0' })
+  const server = new McpServer({ name: brand.mcp.serverName, version: '0.3.0' })
 
   server.registerTool('list_decks', {
     title: 'List Echo decks',
@@ -146,6 +150,82 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
     }
     try { const notes = await listDraftNotesForUser(supabase, userId, { deckId, batchId }); return toTextResult(`Found ${notes.length} draft notes. Approval remains in Echo.`, { notes }) }
     catch (error) { return toToolError('Failed to list draft notes.', { code: 'LIST_DRAFT_NOTES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to list draft notes.') }) }
+  })
+
+  server.registerTool('get_review_session', {
+    title: 'Get an Echo review session',
+    description: 'Load cards to review out loud. mode "due" returns today\'s due cards ordered like the app; mode "tag" returns cards of notes with all given tags regardless of due date. Default direction "production" asks the Russian side and expects the target-language answer. Grade each card with submit_review right after the user answers.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      ...selectorFields,
+      mode: z.enum(['due', 'tag']).default('due'),
+      tags: z.array(z.string().min(1)).optional().describe('Required for mode "tag"; a note must have every tag.'),
+      direction: z.enum(['production', 'recognition', 'both']).default('production').describe('production: RU question, target-language answer. recognition: target-language question, RU answer.'),
+      limit: z.number().int().min(1).max(100).default(30),
+    },
+  }, async ({ mode, tags, direction, limit, ...input }) => {
+    const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
+    if (resolved.error) return resolved.error
+    const deck = resolved.deck!
+    if (mode === 'tag' && !tags?.length) return toToolError('mode "tag" needs at least one tag.', { code: 'TAGS_REQUIRED', nextTool: 'get_review_session' })
+
+    try {
+      const language = deck.language as Language
+      const matchesDirection = (card: { card_type: string }) =>
+        direction === 'both' ? card.card_type === 'production' || card.card_type === 'recognition' : card.card_type === direction
+
+      const rawCards = mode === 'tag'
+        ? await getManualStudyCardsForUser(supabase, deck.id, { tags }, userId)
+        : await getDueCardsForUser(supabase, deck.id, REGULAR_DUE_REVIEW_LIMIT, userId)
+      const candidates = rawCards.filter(matchesDirection)
+      const selected = (mode === 'tag' ? candidates : orderCards(candidates)).slice(0, limit)
+
+      const cards = selected.map((card) => ({
+        cardId: card.id,
+        noteId: card.note_id,
+        direction: card.card_type as ReviewDirection,
+        state: card.state,
+        isNew: card.state === 'new',
+        ...buildReviewCardSides((card.notes?.fields ?? {}) as Record<string, unknown>, language, card.card_type as ReviewDirection),
+      }))
+
+      return toTextResult(`Review session for ${deck.name}: ${cards.length} of ${candidates.length} matching cards.`, {
+        deck: { id: deck.id, name: deck.name, language: deck.language },
+        mode,
+        totalMatching: candidates.length,
+        returned: cards.length,
+        instructions: [
+          'Read each question aloud, then listen to the answer.',
+          'Compare answers without diacritics (acceptedAnswersNormalized); voice recognition may spell target-language words in Cyrillic, so judge by sound.',
+          'Say whether it was right; on a mistake give the correct answer.',
+          'Call submit_review with again, hard, good or easy right after each card so progress is saved if the call drops.',
+          'Re-ask cards graded again at the end of the session.',
+        ],
+        cards,
+      })
+    } catch (error) {
+      return toToolError('Failed to load the review session.', { code: 'GET_REVIEW_SESSION_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to load the review session.', { tool: 'get_review_session', deckId: deck.id }) })
+    }
+  })
+
+  server.registerTool('submit_review', {
+    title: 'Submit an Echo review grade',
+    description: 'Grade one card from get_review_session. Updates the FSRS schedule exactly like an in-app review and logs it. Rating: again, hard, good or easy (or 1-4).',
+    annotations: { readOnlyHint: false, idempotentHint: false },
+    inputSchema: {
+      cardId: z.string().min(1),
+      rating: z.union([z.enum(['again', 'hard', 'good', 'easy']), z.number().int().min(1).max(4)]),
+      durationMs: z.number().int().min(0).max(3_600_000).optional().describe('Time spent on the card in milliseconds.'),
+    },
+  }, async ({ cardId, rating, durationMs }) => {
+    const parsed = parseReviewRating(rating)
+    if (!parsed) return toToolError('Rating must be again, hard, good, easy or 1-4.', { code: 'INVALID_RATING' })
+    try {
+      const { updatedCard, scheduledDays } = await submitReviewForUser(supabase, userId, cardId, parsed, durationMs ?? 0)
+      return toTextResult(`Saved rating ${parsed}. Next review in ${scheduledDays} day(s).`, { cardId, rating: parsed, state: updatedCard.state, dueAt: updatedCard.due_at, scheduledDays })
+    } catch (error) {
+      return toToolError('Failed to submit the review.', { code: 'SUBMIT_REVIEW_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to submit the review.', { tool: 'submit_review' }) })
+    }
   })
 
   return server

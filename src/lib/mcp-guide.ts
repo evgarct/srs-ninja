@@ -69,7 +69,7 @@ export function buildDeckContract(deck: McpDeck) {
 
 export function buildEchoGuide(deck?: McpDeck) {
   return {
-    safety: 'MCP can read your Echo decks and drafts and create draft notes. Approval, publishing, and deletion stay in Echo.',
+    safety: 'MCP can read your Echo decks and drafts, create draft notes, and review cards. Approval, publishing, and deletion stay in Echo.',
     workflow: [
       'Call list_decks when the requested deck is not obvious.',
       'Use language to select a unique deck; otherwise add its exact name or deckId.',
@@ -83,7 +83,14 @@ export function buildEchoGuide(deck?: McpDeck) {
       save_draft_notes: 'Creates drafts only; it never publishes notes.',
       list_draft_batches: 'Lists the user\'s draft import batches, optionally by deck.',
       list_draft_notes: 'Lists the user\'s draft notes, optionally by deck or batch.',
+      get_review_session: 'Loads due cards (or cards by tag) for a spoken review, with question, answer and accepted variants.',
+      submit_review: 'Grades one card (again/hard/good/easy) and updates the spaced-repetition schedule like the app.',
     },
+    reviewWorkflow: [
+      'Call get_review_session with a deck selector (mode due, or mode tag with tags).',
+      'Read each question, check the spoken answer against acceptedAnswers ignoring diacritics, and judge by sound.',
+      'Call submit_review immediately after each card.',
+    ],
     selectorExamples: [
       { language: 'turkish' },
       { language: 'turkish', name: 'Turkish A2' },

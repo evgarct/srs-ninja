@@ -30,7 +30,8 @@ jobs:
   # ── Layer 2: Storybook interaction tests (Playwright/Chromium) ────────────
   storybook:
     name: Storybook interaction tests
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest moved to 26.04, which Playwright does not support yet.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
