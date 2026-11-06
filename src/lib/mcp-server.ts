@@ -21,12 +21,19 @@ const selectorFields = {
   name: z.string().min(1).optional().describe('Exact deck name, compared case-insensitively after trimming whitespace.'),
 }
 
-function toTextResult(text: string, structuredContent?: Record<string, unknown>) {
-  return { content: [{ type: 'text' as const, text }], structuredContent }
+// Some MCP clients (including Claude) only show the text content to the model
+// and drop structuredContent, so the payload is mirrored into the text as JSON.
+// Without it get_review_session returned only a summary line and no cardIds.
+function withJsonPayload(text: string, structuredContent?: Record<string, unknown>) {
+  return structuredContent ? `${text}\n\n${JSON.stringify(structuredContent)}` : text
 }
 
-function toToolError(message: string, structuredContent: Record<string, unknown>) {
-  return { content: [{ type: 'text' as const, text: message }], isError: true, structuredContent }
+export function toTextResult(text: string, structuredContent?: Record<string, unknown>) {
+  return { content: [{ type: 'text' as const, text: withJsonPayload(text, structuredContent) }], structuredContent }
+}
+
+export function toToolError(message: string, structuredContent: Record<string, unknown>) {
+  return { content: [{ type: 'text' as const, text: withJsonPayload(message, structuredContent) }], isError: true, structuredContent }
 }
 
 export type ToolErrorDiagnostic = {
@@ -66,7 +73,7 @@ function selectorFromInput(input: { deckId?: string; language?: typeof MCP_DECK_
 }
 
 export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupabaseClient; userId: string }) {
-  const server = new McpServer({ name: brand.mcp.serverName, version: '0.3.0' })
+  const server = new McpServer({ name: brand.mcp.serverName, version: '0.3.1' })
 
   server.registerTool('list_decks', {
     title: 'List Echo decks',
@@ -195,8 +202,10 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
         totalMatching: candidates.length,
         returned: cards.length,
         instructions: [
+          'Each card has a cardId; pass exactly that cardId to submit_review.',
           'Read each question aloud, then listen to the answer.',
           'Compare answers without diacritics (acceptedAnswersNormalized); voice recognition may spell target-language words in Cyrillic, so judge by sound.',
+          'Accept only answers listed in acceptedAnswers for that card; do not treat near-synonyms (for example mluvit and říkat) as correct unless the card lists them.',
           'Say whether it was right; on a mistake give the correct answer.',
           'Call submit_review with again, hard, good or easy right after each card so progress is saved if the call drops.',
           'Re-ask cards graded again at the end of the session.',

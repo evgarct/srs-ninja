@@ -11,6 +11,8 @@ The user can ask an assistant over MCP to run a spoken review: the assistant ask
 5. `submit_review` accepts `again`, `hard`, `good`, `easy` or 1-4, applies the same FSRS scheduling as an in-app review, and logs the review.
 6. A card that does not belong to the user cannot be graded and nothing is written.
 7. Each grade is saved immediately so an interrupted conversation keeps its progress.
+8. The cards, including each `cardId`, are readable from the tool's text content, so a client that ignores `structuredContent` (for example Claude) can still run the session and call `submit_review`.
+9. The session instructions tell the assistant to accept only a card's listed answers; near-synonyms are not accepted unless the card lists them.
 
 ## Non-goals
 - No new card or note fields; no approval or deletion through MCP.
