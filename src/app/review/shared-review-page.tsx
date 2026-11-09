@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { ReviewSession } from '@/components/review-session'
+import type { ReviewSessionCard } from '@/lib/review-session'
 import { ReviewSessionCompleteRestore } from '@/components/review-session-complete-restore'
 import { getDueCards, getExtraStudyCards, getManualStudyCards } from '@/lib/actions/cards'
 import { buttonVariants } from '@/lib/button-variants'
@@ -101,7 +102,8 @@ export async function renderSharedReviewPage(
   return (
     <main className="mx-auto flex h-[100svh] w-full flex-col overflow-hidden bg-[#090511] px-0 pb-0 pt-0">
       <ReviewSession
-        cards={cards}
+        // Note fields are stored as JSON objects; the session reads them as a record of fields.
+        cards={cards as unknown as ReviewSessionCard[]}
         deckId={deckId}
         language={deck.language}
         audioMap={audioMap}

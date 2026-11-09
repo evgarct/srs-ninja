@@ -1,0 +1,195 @@
+package com.evgarct.echo.ui.login
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.ContentType
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentType
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.evgarct.echo.R
+import com.evgarct.echo.ui.PrimaryAction
+import com.evgarct.echo.ui.TitleLine
+import com.evgarct.echo.ui.art.SwingingBug
+import com.evgarct.echo.ui.riseIn
+import com.evgarct.echo.ui.theme.EchoEase
+import com.evgarct.echo.ui.theme.Ink
+import com.evgarct.echo.ui.theme.Type
+
+/** Email + password, the same account as the web app. */
+@Composable
+fun LoginScreen(
+    busy: Boolean,
+    error: String?,
+    onSubmit: (email: String, password: String) -> Unit,
+) {
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    val focus = LocalFocusManager.current
+    val passwordFocus = remember { FocusRequester() }
+    val canSubmit = email.isNotBlank() && password.isNotEmpty() && !busy
+    val submit = {
+        if (canSubmit) {
+            focus.clearFocus()
+            onSubmit(email, password)
+        }
+    }
+
+    Box(Modifier.fillMaxSize().background(Ink.Ground)) {
+        SwingingBug(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(end = 34.dp))
+        Column(
+            Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+        ) {
+            BasicText(
+                stringResource(R.string.wordmark),
+                Modifier.padding(top = 14.dp),
+                style = Type.hand.copy(fontSize = 36.sp, lineHeight = 36.sp, color = Ink.Graphite),
+            )
+            Spacer(Modifier.height(38.dp))
+            Column(Modifier.riseIn()) {
+                BasicText(stringResource(R.string.login_eyebrow), style = Type.mono)
+                Spacer(Modifier.height(10.dp))
+                TitleLine(stringResource(R.string.login_title_line1))
+                TitleLine(stringResource(R.string.login_title_line2))
+            }
+            Spacer(Modifier.height(40.dp))
+            Column(Modifier.riseIn(80)) {
+                PaperField(
+                    label = stringResource(R.string.login_email),
+                    value = email,
+                    onChange = { email = it },
+                    contentType = ContentType.EmailAddress,
+                    keyboard = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+                    actions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
+                )
+                Spacer(Modifier.height(22.dp))
+                PaperField(
+                    label = stringResource(R.string.login_password),
+                    value = password,
+                    onChange = { password = it },
+                    contentType = ContentType.Password,
+                    keyboard = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Go),
+                    actions = KeyboardActions(onGo = { submit() }),
+                    modifier = Modifier.focusRequester(passwordFocus),
+                    secret = true,
+                )
+            }
+            AnimatedVisibility(
+                visible = error != null,
+                enter = fadeIn(tween(200)) + slideInVertically(tween(320, easing = EchoEase)) { -it / 2 },
+                exit = fadeOut(tween(150)),
+            ) {
+                BasicText(
+                    error.orEmpty(),
+                    Modifier.padding(top = 18.dp),
+                    style = Type.hand.copy(fontSize = 22.sp, color = Ink.Graphite),
+                )
+            }
+            Spacer(Modifier.weight(1f).height(32.dp))
+            Box(Modifier.padding(bottom = 20.dp).riseIn(160)) {
+                PrimaryAction(
+                    stringResource(if (busy) R.string.login_busy else R.string.login_submit),
+                    trailing = if (busy) null else "→",
+                    onClick = submit,
+                )
+            }
+            BasicText(
+                stringResource(R.string.login_hint),
+                Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                style = Type.mono.copy(color = Ink.Soft),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PaperField(
+    label: String,
+    value: String,
+    onChange: (String) -> Unit,
+    contentType: ContentType,
+    keyboard: KeyboardOptions,
+    actions: KeyboardActions,
+    modifier: Modifier = Modifier,
+    secret: Boolean = false,
+) {
+    val source = remember { MutableInteractionSource() }
+    val focused by source.collectIsFocusedAsState()
+    val rule by animateColorAsState(if (focused) Ink.Graphite else Ink.Rule, tween(200), label = "rule")
+    val ruleW by animateDpAsState(if (focused) 1.5.dp else 1.dp, tween(200), label = "ruleW")
+    Column(modifier.fillMaxWidth()) {
+        BasicText(label, style = Type.mono.copy(color = Ink.Soft))
+        BasicTextField(
+            value = value,
+            onValueChange = onChange,
+            singleLine = true,
+            interactionSource = source,
+            textStyle = TextStyle(fontFamily = Type.Onest, fontSize = 22.sp, color = Ink.Graphite),
+            cursorBrush = SolidColor(Ink.Leaf),
+            keyboardOptions = keyboard,
+            keyboardActions = actions,
+            visualTransformation = if (secret) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+            modifier = Modifier
+                .fillMaxWidth()
+                .semantics { this.contentType = contentType }
+                .drawBehind {
+                    val w = ruleW.toPx()
+                    drawLine(rule, Offset(0f, size.height - w / 2), Offset(size.width, size.height - w / 2), w)
+                }
+                .padding(top = 8.dp, bottom = 12.dp),
+        )
+    }
+}

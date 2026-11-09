@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Hand-drawn cat head in graphite with one green dot, after the design canvas. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:translateX="17" android:translateY="22">
+        <path
+            android:pathData="M14 36 L 11 14 L 26 28 M48 28 L 63 14 L 60 36 M12 38 C 6 58, 22 68, 37 68 C 52 68, 68 58, 62 38 C 58 26, 16 26, 12 38 M27 46 l 0 0.5 M47 46 l 0 0.5 M34 54 l 3 2.5 l 3 -2.5"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="3.6"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M70 60 m -4 0 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0"
+            android:fillColor="#2E7A3C" />
+    </group>
+</vector>
