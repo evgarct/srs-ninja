@@ -92,7 +92,7 @@ import com.evgarct.echo.data.Deck
 import com.evgarct.echo.data.Grade
 import com.evgarct.echo.data.SessionKind
 import com.evgarct.echo.data.SessionResult
-import com.evgarct.echo.data.gradeForDrag
+import com.evgarct.echo.data.SwipeRules
 import com.evgarct.echo.data.RequeuePolicy
 import com.evgarct.echo.data.ReviewSessionData
 import com.evgarct.echo.ui.LocalSpeaker
@@ -119,6 +119,13 @@ private val SlipEase = CubicBezierEasing(0.2f, 0.9f, 0.2f, 1f)
 
 private enum class Face { Recall, Reveal }
 
+private fun gradeLabel(g: Grade) = when (g) {
+    Grade.Again -> R.string.grade_again
+    Grade.Hard -> R.string.grade_hard
+    Grade.Good -> R.string.grade_good
+    Grade.Easy -> R.string.grade_easy
+}
+
 private const val PREFS = "echo"
 private const val KEY_SWIPES = "successful_swipes"
 
@@ -134,7 +141,7 @@ fun ReviewScreen(
 ) {
     val ready = (cards as? Remote.Ready)?.value
     if (ready != null && ready.cards.isNotEmpty()) {
-        ReviewSession(deck, ready.cards, ready.requeue, kind, onGraded, onClose, onFinish)
+        ReviewSession(deck, ready.cards, ready.requeue, ready.swipe, kind, onGraded, onClose, onFinish)
         return
     }
     BackHandler(onBack = onClose)
@@ -184,6 +191,7 @@ private fun ReviewSession(
     deck: Deck,
     cards: List<Card>,
     requeue: RequeuePolicy,
+    swipe: SwipeRules,
     kind: SessionKind,
     onGraded: (Card, Grade, Long) -> Unit,
     onClose: () -> Unit,
@@ -339,7 +347,8 @@ private fun ReviewSession(
                 .drawBehind { drawRect(Ink.Leaf, size = size.copy(width = size.width * progress)) },
         )
 
-        // Grade scale: appears while the card is being dragged.
+        // Swipe scale: the two outcomes a swipe has on the web (left / right rating), shown while
+        // dragging; the reached side turns green once the card passes the commit distance.
         val scaleAlpha by animateFloatAsState(if (dragging) 1f else 0f, tween(200), label = "scale")
         Row(
             Modifier
@@ -347,23 +356,25 @@ private fun ReviewSession(
                 .fillMaxWidth()
                 .height(22.dp)
                 .graphicsLayer { alpha = scaleAlpha },
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            listOf(Grade.Again to R.string.grade_again, Grade.Hard to R.string.grade_hard, Grade.Good to R.string.grade_good, Grade.Easy to R.string.grade_easy)
-                .forEach { (g, res) ->
+            listOf(swipe.left to true, swipe.right to false).forEach { (g, isLeft) ->
+                if (g != null) {
                     val c by animateColorAsState(if (dragGrade == g) Ink.Leaf else Ink.Idle, tween(120), label = "lbl")
+                    val label = stringResource(gradeLabel(g))
                     BasicText(
-                        stringResource(res),
-                        Modifier.weight(1f),
-                        style = Type.mono.copy(fontSize = 11.5.sp, color = c, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
+                        if (isLeft) "← $label" else "$label →",
+                        style = Type.mono.copy(fontSize = 11.5.sp, color = c),
                         maxLines = 1,
                     )
-                }
+                } else Spacer(Modifier.width(1.dp))
+            }
         }
 
         if (!done && card != null) {
             // Back of the stack: layers step back 11 dp per side and 12 dp up; it thins out near the end.
             val behind = queue.size - 1
-            val lift = with(density) { (kotlin.math.abs(dx.value) / 160.dp.toPx()).coerceAtMost(1f) } * if (dragging) 4f else 0f
+            val lift = with(density) { (kotlin.math.abs(dx.value) / swipe.maxOffset.dp.toPx()).coerceAtMost(1f) } * if (dragging) 4f else 0f
             for (d in 3 downTo 1) {
                 val depth = d - shift.value
                 val visible = d <= behind
@@ -394,45 +405,65 @@ private fun ReviewSession(
                     .graphicsLayer {
                         translationX = dx.value
                         translationY = dy.value
-                        rotationZ = px(dx.value) / 24f
+                        // Web swipe feel: rotate x/20, fade to no less than 0.74 at 340 of travel.
+                        rotationZ = px(dx.value) / 20f
                         transformOrigin = TransformOrigin(0.5f, 0.9f)
-                        alpha = if (shift.value > 0f) 1f - (shift.value * 4f).coerceAtMost(1f) else 1f
+                        val swipeFade = if (dragging) maxOf(0.74f, 1f - kotlin.math.abs(px(dx.value)) / 340f) else 1f
+                        alpha = swipeFade * if (shift.value > 0f) 1f - (shift.value * 4f).coerceAtMost(1f) else 1f
                     }
-                    .pointerInput(reveal, leaving) {
+                    .pointerInput(reveal, leaving, swipe) {
                         if (!reveal || leaving) return@pointerInput
+                        // Web gesture: nothing happens until the touch moves the lock distance; a mostly
+                        // horizontal move then tracks the swipe (clamped to the max offset), a mostly
+                        // vertical one is the slip pull from the design instead.
                         var rawX = 0f
                         var rawY = 0f
+                        var axis = 0 // 0 undecided, 1 horizontal swipe, 2 vertical slip pull
+                        val dp = density.density
+                        fun settle() {
+                            dragging = false
+                            dragGrade = null
+                            scope.launch { dx.animateTo(0f, tween(380, easing = EchoEase)) }
+                            scope.launch { dy.animateTo(0f, tween(380, easing = EchoEase)) }
+                        }
                         detectDragGestures(
-                            onDragStart = { rawX = 0f; rawY = 0f; dragging = true },
+                            onDragStart = { rawX = 0f; rawY = 0f; axis = 0 },
                             onDragEnd = {
-                                val g = gradeForDrag(rawX / density.density)
-                                if (g != null) grade(g, bySwipe = true) else {
-                                    dragging = false
-                                    dragGrade = null
-                                    val yDp = rawY / density.density
-                                    if (yDp < -50f) detail = true
-                                    if (yDp > 50f) detail = false
-                                    scope.launch { dx.animateTo(0f, tween(380, easing = EchoEase)) }
-                                    scope.launch { dy.animateTo(0f, tween(380, easing = EchoEase)) }
+                                when (axis) {
+                                    1 -> {
+                                        val g = swipe.gradeFor(swipe.clamp(rawX / dp))
+                                        if (g != null) grade(g, bySwipe = true) else settle()
+                                    }
+                                    2 -> {
+                                        val yDp = rawY / dp
+                                        if (yDp < -50f) detail = true
+                                        if (yDp > 50f) detail = false
+                                        settle()
+                                    }
+                                    else -> settle()
                                 }
                             },
-                            onDragCancel = {
-                                dragging = false
-                                dragGrade = null
-                                scope.launch { dx.animateTo(0f, tween(380, easing = EchoEase)) }
-                                scope.launch { dy.animateTo(0f, tween(380, easing = EchoEase)) }
-                            },
+                            onDragCancel = { settle() },
                         ) { change, amount ->
                             change.consume()
                             rawX += amount.x
                             rawY += amount.y
-                            val limit = 40.dp.toPx()
-                            scope.launch { dx.snapTo(rawX) }
-                            scope.launch { dy.snapTo((rawY * 0.25f).coerceIn(-limit, limit)) }
-                            val g = gradeForDrag(rawX / density.density)
-                            if (g != dragGrade) {
-                                dragGrade = g
-                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            if (axis == 0) {
+                                if (maxOf(kotlin.math.abs(rawX), kotlin.math.abs(rawY)) / dp < swipe.lockDistance) return@detectDragGestures
+                                axis = if (kotlin.math.abs(rawX) > kotlin.math.abs(rawY)) 1 else 2
+                                if (axis == 1) dragging = true
+                            }
+                            if (axis == 1) {
+                                val xDp = swipe.clamp(rawX / dp)
+                                scope.launch { dx.snapTo(xDp * dp) }
+                                val g = swipe.gradeFor(xDp)
+                                if (g != dragGrade) {
+                                    dragGrade = g
+                                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                                }
+                            } else {
+                                val limit = 40.dp.toPx()
+                                scope.launch { dy.snapTo((rawY * 0.25f).coerceIn(-limit, limit)) }
                             }
                         }
                     },

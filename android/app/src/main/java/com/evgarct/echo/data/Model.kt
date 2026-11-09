@@ -57,7 +57,33 @@ class RequeuePolicy(private val rows: List<Pair<RequeueWindow?, RequeueWindow?>>
     }
 }
 
-data class ReviewSessionData(val cards: List<Card>, val requeue: RequeuePolicy)
+/**
+ * The web review's swipe (`review-swipe.ts`), served by the session route: past [commitDistance]
+ * a swipe grades with that side's rating, the card travels at most [maxOffset], and tracking starts
+ * after [lockDistance] only for a mostly horizontal move. Distances are CSS px, used as dp.
+ */
+data class SwipeRules(
+    val commitDistance: Float,
+    val maxOffset: Float,
+    val lockDistance: Float,
+    val left: Grade?,
+    val right: Grade?,
+) {
+    fun clamp(dxDp: Float) = dxDp.coerceIn(-maxOffset, maxOffset)
+
+    fun gradeFor(dxDp: Float): Grade? = when {
+        dxDp <= -commitDistance -> left
+        dxDp >= commitDistance -> right
+        else -> null
+    }
+
+    companion object {
+        /** Same values as the web, used only if a session response lacks them. */
+        val Web = SwipeRules(96f, 160f, 10f, Grade.Again, Grade.Easy)
+    }
+}
+
+data class ReviewSessionData(val cards: List<Card>, val requeue: RequeuePolicy, val swipe: SwipeRules = SwipeRules.Web)
 
 /** Result of one review session, used by the summary screen. */
 data class SessionResult(
@@ -71,13 +97,4 @@ data class SessionResult(
     fun count(g: Grade) = grades.count { it == g }
     val accuracy get() = if (total == 0) 0 else ((count(Grade.Good) + count(Grade.Easy)) * 100f / total).toInt()
     val struggled get() = count(Grade.Again) + count(Grade.Hard)
-}
-
-/** Grade picked by horizontal drag distance in dp: a little = Hard/Good, far = Again/Easy. */
-fun gradeForDrag(dxDp: Float): Grade? = when {
-    dxDp <= -140f -> Grade.Again
-    dxDp < -40f -> Grade.Hard
-    dxDp >= 140f -> Grade.Easy
-    dxDp > 40f -> Grade.Good
-    else -> null
 }

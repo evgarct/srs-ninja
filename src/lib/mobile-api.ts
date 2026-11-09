@@ -2,6 +2,12 @@ import { createClient as createSupabaseClient, type SupabaseClient } from '@supa
 import { getBearerToken } from '@/lib/mcp-auth'
 import { mapFieldsToFlashcard } from '@/lib/flashcard-mapping'
 import { getReviewRequeueWindow } from '@/lib/review-loop'
+import {
+  REVIEW_SWIPE_COMMIT_THRESHOLD,
+  REVIEW_SWIPE_LOCK_DISTANCE,
+  REVIEW_SWIPE_MAX_OFFSET,
+  getReviewSwipeRating,
+} from '@/lib/review-swipe'
 import type { Database } from '@/lib/supabase/database.types'
 import type { Language } from '@/lib/types'
 
@@ -60,6 +66,26 @@ export function buildRequeueTable(sessionSize: number): Array<{ again: RequeueWi
     again: getReviewRequeueWindow(remaining, 1),
     hard: getReviewRequeueWindow(remaining, 2),
   }))
+}
+
+const RATING_NAMES = { 1: 'again', 2: 'hard', 3: 'good', 4: 'easy' } as const
+
+/**
+ * The web review's swipe (`review-swipe.ts`) for the app: past the commit distance a swipe grades
+ * with the rating `getReviewSwipeRating` gives for that side; the card never travels past the max
+ * offset; tracking starts after the lock distance and only for a mostly horizontal move. Ratings
+ * that no swipe reaches (hard, good) stay on the buttons, as on the web.
+ */
+export function buildSwipeRules() {
+  const left = getReviewSwipeRating(-REVIEW_SWIPE_COMMIT_THRESHOLD)
+  const right = getReviewSwipeRating(REVIEW_SWIPE_COMMIT_THRESHOLD)
+  return {
+    commitDistance: REVIEW_SWIPE_COMMIT_THRESHOLD,
+    maxOffset: REVIEW_SWIPE_MAX_OFFSET,
+    lockDistance: REVIEW_SWIPE_LOCK_DISTANCE,
+    left: left ? RATING_NAMES[left] : null,
+    right: right ? RATING_NAMES[right] : null,
+  }
 }
 
 export type MobileExample = { pre: string; hit: string; post: string }

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { buildRequeueTable, mapCardForMobile, parseTimeZone, splitExampleHit } from '@/lib/mobile-api'
+import { buildRequeueTable, buildSwipeRules, mapCardForMobile, parseTimeZone, splitExampleHit } from '@/lib/mobile-api'
+import {
+  REVIEW_SWIPE_COMMIT_THRESHOLD,
+  REVIEW_SWIPE_LOCK_DISTANCE,
+  REVIEW_SWIPE_MAX_OFFSET,
+  getReviewSwipeRating,
+} from '@/lib/review-swipe'
 import { getReviewRequeueWindow } from '@/lib/review-loop'
 import { shouldBypassAuthRedirect } from '@/lib/supabase/middleware'
 
@@ -71,6 +77,20 @@ describe('buildRequeueTable', () => {
       expect(row.hard).toEqual(getReviewRequeueWindow(remaining, 2))
     })
     expect(table[0]).toEqual({ again: null, hard: null })
+  })
+})
+
+describe('buildSwipeRules', () => {
+  it('mirrors the web swipe: left commits again, right commits easy, same distances', () => {
+    expect(buildSwipeRules()).toEqual({
+      commitDistance: REVIEW_SWIPE_COMMIT_THRESHOLD,
+      maxOffset: REVIEW_SWIPE_MAX_OFFSET,
+      lockDistance: REVIEW_SWIPE_LOCK_DISTANCE,
+      left: 'again',
+      right: 'easy',
+    })
+    expect(getReviewSwipeRating(-REVIEW_SWIPE_COMMIT_THRESHOLD)).toBe(1)
+    expect(getReviewSwipeRating(REVIEW_SWIPE_COMMIT_THRESHOLD)).toBe(4)
   })
 })
 

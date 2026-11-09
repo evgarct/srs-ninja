@@ -1,5 +1,5 @@
 import { orderCards } from '@/lib/card-ordering'
-import { buildRequeueTable, mapCardForMobile, mobileUnauthorized, resolveMobileContext } from '@/lib/mobile-api'
+import { buildRequeueTable, buildSwipeRules, mapCardForMobile, mobileUnauthorized, resolveMobileContext } from '@/lib/mobile-api'
 import { getExpressionAudioMap } from '@/lib/review-audio'
 import { selectReviewSessionCards } from '@/lib/review-card-selection'
 import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
@@ -66,5 +66,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ deck
     // The web requeue policy (`getReviewRequeueWindow`) for every queue length this session can
     // reach, so the app reinserts Again/Hard cards exactly like the web without a round trip.
     requeue: buildRequeueTable(cards.length),
+    // The web swipe: which rating each side commits and at what distance.
+    swipe: buildSwipeRules(),
   })
 }

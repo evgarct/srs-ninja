@@ -61,7 +61,17 @@ class EchoApi(context: Context) {
         val json = JSONObject(authorized("GET", "/api/mobile/decks/$deckId/session?$query"))
         val cards = json.getJSONArray("cards")
         val requeue = json.optJSONArray("requeue")
+        val swipe = json.optJSONObject("swipe")?.let { s ->
+            SwipeRules(
+                commitDistance = s.getDouble("commitDistance").toFloat(),
+                maxOffset = s.getDouble("maxOffset").toFloat(),
+                lockDistance = s.getDouble("lockDistance").toFloat(),
+                left = s.optString("left").toGrade(),
+                right = s.optString("right").toGrade(),
+            )
+        } ?: SwipeRules.Web
         return ReviewSessionData(
+            swipe = swipe,
             cards = (0 until cards.length()).map { i -> cards.getJSONObject(i).toCard() },
             requeue = if (requeue == null) RequeuePolicy.None else RequeuePolicy(
                 (0 until requeue.length()).map { i ->
@@ -179,6 +189,8 @@ class EchoApi(context: Context) {
 }
 
 private val PAIR_CODES = mapOf("english" to "EN", "czech" to "CS", "turkish" to "TR", "russian" to "RU")
+
+private fun String.toGrade(): Grade? = Grade.entries.firstOrNull { it.name.equals(this, ignoreCase = true) }
 
 private fun JSONObject?.toWindow(): RequeueWindow? = this?.let { RequeueWindow(it.getInt("min"), it.getInt("max")) }
 
