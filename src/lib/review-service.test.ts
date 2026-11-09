@@ -20,6 +20,7 @@ function createFakeSupabase(results: Record<string, { data: unknown; error: unkn
       }
     }
     builder.single = () => Promise.resolve(result)
+    builder.maybeSingle = () => Promise.resolve(result)
     builder.then = (resolve: (value: unknown) => void) => resolve(result)
     return builder
   }
@@ -86,5 +87,29 @@ describe('submitReviewForUser', () => {
 
     expect(spy).toHaveBeenCalledWith(notFound)
     expect(calls.reviews).toBeUndefined()
+  })
+
+  it('logs a new grade under the client review id', async () => {
+    const { client, calls } = createFakeSupabase({ cards: { data: dueCard, error: null }, reviews: { data: null, error: null } })
+
+    const result = await submitReviewForUser(client, 'user-1', 'card-1', 1, 900, 'rev-1')
+
+    expect(result.duplicate).toBe(false)
+    expect(calls.cards.some((call) => call.method === 'update')).toBe(true)
+    const insert = calls.reviews.find((call) => call.method === 'insert')
+    expect(insert?.args[0]).toMatchObject({ id: 'rev-1', card_id: 'card-1', rating: 1 })
+  })
+
+  it('treats a retry of a committed grade as a no-op', async () => {
+    const { client, calls } = createFakeSupabase({
+      cards: { data: dueCard, error: null },
+      reviews: { data: { id: 'rev-1', scheduled_days: 4 }, error: null },
+    })
+
+    const result = await submitReviewForUser(client, 'user-1', 'card-1', 3, 900, 'rev-1')
+
+    expect(result).toMatchObject({ duplicate: true, scheduledDays: 4 })
+    expect(calls.cards.some((call) => call.method === 'update')).toBe(false)
+    expect(calls.reviews.some((call) => call.method === 'insert')).toBe(false)
   })
 })

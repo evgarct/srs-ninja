@@ -46,7 +46,9 @@ if (!user) {
 }
 fs.writeFileSync(credsPath, `# Android test user (seeded by scripts/seed-android-test-user.mjs). Never commit.\nemail=${creds.email}\npassword=${creds.password}\n`)
 
-// 2. Wipe the test user's data, children first.
+// 2. Wipe the test user's data, children first (audio rows hang off the user's notes).
+const oldNotes = await rest('GET', 'notes', null, `?select=id&user_id=eq.${user.id}`)
+if (oldNotes.length) await rest('DELETE', 'audio_cache', null, `?note_id=in.(${oldNotes.map((n) => n.id).join(',')})`)
 for (const table of ['reviews', 'review_session_completions', 'cards', 'notes', 'decks']) {
   await rest('DELETE', table, null, `?user_id=eq.${user.id}`)
 }
@@ -99,11 +101,18 @@ const decks = [
   },
 ]
 
+// Borrow one existing English recording URL (read-only) so the test user exercises audio playback
+// exactly like the web: notes with an `audio_cache` row get a speaker, the rest do not.
+const [sampleAudio] = await call('GET', `/rest/v1/audio_cache?select=storage_path,voice_id&language=eq.english&field_key=eq.expression&limit=1`)
+
 const summary = []
 for (const spec of decks) {
   const [deck] = await rest('POST', 'decks', { name: spec.name, language: spec.language, translation_language: 'russian', user_id: user.id })
   for (const [fields, schedule] of spec.notes) {
     const [note] = await rest('POST', 'notes', { deck_id: deck.id, user_id: user.id, fields, status: 'approved', source: 'manual', tags: [] })
+    if (sampleAudio && spec.language === 'english' && spec.name === 'English Core') {
+      await rest('POST', 'audio_cache', { note_id: note.id, language: 'english', field_key: 'expression', storage_path: sampleAudio.storage_path, voice_id: sampleAudio.voice_id })
+    }
     // Both directions, like the web importer; production lags a day so it is not always due together.
     await rest('POST', 'cards', [
       { note_id: note.id, user_id: user.id, card_type: 'recognition', ...schedule },

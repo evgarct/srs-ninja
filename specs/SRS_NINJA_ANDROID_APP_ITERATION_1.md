@@ -20,18 +20,19 @@ A native Android app runs the daily review on the phone against the user's real 
 10. Loading, failure (with retry) and "no decks yet" states keep the same layout.
 
 ### Review
-11. Cards are those of the web session: today's due cards in the web order, or the chosen extra pool.
-12. Recognition cards speak the phrase when they land on top and on the speaker button; production cards (Russian first) speak the answer only after the flip, so audio never gives the answer away.
+11. Cards are those of the web session: today's due cards in the web order, or the chosen extra pool. The app adds no review rules of its own; every rule comes from the web code through the server.
+12. Audio is the note's generated recording, the same file the web plays (ElevenLabs, `audio_cache`); there is no on-device speech. A card without a recording shows no speaker. Recognition cards play when they land on top; production cards (Russian first) play only after the flip, as on the web.
+12a. "Снова" and "Сложно" send the card back into the current session at the position the web review loop uses; "Нормально" and "Легко" let it leave. The counter shows cards that have left out of the session size.
 13. Tapping the card (or "Показать ответ") flips it in place; the back shows the translation, a chevron under the card and the four grades in the footer.
 14. Pulling the card up or tapping the chevron opens the slip under it with examples (the studied phrase on a pale-green wash), near expressions and metadata; pulling down closes it. The slip is as tall as its content up to the free space and never covers the footer.
 15. Dragging grades by distance: a little right = Нормально, far right = Легко, a little left = Сложно, far left = Снова; a scale shows the choice while dragging, a haptic tick marks each change, release flies the card off and the next rises from the stack.
-16. Every grade updates the FSRS schedule exactly like a web review and is logged; grades are sent in order and a failed send is retried, never dropped.
+16. Every grade updates the FSRS schedule exactly like a web review and is logged; grades are sent in order and a failed send is retried, never dropped. A retry of a grade that already reached the server changes nothing (no second schedule step, no second review row). Grades stay with the account that made them: after a sign-out they are never sent under another account.
 17. The swipe hint (cat between arrows) follows the sticker: only on the back with the slip closed, 1.2 s after the flip, only for the first 3 grades of a session, never again after 10 successful swipes, hidden while touching, and static when the system removes animations.
 18. After the last card: "Это была последняя.", then the summary.
 
 ### Summary
 19. The sassy cat swats the ball off the table; card count, accuracy, time and struggled cards count up; the grade bar grows segment by segment.
-20. Finishing today's session marks the deck "done for today" on every device. "К колодам" returns home; the underlined line starts another extra session with the last chosen count and kind.
+20. Finishing today's session marks the deck "done for today" on every device, but only after all of the session's grades are saved (as on the web); a failed completion is retried. "К колодам" returns home; the underlined line starts another extra session with the last chosen count and kind.
 
 ## Non-goals
 - Statistics, deck/note editing, drafts, audio files and Google sign-in (all current accounts use email + password).

@@ -42,15 +42,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-/** Text-to-speech, provided by the activity. [onDone] runs on the main thread. */
+/** Plays a card's recorded audio, provided by the activity. [onDone] runs on the main thread. */
 interface Speaker {
-    fun speak(text: String, locale: Locale, onDone: () -> Unit = {})
+    fun play(url: String, onDone: () -> Unit = {})
     fun stop()
 }
 
 val LocalSpeaker = staticCompositionLocalOf<Speaker> {
     object : Speaker {
-        override fun speak(text: String, locale: Locale, onDone: () -> Unit) = onDone()
+        override fun play(url: String, onDone: () -> Unit) = onDone()
         override fun stop() {}
     }
 }

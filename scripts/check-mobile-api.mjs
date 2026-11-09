@@ -42,11 +42,18 @@ if (extraDeck) {
   console.log(`extra ${extra.deck.name}: ${extra.cards.length} cards`)
 }
 
+console.log(`audio: ${session.cards.filter((c) => c.audioUrl).length}/${session.cards.length} cards have a recording`)
+console.log(`requeue rows: ${session.requeue?.length}; with ${session.cards.length - 1} left, again→${JSON.stringify(session.requeue?.[session.cards.length - 1]?.again)} hard→${JSON.stringify(session.requeue?.[session.cards.length - 1]?.hard)}`)
+
 if (grade) {
-  const res = await fetch(`${apiBase}/api/mobile/reviews`, {
-    method: 'POST',
-    headers: { ...bearer, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ cardId: session.cards[0].cardId, rating: 'good', durationMs: 4200 }),
-  })
-  console.log('grade →', res.status, await res.text())
+  // The same grade twice with one review id: the second must be a no-op on the server.
+  const reviewId = crypto.randomUUID()
+  for (const attempt of ['first', 'retry']) {
+    const res = await fetch(`${apiBase}/api/mobile/reviews`, {
+      method: 'POST',
+      headers: { ...bearer, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cardId: session.cards[0].cardId, rating: 'good', durationMs: 4200, reviewId }),
+    })
+    console.log(`grade ${attempt} →`, res.status, await res.text())
+  }
 }

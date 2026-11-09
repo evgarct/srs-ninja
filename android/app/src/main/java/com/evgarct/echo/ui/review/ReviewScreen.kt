@@ -93,6 +93,8 @@ import com.evgarct.echo.data.Grade
 import com.evgarct.echo.data.SessionKind
 import com.evgarct.echo.data.SessionResult
 import com.evgarct.echo.data.gradeForDrag
+import com.evgarct.echo.data.RequeuePolicy
+import com.evgarct.echo.data.ReviewSessionData
 import com.evgarct.echo.ui.LocalSpeaker
 import com.evgarct.echo.ui.Remote
 import com.evgarct.echo.ui.PrimaryAction
@@ -123,7 +125,7 @@ private const val KEY_SWIPES = "successful_swipes"
 @Composable
 fun ReviewScreen(
     deck: Deck,
-    cards: Remote<List<Card>>,
+    cards: Remote<ReviewSessionData>,
     kind: SessionKind,
     onRetry: () -> Unit,
     onGraded: (Card, Grade, Long) -> Unit,
@@ -131,8 +133,8 @@ fun ReviewScreen(
     onFinish: (SessionResult) -> Unit,
 ) {
     val ready = (cards as? Remote.Ready)?.value
-    if (ready != null && ready.isNotEmpty()) {
-        ReviewSession(deck, ready, kind, onGraded, onClose, onFinish)
+    if (ready != null && ready.cards.isNotEmpty()) {
+        ReviewSession(deck, ready.cards, ready.requeue, kind, onGraded, onClose, onFinish)
         return
     }
     BackHandler(onBack = onClose)
@@ -181,6 +183,7 @@ fun ReviewScreen(
 private fun ReviewSession(
     deck: Deck,
     cards: List<Card>,
+    requeue: RequeuePolicy,
     kind: SessionKind,
     onGraded: (Card, Grade, Long) -> Unit,
     onClose: () -> Unit,
@@ -194,7 +197,10 @@ private fun ReviewSession(
     val scope = rememberCoroutineScope()
     val soon = stringResource(R.string.next_iteration)
 
-    var idx by remember { mutableIntStateOf(0) }
+    // The session queue: the head is on top; Again/Hard go back in where the web policy puts them.
+    val queue = remember { mutableStateListOf<Card>().apply { addAll(cards) } }
+    // Bumps every time a new card lands on top (including a requeued one), keying per-card effects.
+    var turn by remember { mutableIntStateOf(0) }
     var face by remember { mutableStateOf(Face.Recall) }
     var detail by remember { mutableStateOf(false) }
     var dragging by remember { mutableStateOf(false) }
@@ -212,14 +218,17 @@ private fun ReviewSession(
     val shift = remember { Animatable(0f) }
 
     val n = cards.size
-    val done = idx >= n
-    val card = cards.getOrNull(idx.coerceAtMost(n - 1))
+    val done = queue.isEmpty()
+    val card = queue.firstOrNull()
     val reveal = face == Face.Reveal
+    // Cards that have left the session for good; a requeued card still counts as remaining.
+    val finished = n - queue.size
 
     fun say(c: Card) {
+        val url = c.audioUrl ?: return
         playing = true
         val started = System.currentTimeMillis()
-        speaker.speak(c.spoken, deck.speechLocale) {
+        speaker.play(url) {
             val left = 1200 - (System.currentTimeMillis() - started)
             scope.launch { if (left > 0) delay(left); playing = false }
         }
@@ -227,23 +236,25 @@ private fun ReviewSession(
 
     // When the card landed on top: the grade's duration is measured from here.
     var shownAt by remember { mutableStateOf(System.currentTimeMillis()) }
-    // The card speaks as soon as it lands on top; a production card (answer in the target
-    // language) speaks after the flip instead, so audio never gives the answer away.
-    LaunchedEffect(idx) {
+    // Web autoplay rule: recognition plays when the card appears, production when the answer is
+    // revealed (its Russian front never plays), and only cards with a recording play at all.
+    LaunchedEffect(turn) {
         shownAt = System.currentTimeMillis()
-        if (idx < n && !cards[idx].speaksAnswer) {
-            delay(if (idx == 0) 420 else 60)
-            say(cards[idx])
+        val c = queue.firstOrNull() ?: return@LaunchedEffect
+        if (!c.production) {
+            delay(if (turn == 0) 420 else 60)
+            say(c)
         }
     }
-    LaunchedEffect(idx, face) {
-        if (idx < n && face == Face.Reveal && cards[idx].speaksAnswer) {
+    LaunchedEffect(turn, face) {
+        val c = queue.firstOrNull() ?: return@LaunchedEffect
+        if (face == Face.Reveal && c.production) {
             delay(200)
-            say(cards[idx])
+            say(c)
         }
     }
     // Swipe hint: 1.2 s after the flip, restarted on every card.
-    LaunchedEffect(idx, face) {
+    LaunchedEffect(turn, face) {
         hintReady = false
         if (face == Face.Reveal) { delay(1200); hintReady = true }
     }
@@ -265,7 +276,7 @@ private fun ReviewSession(
         detail = false
         hintReady = false
         grades += g
-        cards.getOrNull(idx)?.let { onGraded(it, g, System.currentTimeMillis() - shownAt) }
+        queue.firstOrNull()?.let { onGraded(it, g, System.currentTimeMillis() - shownAt) }
         if (bySwipe) {
             totalSwipes += 1
             prefs.edit().putInt(KEY_SWIPES, totalSwipes).apply()
@@ -282,7 +293,9 @@ private fun ReviewSession(
             dragGrade = null
             dx.snapTo(0f); dy.snapTo(0f); flip.snapTo(0f)
             face = Face.Recall
-            idx += 1
+            val current = queue.removeAt(0)
+            requeue.insertIndex(queue.size, g)?.let { at -> queue.add(at.coerceIn(0, queue.size), current) }
+            turn += 1
             shift.snapTo(0f)
             leaving = false
         }
@@ -309,14 +322,14 @@ private fun ReviewSession(
             TextAction(stringResource(R.string.review_close), onClose)
             BasicText(
                 buildAnnotatedString {
-                    withStyle(SpanStyle(color = Ink.Graphite)) { append("${minOf(idx + 1, n)}") }
+                    withStyle(SpanStyle(color = Ink.Graphite)) { append("${minOf(finished + 1, n)}") }
                     append(" / $n")
                 },
                 style = Type.mono.copy(fontSize = 13.sp, color = Ink.Soft),
             )
             TextAction(stringResource(R.string.review_more), { Toast.makeText(context, soon, Toast.LENGTH_SHORT).show() })
         }
-        val progress by animateFloatAsState(idx.coerceAtMost(n) / n.toFloat(), tween(500, easing = EchoEase), label = "progress")
+        val progress by animateFloatAsState(finished / n.toFloat(), tween(500, easing = EchoEase), label = "progress")
         Box(
             Modifier
                 .padding(top = top + 60.dp, start = 20.dp, end = 20.dp)
@@ -349,7 +362,7 @@ private fun ReviewSession(
 
         if (!done && card != null) {
             // Back of the stack: layers step back 11 dp per side and 12 dp up; it thins out near the end.
-            val behind = n - idx - 1
+            val behind = queue.size - 1
             val lift = with(density) { (kotlin.math.abs(dx.value) / 160.dp.toPx()).coerceAtMost(1f) } * if (dragging) 4f else 0f
             for (d in 3 downTo 1) {
                 val depth = d - shift.value
@@ -427,7 +440,7 @@ private fun ReviewSession(
                 Slip(card, open = reveal && detail, maxHeight = slipMax, onClose = { detail = false })
                 CardFace(
                     card = card,
-                    idx = idx,
+                    idx = turn,
                     face = face,
                     flipDeg = flip.value,
                     leaning = dragGrade == Grade.Good || dragGrade == Grade.Easy,
@@ -478,7 +491,9 @@ private fun ReviewSession(
                     grades.clear()
                     startedAt = System.currentTimeMillis()
                     face = Face.Recall
-                    idx = 0
+                    queue.clear()
+                    queue.addAll(cards)
+                    turn += 1
                 },
             )
         }
@@ -557,8 +572,9 @@ private fun CardFace(
                 Spacer(Modifier.width(60.dp))
             }
         }
-        // On a production card the speaker belongs to the answer side.
-        if (face == Face.Reveal || !card.speaksAnswer) {
+        // Like the web: a speaker only when the note has a recording, and on a production card only
+        // once the target-language answer is visible.
+        if (card.audioUrl != null && (face == Face.Reveal || !card.production)) {
             AudioButton(playing, onAudio, Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = 16.dp))
         }
     }

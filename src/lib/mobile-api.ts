@@ -1,6 +1,7 @@
 import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 import { getBearerToken } from '@/lib/mcp-auth'
 import { mapFieldsToFlashcard } from '@/lib/flashcard-mapping'
+import { getReviewRequeueWindow } from '@/lib/review-loop'
 import type { Database } from '@/lib/supabase/database.types'
 import type { Language } from '@/lib/types'
 
@@ -45,6 +46,20 @@ export function parseTimeZone(value: string | null): string {
   } catch {
     return 'UTC'
   }
+}
+
+export type RequeueWindow = { min: number; max: number } | null
+
+/**
+ * Row `n` holds where a graded card goes back when `n` cards remain after it: `again` and `hard`
+ * windows from the web's `getReviewRequeueWindow` (good/easy never requeue). The queue never grows
+ * past the session size, so rows 0..size-1 cover every state.
+ */
+export function buildRequeueTable(sessionSize: number): Array<{ again: RequeueWindow; hard: RequeueWindow }> {
+  return Array.from({ length: Math.max(sessionSize, 1) }, (_, remaining) => ({
+    again: getReviewRequeueWindow(remaining, 1),
+    hard: getReviewRequeueWindow(remaining, 2),
+  }))
 }
 
 export type MobileExample = { pre: string; hit: string; post: string }

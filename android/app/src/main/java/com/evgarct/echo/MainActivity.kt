@@ -2,10 +2,11 @@ package com.evgarct.echo
 
 import android.app.LocaleManager
 import android.graphics.Color
+import android.media.AudioAttributes
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.LocaleList
-import android.speech.tts.TextToSpeech
-import android.speech.tts.UtteranceProgressListener
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -15,15 +16,14 @@ import com.evgarct.echo.ui.EchoApp
 import com.evgarct.echo.ui.LocalSpeaker
 import com.evgarct.echo.ui.Speaker
 import com.evgarct.echo.ui.theme.EchoTheme
-import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.atomic.AtomicLong
 
+/**
+ * Plays the same generated recordings as the web review (ElevenLabs files from `audio_cache`);
+ * there is no on-device speech synthesis.
+ */
 class MainActivity : ComponentActivity(), Speaker {
-    private var tts: TextToSpeech? = null
-    @Volatile private var ready = false
-    private val pending = ConcurrentHashMap<String, () -> Unit>()
-    private val ids = AtomicLong()
+    private var player: MediaPlayer? = null
+    private var onFinished: (() -> Unit)? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
@@ -36,15 +36,6 @@ class MainActivity : ComponentActivity(), Speaker {
         getSystemService(LocaleManager::class.java)?.let { lm ->
             if (lm.applicationLocales.isEmpty) lm.applicationLocales = LocaleList.forLanguageTags("ru")
         }
-        tts =TextToSpeech(this) { status -> ready = status == TextToSpeech.SUCCESS }.apply {
-            setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                override fun onStart(utteranceId: String) {}
-                override fun onDone(utteranceId: String) = complete(utteranceId)
-                @Deprecated("Deprecated in Java")
-                override fun onError(utteranceId: String) = complete(utteranceId)
-                override fun onStop(utteranceId: String, interrupted: Boolean) = complete(utteranceId)
-            })
-        }
         setContent {
             EchoTheme {
                 CompositionLocalProvider(LocalSpeaker provides this) { EchoApp() }
@@ -52,31 +43,49 @@ class MainActivity : ComponentActivity(), Speaker {
         }
     }
 
-    private fun complete(id: String) {
-        pending.remove(id)?.let { runOnUiThread(it) }
+    override fun play(url: String, onDone: () -> Unit) {
+        stop()
+        onFinished = onDone
+        player = MediaPlayer().apply {
+            setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                    .build(),
+            )
+            setOnPreparedListener { it.start() }
+            setOnCompletionListener { finishPlayback() }
+            setOnErrorListener { _, what, extra ->
+                Log.w("Echo", "audio failed ($what/$extra)")
+                finishPlayback()
+                true
+            }
+            try {
+                setDataSource(url)
+                prepareAsync()
+            } catch (e: Exception) {
+                Log.w("Echo", "audio failed: ${e.message}")
+                finishPlayback()
+            }
+        }
     }
 
-    override fun speak(text: String, locale: Locale, onDone: () -> Unit) {
-        val engine = tts
-        if (engine == null || !ready) {
-            onDone()
-            return
-        }
-        pending.values.forEach { runOnUiThread(it) }
-        pending.clear()
-        val id = "u${ids.incrementAndGet()}"
-        pending[id] = onDone
-        engine.language = locale
-        engine.setSpeechRate(0.95f)
-        engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, id)
+    private fun finishPlayback() {
+        onFinished?.invoke()
+        onFinished = null
+        player?.release()
+        player = null
     }
 
     override fun stop() {
-        tts?.stop()
+        onFinished?.invoke()
+        onFinished = null
+        player?.release()
+        player = null
     }
 
-    override fun onDestroy() {
-        tts?.shutdown()
-        super.onDestroy()
+    override fun onStop() {
+        stop()
+        super.onStop()
     }
 }

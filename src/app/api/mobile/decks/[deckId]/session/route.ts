@@ -1,5 +1,6 @@
 import { orderCards } from '@/lib/card-ordering'
-import { mapCardForMobile, mobileUnauthorized, resolveMobileContext } from '@/lib/mobile-api'
+import { buildRequeueTable, mapCardForMobile, mobileUnauthorized, resolveMobileContext } from '@/lib/mobile-api'
+import { getExpressionAudioMap } from '@/lib/review-audio'
 import { selectReviewSessionCards } from '@/lib/review-card-selection'
 import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
 import {
@@ -48,6 +49,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ deck
     sessionLimit: isExtra ? undefined : REGULAR_DUE_REVIEW_LIMIT,
   })
 
+  const audioMap = await getExpressionAudioMap(context.supabase, deck.language, cards.map((card) => card.note_id))
+
   return Response.json({
     deck: {
       id: deck.id,
@@ -56,6 +59,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ deck
       translationLanguage: deck.translation_language,
     },
     mode,
-    cards: cards.map((card) => mapCardForMobile(card, deck.language as Language)),
+    cards: cards.map((card) => ({
+      ...mapCardForMobile(card, deck.language as Language),
+      audioUrl: audioMap[card.note_id] ?? null,
+    })),
+    // The web requeue policy (`getReviewRequeueWindow`) for every queue length this session can
+    // reach, so the app reinserts Again/Hard cards exactly like the web without a round trip.
+    requeue: buildRequeueTable(cards.length),
   })
 }

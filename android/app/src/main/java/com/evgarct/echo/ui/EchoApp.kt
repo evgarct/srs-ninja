@@ -22,8 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.evgarct.echo.R
 import com.evgarct.echo.data.AuthException
-import com.evgarct.echo.data.Card
 import com.evgarct.echo.data.Deck
+import com.evgarct.echo.data.ReviewSessionData
 import com.evgarct.echo.data.EchoApi
 import com.evgarct.echo.data.GradeSync
 import com.evgarct.echo.data.SessionKind
@@ -127,6 +127,7 @@ fun EchoApp() {
                     scope.launch {
                         try {
                             api.signIn(email, password)
+                            sync.kick() // grades this account left queued before a sign-out
                             screen = Screen.Home(null)
                         } catch (e: AuthException) {
                             loginError = context.getString(R.string.login_error_credentials)
@@ -153,7 +154,7 @@ fun EchoApp() {
                 },
             )
             is Screen.Review -> {
-                var cards by remember(s.nonce) { mutableStateOf<Remote<List<Card>>>(Remote.Loading) }
+                var cards by remember(s.nonce) { mutableStateOf<Remote<ReviewSessionData>>(Remote.Loading) }
                 var attempt by remember(s.nonce) { mutableStateOf(0) }
                 LaunchedEffect(s.nonce, attempt) {
                     cards = Remote.Loading
@@ -174,7 +175,23 @@ fun EchoApp() {
                     onGraded = { card, grade, ms -> sync.submit(card.id, grade, ms) },
                     onClose = { screen = Screen.Home(s.deck.id) },
                     onFinish = { result ->
-                        scope.launch { runCatching { api.complete(s.deck.id, s.kind) } }
+                        // Like the web: the deck is marked complete only once every grade of the
+                        // session is saved, and a failed completion is retried, never dropped.
+                        scope.launch {
+                            sync.awaitIdle()
+                            var backoff = 1_000L
+                            repeat(6) {
+                                try {
+                                    api.complete(s.deck.id, s.kind)
+                                    return@launch
+                                } catch (e: AuthException) {
+                                    return@launch
+                                } catch (e: Exception) {
+                                    kotlinx.coroutines.delay(backoff)
+                                    backoff = (backoff * 2).coerceAtMost(30_000L)
+                                }
+                            }
+                        }
                         screen = Screen.Done(result, s.deck)
                     },
                 )

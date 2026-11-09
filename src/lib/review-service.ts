@@ -207,8 +207,33 @@ export async function submitReviewForUser(
   userId: string,
   cardId: string,
   rating: Rating,
-  durationMs: number
+  durationMs: number,
+  /**
+   * Client-chosen id for the review row. A retry of a grade that already committed finds its
+   * row and returns without scheduling the card or logging the review a second time.
+   */
+  reviewId?: string
 ) {
+  if (reviewId) {
+    const { data: existing, error: existingError } = await supabase
+      .from('reviews')
+      .select('id, scheduled_days')
+      .eq('id', reviewId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (existingError) throw existingError
+    if (existing) {
+      const { data: current, error: currentError } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('id', cardId)
+        .eq('user_id', userId)
+        .single()
+      if (currentError) throw currentError
+      return { updatedCard: current as Partial<typeof current>, scheduledDays: existing.scheduled_days, duplicate: true }
+    }
+  }
+
   const { data: card, error: fetchError } = await supabase
     .from('cards')
     .select('*')
@@ -230,6 +255,7 @@ export async function submitReviewForUser(
   if (updateError) throw updateError
 
   const { error: reviewError } = await supabase.from('reviews').insert({
+    ...(reviewId ? { id: reviewId } : {}),
     card_id: cardId,
     user_id: userId,
     rating,
@@ -242,5 +268,5 @@ export async function submitReviewForUser(
 
   if (reviewError) throw reviewError
 
-  return { updatedCard, scheduledDays }
+  return { updatedCard, scheduledDays, duplicate: false }
 }

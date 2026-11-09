@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { mapCardForMobile, parseTimeZone, splitExampleHit } from '@/lib/mobile-api'
+import { buildRequeueTable, mapCardForMobile, parseTimeZone, splitExampleHit } from '@/lib/mobile-api'
+import { getReviewRequeueWindow } from '@/lib/review-loop'
 import { shouldBypassAuthRedirect } from '@/lib/supabase/middleware'
 
 describe('splitExampleHit', () => {
@@ -58,6 +59,18 @@ describe('mapCardForMobile', () => {
     expect(card.front).toBe('На что ты намекаешь?')
     expect(card.back).toBe('What are you driving at?')
     expect(card.spoken).toBe('What are you driving at?')
+  })
+})
+
+describe('buildRequeueTable', () => {
+  it('serves the web requeue windows for every reachable queue length', () => {
+    const table = buildRequeueTable(12)
+    expect(table).toHaveLength(12)
+    table.forEach((row, remaining) => {
+      expect(row.again).toEqual(getReviewRequeueWindow(remaining, 1))
+      expect(row.hard).toEqual(getReviewRequeueWindow(remaining, 2))
+    })
+    expect(table[0]).toEqual({ again: null, hard: null })
   })
 })
 

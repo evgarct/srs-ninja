@@ -54,20 +54,30 @@ class EchoApi(context: Context) {
         return (0 until decks.length()).map { i -> decks.getJSONObject(i).toDeck() }
     }
 
-    suspend fun session(deckId: String, kind: SessionKind, extraCount: Int, extraKind: String?): List<Card> {
+    suspend fun session(deckId: String, kind: SessionKind, extraCount: Int, extraKind: String?): ReviewSessionData {
         val query = if (kind == SessionKind.Extra) {
             "mode=extra&limit=$extraCount" + (extraKind?.let { "&kind=$it" } ?: "")
         } else "mode=due"
         val json = JSONObject(authorized("GET", "/api/mobile/decks/$deckId/session?$query"))
         val cards = json.getJSONArray("cards")
-        return (0 until cards.length()).map { i -> cards.getJSONObject(i).toCard() }
+        val requeue = json.optJSONArray("requeue")
+        return ReviewSessionData(
+            cards = (0 until cards.length()).map { i -> cards.getJSONObject(i).toCard() },
+            requeue = if (requeue == null) RequeuePolicy.None else RequeuePolicy(
+                (0 until requeue.length()).map { i ->
+                    val row = requeue.getJSONObject(i)
+                    row.optJSONObject("again").toWindow() to row.optJSONObject("hard").toWindow()
+                },
+            ),
+        )
     }
 
-    suspend fun grade(cardId: String, grade: Grade, durationMs: Long) {
+    suspend fun grade(cardId: String, grade: Grade, durationMs: Long, reviewId: String) {
         val body = JSONObject()
             .put("cardId", cardId)
             .put("rating", grade.name.lowercase(Locale.ROOT))
             .put("durationMs", durationMs)
+            .put("reviewId", reviewId)
         authorized("POST", "/api/mobile/reviews", body)
     }
 
@@ -169,7 +179,8 @@ class EchoApi(context: Context) {
 }
 
 private val PAIR_CODES = mapOf("english" to "EN", "czech" to "CS", "turkish" to "TR", "russian" to "RU")
-private val SPEECH = mapOf("english" to Locale.US, "czech" to Locale.forLanguageTag("cs-CZ"), "turkish" to Locale.forLanguageTag("tr-TR"))
+
+private fun JSONObject?.toWindow(): RequeueWindow? = this?.let { RequeueWindow(it.getInt("min"), it.getInt("max")) }
 
 private fun JSONObject.toDeck(): Deck {
     val language = getString("language")
@@ -179,8 +190,6 @@ private fun JSONObject.toDeck(): Deck {
         name = getString("name"),
         pair = "${PAIR_CODES[language] ?: language.take(2).uppercase()} → ${PAIR_CODES[translation] ?: translation.take(2).uppercase()}",
         drafts = optInt("drafts"),
-        speechLocale = SPEECH[language] ?: Locale.US,
-        cards = emptyList(),
         due = optInt("due"),
         total = optInt("total"),
         completedToday = optBoolean("completedToday"),
@@ -200,6 +209,7 @@ private fun JSONObject.toCard(): Card {
         },
         synonyms = optJSONArray("synonyms")?.strings().orEmpty(),
         meta = optString("meta"),
-        speech = optString("spoken").ifBlank { null },
+        production = optString("cardType") == "production",
+        audioUrl = if (isNull("audioUrl")) null else optString("audioUrl").ifBlank { null },
     )
 }
