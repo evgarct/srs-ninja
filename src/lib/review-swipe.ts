@@ -1,7 +1,9 @@
 import type { Rating } from '@/lib/types'
 
 export const REVIEW_SWIPE_COMMIT_THRESHOLD = 96
-const REVIEW_SWIPE_MAX_OFFSET = 160
+export const REVIEW_SWIPE_MAX_OFFSET = 160
+/** A touch starts tracking a swipe only after this much movement, and only if it is mostly horizontal. */
+export const REVIEW_SWIPE_LOCK_DISTANCE = 10
 
 export function clampReviewSwipeOffset(offsetX: number) {
   return Math.max(-REVIEW_SWIPE_MAX_OFFSET, Math.min(REVIEW_SWIPE_MAX_OFFSET, offsetX))

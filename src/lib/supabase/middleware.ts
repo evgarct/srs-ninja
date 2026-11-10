@@ -8,6 +8,8 @@ export function shouldBypassAuthRedirect(pathname: string) {
     || pathname.startsWith('/.well-known/oauth-protected-resource')
     || pathname === '/api/mcp'
     || pathname.startsWith('/api/mcp/')
+    // The Android app authenticates every /api/mobile call with a Bearer token, not cookies.
+    || pathname.startsWith('/api/mobile/')
 }
 
 export async function updateSession(request: NextRequest) {

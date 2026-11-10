@@ -31,6 +31,7 @@ import {
 } from '@/lib/review-session-completion-state'
 import { getReviewRatingMotion } from '@/lib/review-rating-motion'
 import {
+  REVIEW_SWIPE_LOCK_DISTANCE,
   clampReviewSwipeOffset,
   getReviewSwipeAnchorX,
   getReviewSwipeRating,
@@ -384,7 +385,7 @@ export function ReviewSession({
     const deltaY = event.clientY - gesture.startY
 
     if (!gesture.isTracking) {
-      if (Math.abs(deltaX) < 10) return
+      if (Math.abs(deltaX) < REVIEW_SWIPE_LOCK_DISTANCE) return
       if (Math.abs(deltaX) <= Math.abs(deltaY)) {
         swipeGestureRef.current = null
         setSwipeOffsetX(0)

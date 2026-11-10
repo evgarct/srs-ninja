@@ -45,6 +45,91 @@ export async function getDueCardsForUser(
   return data
 }
 
+function shuffleCards<T>(cards: T[]) {
+  const result = [...cards]
+
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    ;[result[index], result[randomIndex]] = [result[randomIndex], result[index]]
+  }
+
+  return result
+}
+
+export const EXTRA_STUDY_KINDS = ['hard', 'new', 'random', 'forgotten'] as const
+export type ExtraStudyKind = (typeof EXTRA_STUDY_KINDS)[number]
+
+export function parseExtraStudyKind(value: string | null | undefined): ExtraStudyKind | undefined {
+  return EXTRA_STUDY_KINDS.find((kind) => kind === value)
+}
+
+/**
+ * Extra study picked by kind (the Android "Ещё 20 сложных" phrase):
+ * hard = seen cards with the highest FSRS difficulty, new = unseen cards, forgotten = cards
+ * that lapsed (most lapses first), random = any card. Each pool is shuffled within its pick.
+ */
+export async function getExtraStudyCardsByKind(
+  supabase: TypedSupabaseClient,
+  deckId: string,
+  kind: ExtraStudyKind,
+  limit = 20
+) {
+  const candidateLimit = getReviewSessionCandidateLimit(limit)
+  let query = supabase
+    .from('cards')
+    .select('*, notes!inner(fields, tags, deck_id, status)')
+    .eq('notes.deck_id', deckId)
+    .eq('notes.status', 'approved')
+
+  if (kind === 'new') query = query.eq('state', 'new').order('created_at', { ascending: true })
+  if (kind === 'hard') query = query.neq('state', 'new').order('difficulty', { ascending: false })
+  if (kind === 'forgotten') query = query.gt('lapses', 0).order('lapses', { ascending: false })
+
+  const { data, error } = await query.limit(kind === 'hard' || kind === 'forgotten' ? limit : candidateLimit)
+  if (error) throw error
+  return shuffleCards(data).slice(0, limit)
+}
+
+/** Extra study: random new cards first, then the soonest upcoming ones, up to `limit`. */
+export async function getExtraStudyCardsForUser(
+  supabase: TypedSupabaseClient,
+  deckId: string,
+  limit = 20
+) {
+  const now = new Date().toISOString()
+  const candidateLimit = getReviewSessionCandidateLimit(limit)
+
+  const { data: newCardPool, error: newErr } = await supabase
+    .from('cards')
+    .select('*, notes!inner(fields, tags, deck_id, status)')
+    .eq('notes.deck_id', deckId)
+    .eq('notes.status', 'approved')
+    .eq('state', 'new')
+    .order('created_at', { ascending: true })
+    .limit(candidateLimit)
+
+  if (newErr) throw newErr
+
+  const newCards = shuffleCards(newCardPool).slice(0, limit)
+
+  if (newCards.length >= limit) return newCards
+
+  const remaining = limit - newCards.length
+  const { data: upcomingCards, error: upErr } = await supabase
+    .from('cards')
+    .select('*, notes!inner(fields, tags, deck_id, status)')
+    .eq('notes.deck_id', deckId)
+    .eq('notes.status', 'approved')
+    .neq('state', 'new')
+    .gt('due_at', now)
+    .order('due_at', { ascending: true })
+    .limit(remaining)
+
+  if (upErr) throw upErr
+
+  return [...newCards, ...upcomingCards]
+}
+
 export async function getManualStudyCardsForUser(
   supabase: TypedSupabaseClient,
   deckId: string,
@@ -122,8 +207,33 @@ export async function submitReviewForUser(
   userId: string,
   cardId: string,
   rating: Rating,
-  durationMs: number
+  durationMs: number,
+  /**
+   * Client-chosen id for the review row. A retry of a grade that already committed finds its
+   * row and returns without scheduling the card or logging the review a second time.
+   */
+  reviewId?: string
 ) {
+  if (reviewId) {
+    const { data: existing, error: existingError } = await supabase
+      .from('reviews')
+      .select('id, scheduled_days')
+      .eq('id', reviewId)
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (existingError) throw existingError
+    if (existing) {
+      const { data: current, error: currentError } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('id', cardId)
+        .eq('user_id', userId)
+        .single()
+      if (currentError) throw currentError
+      return { updatedCard: current as Partial<typeof current>, scheduledDays: existing.scheduled_days, duplicate: true }
+    }
+  }
+
   const { data: card, error: fetchError } = await supabase
     .from('cards')
     .select('*')
@@ -145,6 +255,7 @@ export async function submitReviewForUser(
   if (updateError) throw updateError
 
   const { error: reviewError } = await supabase.from('reviews').insert({
+    ...(reviewId ? { id: reviewId } : {}),
     card_id: cardId,
     user_id: userId,
     rating,
@@ -157,5 +268,5 @@ export async function submitReviewForUser(
 
   if (reviewError) throw reviewError
 
-  return { updatedCard, scheduledDays }
+  return { updatedCard, scheduledDays, duplicate: false }
 }

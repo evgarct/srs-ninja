@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The sign-in drawing as an icon: a paper cat holds on to a stack of cards, one green dot.
+     Drawn for a graphite background; the art sits inside the 66 dp adaptive-icon safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.4"
+        android:scaleY="0.4"
+        android:translateX="2"
+        android:translateY="19">
+        <path
+            android:pathData="M162 76 C 178 74, 190 62, 186 46 C 184 38, 176 38, 176 45"
+            android:strokeColor="#F1ECE6"
+            android:strokeWidth="6"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M84 84 C 78 58, 90 42, 100 37 L 98 17 L 115 30 C 121 28, 129 28, 135 30 L 152 17 L 150 38 C 160 45, 166 60, 160 84 Z"
+            android:fillColor="#F1ECE6"
+            android:strokeColor="#F1ECE6"
+            android:strokeWidth="6"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M111 52 l 0 1 M137 52 l 0 1"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="8"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M120 60 L 124 63 L 128 60 M124 63 L 124 68"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M84,98 h92 a10,10 0 0 1 10,10 v40 a10,10 0 0 1 -10,10 h-92 a10,10 0 0 1 -10,-10 v-40 a10,10 0 0 1 10,-10 z"
+            android:fillColor="#D8D1C6"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="5" />
+        <path
+            android:pathData="M77,90 h106 a11,11 0 0 1 11,11 v38 a11,11 0 0 1 -11,11 h-106 a11,11 0 0 1 -11,-11 v-38 a11,11 0 0 1 11,-11 z"
+            android:fillColor="#E9E3DA"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="5" />
+        <path
+            android:pathData="M70,82 h120 a12,12 0 0 1 12,12 v36 a12,12 0 0 1 -12,12 h-120 a12,12 0 0 1 -12,-12 v-36 a12,12 0 0 1 12,-12 z"
+            android:fillColor="#FBF9F5"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="5" />
+        <path
+            android:pathData="M92 79 L 92 92 C 92 101, 110 101, 110 92 L 110 79 Z M138 79 L 138 92 C 138 101, 156 101, 156 92 L 156 79 Z"
+            android:fillColor="#F1ECE6"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="5"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M76 118 L 128 118"
+            android:strokeColor="#1D1C1A"
+            android:strokeWidth="6"
+            android:strokeLineCap="round" />
+        <path
+            android:pathData="M180 124 m -9 0 a 9 9 0 1 0 18 0 a 9 9 0 1 0 -18 0"
+            android:fillColor="#2E7A3C" />
+    </group>
+</vector>

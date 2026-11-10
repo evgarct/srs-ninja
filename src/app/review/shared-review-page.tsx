@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { ReviewSession } from '@/components/review-session'
+import type { ReviewSessionCard } from '@/lib/review-session'
 import { ReviewSessionCompleteRestore } from '@/components/review-session-complete-restore'
 import { getDueCards, getExtraStudyCards, getManualStudyCards } from '@/lib/actions/cards'
 import { buttonVariants } from '@/lib/button-variants'
@@ -10,7 +11,7 @@ import { selectReviewSessionCards } from '@/lib/review-card-selection'
 import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
 import { parseReviewSessionSearchParams, type ReviewSessionSearchParams } from '@/lib/review-session-route'
 import { createClient } from '@/lib/supabase/server'
-import { supportsTtsLanguage } from '@/lib/tts-config'
+import { getExpressionAudioMap } from '@/lib/review-audio'
 import { getTranslations } from 'next-intl/server'
 
 export async function renderSharedReviewPage(
@@ -54,19 +55,7 @@ export async function renderSharedReviewPage(
     sessionLimit: isExtra || isManual ? undefined : REGULAR_DUE_REVIEW_LIMIT,
   })
 
-  let audioMap: Record<string, string> = {}
-  if (supportsTtsLanguage(deck.language) && cards.length > 0) {
-    const noteIds = [...new Set(cards.map((card) => card.note_id))]
-    const { data: audioRows } = await supabase
-      .from('audio_cache')
-      .select('note_id, storage_path')
-      .in('note_id', noteIds)
-      .eq('field_key', 'expression')
-
-    if (audioRows) {
-      audioMap = Object.fromEntries(audioRows.map((row) => [row.note_id, row.storage_path]))
-    }
-  }
+  const audioMap = await getExpressionAudioMap(supabase, deck.language, cards.map((card) => card.note_id))
 
   const t = await getTranslations('review')
 
@@ -101,7 +90,8 @@ export async function renderSharedReviewPage(
   return (
     <main className="mx-auto flex h-[100svh] w-full flex-col overflow-hidden bg-[#090511] px-0 pb-0 pt-0">
       <ReviewSession
-        cards={cards}
+        // Note fields are stored as JSON objects; the session reads them as a record of fields.
+        cards={cards as unknown as ReviewSessionCard[]}
         deckId={deckId}
         language={deck.language}
         audioMap={audioMap}
