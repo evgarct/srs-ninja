@@ -32,6 +32,8 @@ object Ink {
     val Leaf = Color(0xFF2E7A3C)
     val LeafLight = Color(0xFF7FC08A)
     val LeafWash = Color(0xFFDCEBDD)
+    /** Destructive words only: "Выйти", "Закончить ревью". */
+    val Rust = Color(0xFFA3341B)
     val Stack1 = Color(0xFFF8F5F0)
     val Stack2 = Color(0xFFF5F2EC)
     val Stack3 = Color(0xFFF3F0EA)
@@ -66,6 +68,7 @@ val EchoEase = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
 val CssEase = CubicBezierEasing(0.25f, 0.1f, 0.25f, 1f)
 val CssEaseInOut = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)
 val CssEaseOut = CubicBezierEasing(0f, 0f, 0.58f, 1f)
+val CssEaseIn = CubicBezierEasing(0.42f, 0f, 1f, 1f)
 val FlyOutEase = CubicBezierEasing(0.5f, 0f, 0.75f, 0f)
 
 /** True when the system "remove animations" setting is on: looping drawings freeze on a static frame. */

@@ -91,6 +91,12 @@ fun DrawScope.fill(d: String, color: Color, alpha: Float = 1f) {
     drawPath(svg(d), color, alpha = alpha, style = Fill)
 }
 
+/** A drawn shape with a paper fill under its stroke; an open path is filled as if closed. */
+fun DrawScope.shape(d: String, fill: Color, stroke: Color, width: Float, alpha: Float = 1f) {
+    drawPath(svg(d), fill, alpha = alpha, style = Fill)
+    line(d, stroke, width, alpha)
+}
+
 /** Draws only the first [fraction] of a path's length, the "pen drawing itself" effect. */
 fun DrawScope.partialLine(d: String, fraction: Float, color: Color, width: Float, alpha: Float = 1f) {
     if (fraction <= 0f || alpha <= 0f) return

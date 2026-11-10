@@ -90,6 +90,8 @@ fun EchoApp() {
     val home = screen as? Screen.Home
     LaunchedEffect(home?.nonce) { if (home != null) reloadDecks() }
 
+    val prefs = remember { EchoPrefs(context.applicationContext) }
+    androidx.compose.runtime.CompositionLocalProvider(LocalPrefs provides prefs) {
     AnimatedContent(
         targetState = screen,
         modifier = Modifier.fillMaxSize().background(Ink.Ground),
@@ -118,6 +120,18 @@ fun EchoApp() {
             Screen.Login -> LoginScreen(
                 busy = loginBusy,
                 error = loginError,
+                // Accounts are created on the web login page (same Supabase project); the app only signs in.
+                onCreateAccount = {
+                    runCatching {
+                        context.startActivity(
+                            android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(com.evgarct.echo.BuildConfig.API_BASE.trimEnd('/') + "/login"),
+                            ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }
+                },
+                onSoon = { android.widget.Toast.makeText(context, R.string.next_iteration, android.widget.Toast.LENGTH_SHORT).show() },
                 onSubmit = { email, password ->
                     if (!api.isConfigured) {
                         loginError = context.getString(R.string.login_error_config); return@LoginScreen
@@ -174,9 +188,11 @@ fun EchoApp() {
                     onRetry = { attempt++ },
                     onGraded = { card, grade, ms -> sync.submit(card.id, grade, ms) },
                     onClose = { screen = Screen.Home(s.deck.id) },
-                    onFinish = { result ->
-                        // Like the web: the deck is marked complete only once every grade of the
-                        // session is saved, and a failed completion is retried, never dropped.
+                    onFinish = { result -> screen = Screen.Done(result, s.deck) },
+                    onQueueDone = {
+                        // Like the web: the session completes when a grade empties the queue (not when
+                        // the summary is opened), the deck is marked complete only once every grade
+                        // is saved, and a failed completion is retried, never dropped.
                         scope.launch {
                             sync.awaitIdle()
                             var backoff = 1_000L
@@ -192,7 +208,6 @@ fun EchoApp() {
                                 }
                             }
                         }
-                        screen = Screen.Done(result, s.deck)
                     },
                 )
             }
@@ -203,5 +218,6 @@ fun EchoApp() {
                 onMore = { screen = Screen.Review(s.deck, SessionKind.Extra, extra.first, extra.second) },
             )
         }
+    }
     }
 }

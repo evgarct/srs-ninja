@@ -81,7 +81,7 @@ fun DoneScreen(
             .background(Ink.Ground)
             .windowInsetsPadding(WindowInsets.statusBars)
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 20.dp),
+            .padding(start = 24.dp, end = 24.dp, top = 28.dp),
     ) {
         BasicText("${result.deckName} · $date", Modifier.riseIn(durationMs = 480), style = Type.mono)
         BasicText(

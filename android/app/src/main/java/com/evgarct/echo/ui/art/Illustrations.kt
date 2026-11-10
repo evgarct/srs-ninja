@@ -3,65 +3,101 @@ package com.evgarct.echo.ui.art
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.evgarct.echo.ui.theme.CssEaseIn
 import com.evgarct.echo.ui.theme.CssEaseOut
+import com.evgarct.echo.ui.theme.EchoEase
 import com.evgarct.echo.ui.theme.Ink
 import com.evgarct.echo.ui.theme.LocalReducedMotion
-
-/** The bug hanging on its thread at the top of Home: swings, wiggles its legs, blinks. */
-@Composable
-fun SwingingBug(modifier: Modifier = Modifier) {
-    val clock = rememberClock()
-    Art(64f, 118f, modifier.size(64.dp, 118.dp)) {
-        val t = clock.value
-        val c = Ink.Graphite
-        rotated(kf(phase(t, 3.6f), 0f to -7f, .5f to 7f, 1f to -7f), 33f, 0f) {
-            line("M33 0 L 32 58", c)
-            line("M32 60 C 22 60, 18 72, 22 82 C 26 92, 40 92, 43 82 C 46 72, 42 60, 32 60", c)
-            val legs = kf(phase(t, .9f), 0f to -8f, .5f to 8f, 1f to -8f)
-            rotated(legs, 24f, 78f) {
-                line("M24 69 L 12 63", c); line("M22 77 L 9 79", c); line("M25 86 L 15 95", c)
-            }
-            rotated(-legs, 42f, 74f) {
-                line("M41 69 L 52 64", c); line("M43 78 L 55 80", c)
-            }
-            scaledAt(1f, blink(t, 4f), 32f, 72f) {
-                line("M28 72 l 0 0.5", c); line("M36 72 l 0 0.5", c)
-            }
-            line("M29 80 q 3 2 6 0", c)
-        }
-    }
-}
 
 private fun blink(t: Float, period: Float) =
     kf(phase(t, period), 0f to 1f, .92f to 1f, .95f to .1f, 1f to 1f)
 
-/** Idle Home: the cat points up at the deck list. */
+/**
+ * Sign-in: a cat rises from behind a stack of cards, grips its edge with both paws, blinks and
+ * waves its tail. The cards are drawn over the cat, so it really peeks from behind them.
+ */
 @Composable
-fun PointingCat(modifier: Modifier = Modifier) {
-    val clock = rememberClock()
-    Art(96f, 80f, modifier.size(96.dp, 80.dp)) {
+fun PeekingCat(description: String, modifier: Modifier = Modifier) {
+    // Reduced motion: the cat is already up and holding on.
+    val clock = rememberClock(frozenAt = 2f)
+    Art(240f, 160f, modifier.size(300.dp, 200.dp), description) {
         val t = clock.value
         val c = Ink.Graphite
-        val w = 2.3f
-        moved(0f, kf(phase(t, 2.4f), 0f to 0f, .5f to -4f, 1f to 0f)) {
-            line("M30 36 L 28 22 L 38 30", c, w)
-            line("M46 29 L 55 20 L 54 36", c, w)
-            line("M28 38 C 24 52, 34 60, 42 60 C 52 60, 58 52, 54 38", c, w)
-            scaledAt(1f, blink(t, 5f), 41f, 44f) {
-                line("M36 44 l 0 0.5", c, w); line("M47 43 l 0 0.5", c, w)
+        val w = 3f
+        // echoPeek: 900 ms after a 200 ms delay, overshoots by 4 and settles.
+        val peek = kf(((t - .2f) / .9f).coerceIn(0f, 1f), 0f to 46f, .6f to -4f, 1f to 0f, easing = EchoEase)
+        moved(0f, peek) {
+            rotated(kf(phase(t, 1.8f), 0f to -8f, .5f to 12f, 1f to -8f), 162f, 76f) {
+                line("M162 76 C 178 74, 190 62, 186 46 C 184 38, 176 38, 176 45", c, w)
             }
-            line("M40 50 l 1.5 1.5 l 1.5 -1.5", c, w)
-            moved(0f, kf(phase(t, 1.2f), 0f to 0f, .5f to -6f, 1f to 0f)) {
-                line("M58 46 C 66 40, 70 30, 72 16", c, w)
-                line("M66 22 L 72 14 L 77 22", c, w)
+            shape(
+                "M84 84 C 78 58, 90 42, 100 37 L 98 17 L 115 30 C 121 28, 129 28, 135 30 L 152 17 L 150 38 C 160 45, 166 60, 160 84",
+                Ink.Ground, c, w,
+            )
+            scaledAt(1f, blink(t, 4.5f), 124f, 52f) {
+                line("M111 52 l 0 1", c, w); line("M137 52 l 0 1", c, w)
             }
-            line("M32 60 C 30 66, 30 72, 32 78", c, w)
-            line("M50 60 C 54 66, 54 72, 52 78", c, w)
+            line("M120 60 L 124 63 L 128 60", c, w)
+            line("M124 63 L 124 67", c, w)
+        }
+        sheet(74f, 98f, 112f, 60f, 10f, Ink.Stack2, c, w)
+        sheet(66f, 90f, 128f, 60f, 11f, Ink.Stack1, c, w)
+        sheet(58f, 82f, 144f, 60f, 12f, Ink.Paper, c, w)
+        // echoGrip: the paws appear on the edge once the cat is up.
+        val grip = ((t - .95f) / .3f).coerceIn(0f, 1f)
+        if (grip > .01f) {
+            shape("M92 79 L 92 92 C 92 101, 110 101, 110 92 L 110 79", Ink.Ground, c, w, grip)
+            line("M98 94 L 98 98", c, w, grip); line("M104 94 L 104 98", c, w, grip)
+            shape("M138 79 L 138 92 C 138 101, 156 101, 156 92 L 156 79", Ink.Ground, c, w, grip)
+            line("M144 94 L 144 98", c, w, grip); line("M150 94 L 150 98", c, w, grip)
+        }
+        line("M76 116 L 128 116", c, w)
+        line("M76 128 L 108 128", Ink.SlipEdge, w)
+        drawCircle(Ink.Leaf, 6f, Offset(180f, 124f))
+    }
+}
+
+private fun DrawScope.sheet(x: Float, y: Float, w: Float, h: Float, r: Float, fill: Color, stroke: Color, width: Float) {
+    drawRoundRect(fill, Offset(x, y), Size(w, h), CornerRadius(r, r))
+    drawRoundRect(stroke, Offset(x, y), Size(w, h), CornerRadius(r, r), style = Stroke(width))
+}
+
+/**
+ * Home: a cat sits on the top edge of the screen, paws and tail hanging down. [extendUp] continues
+ * its sides above the drawing so the body always reaches the real screen edge under the status bar.
+ */
+@Composable
+fun SittingCat(description: String, modifier: Modifier = Modifier, extendUp: Dp = 0.dp) {
+    val clock = rememberClock()
+    Art(110f, 130f, modifier.size(110.dp, 130.dp), description) {
+        val t = clock.value
+        val c = Ink.Graphite
+        val w = 2.6f
+        val up = extendUp.value
+        rotated(kf(phase(t, 3.2f), 0f to -9f, .5f to 9f, 1f to -9f), 55f, 30f) {
+            line("M55 30 C 53 58, 60 80, 54 98 C 50 110, 38 110, 38 100", c, w)
+        }
+        if (up > 0f) {
+            drawRect(Ink.Ground, Offset(14f, -up), Size(82f, up + 1f))
+            drawLine(c, Offset(14f, -up), Offset(14f, 0f), w)
+            drawLine(c, Offset(96f, -up), Offset(96f, 0f), w)
+        }
+        shape("M14 0 C 14 24, 34 32, 56 32 C 78 32, 96 24, 96 0", Ink.Ground, c, w)
+        moved(0f, kf(phase(t, 2.6f), 0f to 0f, .5f to 3f, 1f to 0f)) {
+            shape("M24 20 L 24 36 C 24 45, 41 45, 41 36 L 41 24", Ink.Ground, c, w)
+            line("M30 38 L 30 42", c, w); line("M35 38 L 35 42", c, w)
+        }
+        moved(0f, kf(phase(t, 2.6f, 1.3f), 0f to 0f, .5f to 3f, 1f to 0f)) {
+            shape("M69 24 L 69 36 C 69 45, 86 45, 86 36 L 86 20", Ink.Ground, c, w)
+            line("M75 38 L 75 42", c, w); line("M80 38 L 80 42", c, w)
         }
     }
 }
@@ -92,27 +128,39 @@ private inline fun DrawScope.spark(t: Float, delay: Float, center: Offset, draw:
     scaledAt(s, s, center.x, center.y) { draw(a) }
 }
 
-/** Recall face: a cat paw taps the card and a green ring spreads from the touch. */
+/** Recall face: a pale-green cat paw presses the card and a green ring spreads from the touch. */
 @Composable
 fun TapPaw(modifier: Modifier = Modifier) {
-    val clock = rememberClock(frozenAt = .6f)
+    val clock = rememberClock(frozenAt = 0f)
     Art(44f, 46f, modifier.size(44.dp, 46.dp)) {
         val p = phase(clock.value, 1.6f)
         val rs = kf(p, 0f to .4f, .48f to .4f, .52f to .6f, 1f to 1.8f, easing = CssEaseOut)
         val ra = kf(p, 0f to 0f, .48f to 0f, .52f to .9f, 1f to 0f, easing = CssEaseOut)
-        if (ra > 0.01f) drawCircle(Ink.Leaf, 9f * rs, Offset(22f, 17f), alpha = ra, style = Stroke(1.8f))
-        moved(0f, kf(p, 0f to 0f, .35f to -5f, .5f to 2f, .6f to 0f, 1f to 0f)) {
-            val c = Ink.Soft
-            line("M18 27 C 20 34, 21 40, 21 46", c, 2f)
-            line("M28 26 C 31 32, 33 39, 34 46", c, 2f)
-            drawOval(Ink.Paper, Offset(11f, 7.5f), Size(23f, 20f))
-            drawOval(c, Offset(11f, 7.5f), Size(23f, 20f), style = Stroke(2f))
-            fill("M17.5 21.5 q 5 -6 10 0 q -0.5 4 -5 4 q -4.5 0 -5 -4 z", c)
-            drawCircle(c, 2f, Offset(14.5f, 15.5f))
-            drawCircle(c, 2.1f, Offset(19.5f, 11.5f))
-            drawCircle(c, 2.1f, Offset(25.5f, 11.5f))
-            drawCircle(c, 2f, Offset(30.5f, 15.5f))
+        if (ra > 0.01f) drawCircle(Ink.Leaf, 13f * rs, Offset(22f, 25f), alpha = ra, style = Stroke(1.6f))
+        val dy = kf(p, 0f to 0f, .38f to -4f, .5f to 1f, .62f to 0f, 1f to 0f)
+        val s = kf(p, 0f to 1f, .38f to 1.04f, .5f to .86f, .62f to 1f, 1f to 1f)
+        moved(0f, dy) {
+            scaledAt(s, s, 22f, 30f) {
+                rotated(-12f, 22f, 22f) {
+                    val c = Ink.Graphite
+                    shape(
+                        "M13 29 C 13 23, 18 20, 22 20 C 26 20, 31 23, 31 29 C 31 32.5, 28.5 33.5, 26.5 32.5 C 24.5 31.5, 23.5 31.5, 22 31.5 C 20.5 31.5, 19.5 31.5, 17.5 32.5 C 15.5 33.5, 13 32.5, 13 29 Z",
+                        Ink.LeafWash, c, 1.8f,
+                    )
+                    toe(11f, 18f, 3.2f, 4.2f, -25f)
+                    toe(17.5f, 12f, 3.4f, 4.6f, -8f)
+                    toe(26.5f, 12f, 3.4f, 4.6f, 8f)
+                    toe(33f, 18f, 3.2f, 4.2f, 25f)
+                }
+            }
         }
+    }
+}
+
+private fun DrawScope.toe(cx: Float, cy: Float, rx: Float, ry: Float, deg: Float) {
+    rotated(deg, cx, cy) {
+        drawOval(Ink.LeafWash, Offset(cx - rx, cy - ry), Size(rx * 2, ry * 2))
+        drawOval(Ink.Graphite, Offset(cx - rx, cy - ry), Size(rx * 2, ry * 2), style = Stroke(1.8f))
     }
 }
 
@@ -156,40 +204,42 @@ fun SwipeHintCat(description: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Session done: a sassy cat on the table swats the green ball off, smug head tilt, slow blink. */
+/**
+ * Session done: a fat cat sits on the table with half-closed eyes, flicks its tail, glances
+ * sideways and swats the green ball off the edge; the ball drops out of sight and comes back.
+ */
 @Composable
 fun SassyCat(description: String, modifier: Modifier = Modifier) {
-    val clock = rememberClock(frozenAt = 0.5f)
-    Art(220f, 132f, modifier.size(300.dp, 180.dp), description) {
+    val clock = rememberClock(frozenAt = 0.4f)
+    Art(240f, 152f, modifier.size(300.dp, 190.dp), description) {
         val t = clock.value
         val p = phase(t, 4f)
         val c = Ink.Graphite
-        val w = 2.6f
-        line("M20 96 L 150 96", c, w); line("M150 96 L 150 101", c, w)
-        line("M0 128 L 120 128", c, w); line("M132 128 L 220 128", c, w)
-        rotated(kf(phase(t, 2.2f), 0f to 0f, .2f to 14f, .3f to -6f, .4f to 10f, .55f to 0f, 1f to 0f), 74f, 92f) {
-            line("M74 92 C 56 92, 48 104, 52 116 C 54 122, 62 121, 61 115", c, w)
+        val w = 3f
+        line("M14 112 L 200 112", c, w)
+        line("M200 112 L 200 120", c, w)
+        rotated(kf(phase(t, 2.2f), 0f to 0f, .2f to 14f, .3f to -6f, .4f to 10f, .55f to 0f, 1f to 0f), 62f, 104f) {
+            line("M62 104 C 40 106, 30 92, 38 78 C 42 71, 52 72, 52 80", c, w)
         }
-        line("M80 47 C 70 60, 68 80, 72 96", c, w)
-        line("M104 47 C 114 60, 118 80, 112 96", c, w)
-        line("M84 96 c 0 -6, 8 -6, 8 0", c, w)
-        rotated(kf(p, 0f to 0f, .18f to 0f, .26f to -14f, .31f to 16f, .4f to 0f, 1f to 0f), 108f, 68f) {
-            line("M108 68 C 120 70, 130 78, 135 86", c, w)
-            line("M135 86 c 3 3, 8 1, 6 -3 c -1 -2, -4 -2, -6 0", c, w)
+        line("M62 112 C 54 84, 62 56, 78 46 L 76 24 L 94 38 C 102 35, 112 35, 120 38 L 138 24 L 137 47 C 152 58, 158 86, 150 112", c, w)
+        line("M92 112 C 92 104, 104 104, 104 112", c, w)
+        rotated(kf(p, 0f to 0f, .18f to 0f, .26f to -14f, .31f to 16f, .4f to 0f, 1f to 0f), 148f, 90f) {
+            line("M146 88 C 156 86, 166 90, 172 98", c, w)
+            line("M172 98 C 177 100, 180 95, 176 92", c, w)
         }
-        rotated(kf(p, 0f to 0f, .4f to 0f, .5f to -7f, .78f to -7f, .88f to 0f, 1f to 0f), 92f, 46f) {
-            line("M74 40 C 70 26, 80 18, 92 18 C 104 18, 112 26, 108 40 C 105 50, 77 50, 74 40", c, w)
-            line("M77 26 L 73 9 L 86 19", c, w); line("M98 19 L 111 8 L 107 27", c, w)
-            line("M79 32 L 88 31", c, w); line("M95 30 L 104 29", c, w)
-            scaledAt(1f, kf(p, 0f to 1f, .6f to 1f, .64f to .15f, .68f to .15f, .72f to 1f, 1f to 1f), 92f, 33f) {
-                line("M82 33 q 2 3 4 0", c, w); line("M97 31 q 2 3 4 0", c, w)
-            }
-            line("M95 23 q 5 -4 10 -1", c, w); line("M86 40 q 4 3 9 -1", c, w)
-            line("M112 34 l 7 -1", c, w); line("M112 38 l 7 1", c, w)
+        line("M88 62 L 102 62", c, w)
+        line("M114 62 L 128 62", c, w)
+        moved(kf(p, 0f to -4f, .4f to -4f, .5f to 4f, .8f to 4f, .9f to -4f, 1f to -4f), 0f) {
+            line("M97 63 C 97 68, 103 68, 103 63", c, w)
+            line("M123 63 C 123 68, 129 68, 129 63", c, w)
         }
-        val bx = kf(p, 0f to 0f, .29f to 0f, .36f to 14f, .46f to 24f, .53f to 31f, .6f to 38f, .82f to 72f, .88f to 72f, .92f to 0f, 1f to 0f)
-        val by = kf(p, 0f to 0f, .29f to 0f, .36f to -3f, .46f to 33f, .53f to 22f, .6f to 33f, .82f to 33f, .88f to 33f, .92f to 0f, 1f to 0f)
-        val ba = kf(p, 0f to 1f, .82f to 1f, .88f to 0f, .92f to 0f, 1f to 1f)
-        if (ba > .01f) drawCircle(Ink.Leaf, 5f, Offset(143f + bx, 90.5f + by), alpha = ba)
+        line("M104 76 L 108 79 L 112 76", c, w)
+        line("M108 79 C 108 84, 116 85, 119 81", c, w)
+        line("M82 74 L 70 72", c, w); line("M82 79 L 71 82", c, w)
+        line("M134 74 L 146 71", c, w)
+        val bx = kf(p, 0f to 0f, .29f to 0f, .37f to 20f, .48f to 34f, .56f to 42f, .9f to 0f, 1f to 0f, easing = CssEaseIn)
+        val by = kf(p, 0f to 0f, .29f to 0f, .37f to 0f, .48f to 30f, .56f to 58f, .9f to 0f, 1f to 0f, easing = CssEaseIn)
+        val ba = kf(p, 0f to 1f, .48f to 1f, .56f to 0f, .9f to 0f, 1f to 1f, easing = CssEaseIn)
+        if (ba > .01f) drawCircle(Ink.Leaf, 7f, Offset(186f + bx, 104f + by), alpha = ba)
     }
 }

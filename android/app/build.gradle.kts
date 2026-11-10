@@ -19,6 +19,18 @@ val webEnv: Map<String, String> = run {
 }
 fun quoted(v: String?) = "\"${v.orEmpty()}\""
 
+// `vercel env pull` writes sensitive variables as a placeholder ("[SENSITIVE]"), so APP_URL from
+// .env.local is used only when it really is a URL; otherwise the production address is the default.
+val productionApi = "https://echo-phi-one.vercel.app"
+val apiBase: String = ((project.findProperty("echo.apiBase") as String?)
+    ?: webEnv["APP_URL"]?.takeIf { it.startsWith("https://") }
+    ?: productionApi).trimEnd('/')
+require(Regex("^https?://[A-Za-z0-9.-]+(:\\d+)?$").matches(apiBase)) { "echo.apiBase is not a URL: $apiBase" }
+require(webEnv["NEXT_PUBLIC_SUPABASE_URL"].orEmpty().startsWith("https://") && webEnv["NEXT_PUBLIC_SUPABASE_ANON_KEY"].orEmpty().length > 20) {
+    "NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY are missing in ../.env.local; the app could not sign in"
+}
+logger.lifecycle("Echo API base: $apiBase" + if (apiBase.contains("localhost")) "  (local build: needs `adb reverse tcp:3000 tcp:3000`, do not hand it to a user)" else "")
+
 android {
     namespace = "com.evgarct.echo"
     compileSdk = 37
@@ -31,11 +43,7 @@ android {
         versionName = "0.1.0"
         buildConfigField("String", "SUPABASE_URL", quoted(webEnv["NEXT_PUBLIC_SUPABASE_URL"]))
         buildConfigField("String", "SUPABASE_ANON_KEY", quoted(webEnv["NEXT_PUBLIC_SUPABASE_ANON_KEY"]))
-        buildConfigField(
-            "String",
-            "API_BASE",
-            quoted((project.findProperty("echo.apiBase") as String?) ?: webEnv["APP_URL"] ?: "https://echo-phi-one.vercel.app"),
-        )
+        buildConfigField("String", "API_BASE", quoted(apiBase))
     }
 
     buildTypes {

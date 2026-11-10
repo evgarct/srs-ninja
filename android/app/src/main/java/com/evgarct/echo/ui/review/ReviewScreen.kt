@@ -95,6 +95,12 @@ import com.evgarct.echo.data.SessionResult
 import com.evgarct.echo.data.SwipeRules
 import com.evgarct.echo.data.RequeuePolicy
 import com.evgarct.echo.data.ReviewSessionData
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import com.evgarct.echo.ui.LocalPrefs
+import com.evgarct.echo.ui.SwitchSentence
+import com.evgarct.echo.ui.Word
+import com.evgarct.echo.ui.home.nudgeable
 import com.evgarct.echo.ui.LocalSpeaker
 import com.evgarct.echo.ui.Remote
 import com.evgarct.echo.ui.PrimaryAction
@@ -137,21 +143,22 @@ fun ReviewScreen(
     onRetry: () -> Unit,
     onGraded: (Card, Grade, Long) -> Unit,
     onClose: () -> Unit,
+    onQueueDone: () -> Unit,
     onFinish: (SessionResult) -> Unit,
 ) {
     val ready = (cards as? Remote.Ready)?.value
     if (ready != null && ready.cards.isNotEmpty()) {
-        ReviewSession(deck, ready.cards, ready.requeue, ready.swipe, kind, onGraded, onClose, onFinish)
+        ReviewSession(deck, ready.cards, ready.requeue, ready.swipe, kind, onGraded, onClose, onQueueDone, onFinish)
         return
     }
     BackHandler(onBack = onClose)
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     Box(Modifier.fillMaxSize().background(Ink.Ground)) {
-        Row(Modifier.padding(top = top + 4.dp, start = 8.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(top = top + 12.dp, start = 8.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             TextAction(stringResource(R.string.review_close), onClose)
         }
         Column(
-            Modifier.padding(top = top + 204.dp, start = 24.dp, end = 24.dp).fillMaxWidth(),
+            Modifier.padding(top = top + 216.dp, start = 24.dp, end = 24.dp).fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             when (cards) {
@@ -195,10 +202,17 @@ private fun ReviewSession(
     kind: SessionKind,
     onGraded: (Card, Grade, Long) -> Unit,
     onClose: () -> Unit,
+    onQueueDone: () -> Unit,
     onFinish: (SessionResult) -> Unit,
 ) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
+    val display = LocalPrefs.current
+    var menu by remember { mutableStateOf(false) }
+    // Time spent on graded cards, summed per card like the web summary (not wall-clock time).
+    var spentMs by remember { mutableStateOf(0L) }
+    // Web rule: only a queue emptied by a grade completes the session; hiding the last card does not.
+    var completedByGrade by remember { mutableStateOf(false) }
     val density = LocalDensity.current
     val view = LocalView.current
     val speaker = LocalSpeaker.current
@@ -217,7 +231,6 @@ private fun ReviewSession(
     var hintReady by remember { mutableStateOf(false) }
     var dragGrade by remember { mutableStateOf<Grade?>(null) }
     val grades = remember { mutableStateListOf<Grade>() }
-    var startedAt by remember { mutableStateOf(System.currentTimeMillis()) }
     var totalSwipes by remember { mutableIntStateOf(prefs.getInt(KEY_SWIPES, 0)) }
 
     val dx = remember { Animatable(0f) }
@@ -229,8 +242,13 @@ private fun ReviewSession(
     val done = queue.isEmpty()
     val card = queue.firstOrNull()
     val reveal = face == Face.Reveal
-    // Cards that have left the session for good; a requeued card still counts as remaining.
-    val finished = n - queue.size
+    // The web counter: reviews done so far out of those plus the cards still in the queue, so a
+    // requeued card makes the total grow instead of the position going back.
+    val completed = grades.size
+    val projected = completed + queue.size
+    val step = minOf(completed + 1, maxOf(projected, 1))
+
+    LaunchedEffect(done, completedByGrade) { if (done && completedByGrade) onQueueDone() }
 
     fun say(c: Card) {
         val url = c.audioUrl ?: return
@@ -272,6 +290,7 @@ private fun ReviewSession(
         scope.launch {
             flip.animateTo(90f, tween(150, easing = FastOutLinearInEasing))
             face = Face.Reveal
+            detail = display.slipOpen
             flip.snapTo(-90f)
             flip.animateTo(0f, tween(190, easing = LinearOutSlowInEasing))
         }
@@ -284,7 +303,9 @@ private fun ReviewSession(
         detail = false
         hintReady = false
         grades += g
-        queue.firstOrNull()?.let { onGraded(it, g, System.currentTimeMillis() - shownAt) }
+        val took = System.currentTimeMillis() - shownAt
+        spentMs += took
+        queue.firstOrNull()?.let { onGraded(it, g, took) }
         if (bySwipe) {
             totalSwipes += 1
             prefs.edit().putInt(KEY_SWIPES, totalSwipes).apply()
@@ -303,44 +324,65 @@ private fun ReviewSession(
             face = Face.Recall
             val current = queue.removeAt(0)
             requeue.insertIndex(queue.size, g)?.let { at -> queue.add(at.coerceIn(0, queue.size), current) }
+            if (queue.isEmpty()) completedByGrade = true
             turn += 1
             shift.snapTo(0f)
             leaving = false
         }
     }
 
-    BackHandler(onBack = onClose)
+    // The web's "hide until the end of the session": the card leaves this queue without a grade.
+    val hiddenNote = stringResource(R.string.review_card_hidden)
+    fun hideCurrent() {
+        menu = false
+        if (leaving || done) return
+        detail = false
+        hintReady = false
+        scope.launch {
+            dx.snapTo(0f); dy.snapTo(0f); flip.snapTo(0f)
+            face = Face.Recall
+            queue.removeAt(0)
+            turn += 1
+        }
+        Toast.makeText(context, hiddenNote, Toast.LENGTH_SHORT).show()
+    }
+
+    BackHandler { if (menu) menu = false else onClose() }
 
     val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     BoxWithConstraints(Modifier.fillMaxSize().background(Ink.Ground)) {
         val cardW = maxWidth - 40.dp
-        val cardTop = top + 124.dp
+        val cardTop = top + 132.dp
         val footerTop = maxHeight - bottom - 64.dp
         // The canvas drew the slip at 354; on a taller phone it may use the whole runway so nothing scrolls away.
         val slipMax = maxOf(SlipH, footerTop - (cardTop + CardH) - 12.dp)
 
         // Top bar
         Row(
-            Modifier.padding(top = top + 4.dp, start = 8.dp, end = 8.dp).fillMaxWidth().height(48.dp),
+            Modifier.padding(top = top + 12.dp, start = 8.dp, end = 8.dp).fillMaxWidth().height(48.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             TextAction(stringResource(R.string.review_close), onClose)
             BasicText(
                 buildAnnotatedString {
-                    withStyle(SpanStyle(color = Ink.Graphite)) { append("${minOf(finished + 1, n)}") }
-                    append(" / $n")
+                    withStyle(SpanStyle(color = Ink.Graphite)) { append("$step") }
+                    append(" / ${maxOf(projected, 1)}")
                 },
                 style = Type.mono.copy(fontSize = 13.sp, color = Ink.Soft),
             )
-            TextAction(stringResource(R.string.review_more), { Toast.makeText(context, soon, Toast.LENGTH_SHORT).show() })
+            TextAction(stringResource(R.string.review_more), { if (!done) menu = true })
         }
-        val progress by animateFloatAsState(finished / n.toFloat(), tween(500, easing = EchoEase), label = "progress")
+        val progress by animateFloatAsState(
+            if (projected > 0) completed / projected.toFloat() else 1f,
+            tween(500, easing = EchoEase),
+            label = "progress",
+        )
         Box(
             Modifier
-                .padding(top = top + 60.dp, start = 20.dp, end = 20.dp)
+                .padding(top = top + 68.dp, start = 20.dp, end = 20.dp)
                 .fillMaxWidth()
                 .height(1.dp)
                 .background(Ink.Rule)
@@ -352,7 +394,7 @@ private fun ReviewSession(
         val scaleAlpha by animateFloatAsState(if (dragging) 1f else 0f, tween(200), label = "scale")
         Row(
             Modifier
-                .padding(top = top + 70.dp, start = 51.dp, end = 51.dp)
+                .padding(top = top + 78.dp, start = 51.dp, end = 51.dp)
                 .fillMaxWidth()
                 .height(22.dp)
                 .graphicsLayer { alpha = scaleAlpha },
@@ -505,7 +547,7 @@ private fun ReviewSession(
                 visible = showHint,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = bottom + 64.dp + 56.dp)
+                    .padding(bottom = bottom + 64.dp + 40.dp)
                     .graphicsLayer { scaleX = .85f; scaleY = .85f },
                 enter = fadeIn(tween(300)),
                 exit = fadeOut(tween(200)),
@@ -514,18 +556,8 @@ private fun ReviewSession(
             }
         } else {
             EndOfDeck(
-                modifier = Modifier.padding(top = top + 204.dp, start = 24.dp, end = 24.dp),
-                onResults = {
-                    onFinish(SessionResult(deck.id, deck.name, kind, grades.toList(), System.currentTimeMillis() - startedAt))
-                },
-                onAgain = {
-                    grades.clear()
-                    startedAt = System.currentTimeMillis()
-                    face = Face.Recall
-                    queue.clear()
-                    queue.addAll(cards)
-                    turn += 1
-                },
+                modifier = Modifier.padding(top = top + 216.dp, start = 24.dp, end = 24.dp),
+                onResults = { onFinish(SessionResult(deck.id, deck.name, kind, grades.toList(), spentMs)) },
             )
         }
 
@@ -537,6 +569,95 @@ private fun ReviewSession(
             onShow = ::doFlip,
             onGrade = { grade(it, bySwipe = false) },
         )
+
+        CardMenu(
+            open = menu && card != null,
+            phrase = card?.text.orEmpty(),
+            bottomInset = bottom,
+            slipOpen = display.slipOpen,
+            onToggleSlip = display::toggleSlip,
+            onSoon = { Toast.makeText(context, soon, Toast.LENGTH_SHORT).show() },
+            onHide = ::hideCurrent,
+            onDismiss = { menu = false },
+            onEnd = { menu = false; onClose() },
+        )
+    }
+}
+
+/**
+ * "Ещё" during a review: a paper sheet over the dimmed card with the card's actions, the quick
+ * display settings as a sentence and "Закончить ревью". Tapping the dim or "Закрыть" dismisses it.
+ */
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.CardMenu(
+    open: Boolean,
+    phrase: String,
+    bottomInset: Dp,
+    slipOpen: Boolean,
+    onToggleSlip: () -> Unit,
+    onSoon: () -> Unit,
+    onHide: () -> Unit,
+    onDismiss: () -> Unit,
+    onEnd: () -> Unit,
+) {
+    val scrim by animateFloatAsState(if (open) 1f else 0f, tween(240), label = "scrim")
+    val dismissLabel = stringResource(R.string.review_menu_close_a11y)
+    if (scrim > 0.01f) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .graphicsLayer { alpha = scrim }
+                .background(Ink.Graphite.copy(alpha = 0.32f))
+                .clickable(remember { MutableInteractionSource() }, null, onClickLabel = dismissLabel, onClick = onDismiss),
+        )
+    }
+    AnimatedVisibility(
+        visible = open,
+        modifier = Modifier.align(Alignment.BottomCenter).padding(start = 8.dp, end = 8.dp, bottom = bottomInset + 8.dp),
+        enter = fadeIn(tween(200)) + slideInVertically(tween(380, easing = EchoEase)) { it * 3 / 5 },
+        exit = fadeOut(tween(160)) + slideOutVertically(tween(240)) { it / 3 },
+    ) {
+        val rowStyle = Type.display.copy(fontSize = 26.sp, letterSpacing = (-0.02).em, lineHeight = 1.15.em)
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .background(Ink.Paper, RoundedCornerShape(22.dp))
+                .border(1.5.dp, Ink.Graphite, RoundedCornerShape(22.dp))
+                // The sheet swallows taps so they never reach the dim behind it.
+                .clickable(remember { MutableInteractionSource() }, null) {}
+                .padding(start = 24.dp, end = 24.dp, top = 22.dp, bottom = 22.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BasicText(phrase, Modifier.weight(1f), style = Type.mono, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                TextAction(stringResource(R.string.review_close), onDismiss, Modifier.offset(x = 12.dp))
+            }
+            listOf(
+                R.string.review_menu_edit to onSoon,
+                R.string.review_menu_snooze to onSoon,
+                R.string.review_menu_hide to onHide,
+            ).forEach { (label, action) ->
+                Box(Modifier.fillMaxWidth().heightIn(min = 54.dp).nudgeable(action), contentAlignment = Alignment.CenterStart) {
+                    BasicText(stringResource(label), style = rowStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            SwitchSentence(
+                listOf(
+                    Word(stringResource(R.string.pref_slip).replaceFirstChar { it.titlecase() } + " "),
+                    Word(stringResource(if (slipOpen) R.string.pref_slip_open else R.string.pref_slip_hidden), onToggleSlip),
+                    Word(", " + stringResource(R.string.pref_audio) + " "),
+                    Word(stringResource(R.string.pref_audio_auto), onSoon),
+                    Word("."),
+                ),
+                Type.body.copy(fontSize = 18.sp, lineHeight = 29.sp, letterSpacing = (-0.01).em, color = Ink.Soft),
+                Modifier.padding(top = 16.dp),
+            )
+            TextAction(
+                stringResource(R.string.review_end),
+                onEnd,
+                Modifier.padding(top = 10.dp).offset(x = (-12).dp),
+                style = Type.body.copy(fontSize = 15.sp, color = Ink.Rust),
+            )
+        }
     }
 }
 
@@ -573,26 +694,27 @@ private fun CardFace(
             Modifier.fillMaxSize().padding(start = 26.dp, top = 26.dp, end = 16.dp, bottom = 16.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            // Phrase: up to 3 lines, sized to its real width 32 → 24 sp, then ellipsis.
-            androidx.compose.runtime.key(idx) {
+            // Main text, always top left: the front before the flip, the answer after it. Up to
+            // 3 lines, sized to its real width (front 32 → 24 sp, answer 32 → 21 sp), then ellipsis.
+            androidx.compose.runtime.key(idx, face) {
                 BasicText(
-                    card.text,
+                    if (face == Face.Reveal) card.translation else card.text,
                     Modifier.fillMaxWidth().riseIn(durationMs = 260, distance = 8.dp),
                     style = Type.display.copy(fontSize = 32.sp, lineHeight = 1.08.em, letterSpacing = (-0.025).em),
                     maxLines = 3,
                     overflow = TextOverflow.Ellipsis,
-                    autoSize = TextAutoSize.StepBased(24.sp, 32.sp, 1.sp),
+                    autoSize = TextAutoSize.StepBased(if (face == Face.Reveal) 21.sp else 24.sp, 32.sp, 1.sp),
                 )
             }
             Row(verticalAlignment = Alignment.Bottom) {
                 Box(Modifier.weight(1f)) {
                     if (face == Face.Reveal) {
-                        // Translation: pinned to the bottom, grows upward, 19 → 17 sp, max 3 lines.
+                        // The front goes down in grey: pinned to the bottom, 19 → 17 sp, max 2 lines.
                         BasicText(
-                            card.translation,
+                            card.text,
                             Modifier.padding(bottom = 10.dp).riseIn(durationMs = 300, distance = 8.dp),
                             style = Type.body.copy(fontSize = 19.sp, lineHeight = 1.3.em, color = Ink.Soft),
-                            maxLines = 3,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                             autoSize = TextAutoSize.StepBased(17.sp, 19.sp, 1.sp),
                         )
@@ -796,7 +918,7 @@ private fun Footer(
 }
 
 @Composable
-private fun EndOfDeck(modifier: Modifier, onResults: () -> Unit, onAgain: () -> Unit) {
+private fun EndOfDeck(modifier: Modifier, onResults: () -> Unit) {
     val reduced = LocalReducedMotion.current
     val inf = rememberInfiniteTransition(label = "nudge")
     val nudge by inf.animateFloat(0f, 5f, infiniteRepeatable(tween(600), RepeatMode.Reverse), label = "n")
@@ -813,6 +935,5 @@ private fun EndOfDeck(modifier: Modifier, onResults: () -> Unit, onAgain: () -> 
                 style = Type.body.copy(color = Ink.LeafLight),
             )
         }
-        TextAction(stringResource(R.string.review_again), onAgain, Modifier.offset(x = (-12).dp))
     }
 }

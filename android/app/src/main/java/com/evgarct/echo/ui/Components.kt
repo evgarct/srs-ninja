@@ -25,6 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -169,6 +173,107 @@ fun rangeLineRects(layout: androidx.compose.ui.text.TextLayoutResult, start: Int
         i = lineEnd
     }
     return out
+}
+
+/** One piece of a [SwitchSentence]: plain text, or a word you tap to change a setting. */
+class Word(val text: String, val onClick: (() -> Unit)? = null)
+
+/**
+ * A setting written as a sentence ("Ещё 20 сложных из этой колоды."): tappable words are graphite
+ * with a dotted underline, 1.5 dp thick, 5 dp under the baseline. They are switches, not links.
+ */
+@Composable
+fun SwitchSentence(words: List<Word>, style: TextStyle, modifier: Modifier = Modifier) {
+    val link = androidx.compose.ui.text.TextLinkStyles(androidx.compose.ui.text.SpanStyle(color = Ink.Graphite))
+    val ranges = ArrayList<IntRange>()
+    val text = androidx.compose.ui.text.buildAnnotatedString {
+        words.forEachIndexed { i, w ->
+            val click = w.onClick
+            if (click == null) append(w.text) else {
+                val start = length
+                pushLink(androidx.compose.ui.text.LinkAnnotation.Clickable("w$i", link) { click() })
+                append(w.text)
+                pop()
+                ranges += start until length
+            }
+        }
+    }
+    var layout by remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
+    BasicText(
+        text,
+        modifier.drawBehind {
+            val l = layout ?: return@drawBehind
+            val total = l.layoutInput.text.length
+            val dot = 1.5.dp.toPx()
+            val effect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(0.01f, dot * 2.2f))
+            for (range in ranges) {
+                var i = range.first
+                val end = minOf(range.last + 1, total)
+                while (i < end) {
+                    val line = l.getLineForOffset(i)
+                    val lineEnd = minOf(end, l.getLineEnd(line, visibleEnd = true))
+                    if (lineEnd <= i) { i = maxOf(i + 1, l.getLineEnd(line)); continue }
+                    val x0 = l.getBoundingBox(i).left
+                    val x1 = l.getBoundingBox(lineEnd - 1).right
+                    val y = l.getLineBaseline(line) + 5.dp.toPx()
+                    drawLine(
+                        Ink.Graphite,
+                        androidx.compose.ui.geometry.Offset(minOf(x0, x1), y),
+                        androidx.compose.ui.geometry.Offset(maxOf(x0, x1), y),
+                        dot,
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        pathEffect = effect,
+                    )
+                    i = lineEnd
+                }
+            }
+        },
+        style = style,
+        onTextLayout = { layout = it },
+    )
+}
+
+/** The three sections under every top-level screen; the current one is medium with a green underline. */
+enum class Section { Decks, Stats, More }
+
+@Composable
+fun BottomNav(current: Section, onSelect: (Section) -> Unit, modifier: Modifier = Modifier) {
+    val sections = androidx.compose.ui.res.stringResource(com.evgarct.echo.R.string.nav_sections)
+    Row(
+        modifier
+            .padding(horizontal = 12.dp)
+            .fillMaxWidth()
+            .height(64.dp)
+            .drawBehind {
+                drawLine(Ink.Rule, androidx.compose.ui.geometry.Offset.Zero, androidx.compose.ui.geometry.Offset(size.width, 0f), 1.dp.toPx())
+            }
+            .semantics { contentDescription = sections },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NavItem(androidx.compose.ui.res.stringResource(com.evgarct.echo.R.string.nav_decks), current == Section.Decks) { onSelect(Section.Decks) }
+        NavItem(androidx.compose.ui.res.stringResource(com.evgarct.echo.R.string.nav_stats), current == Section.Stats) { onSelect(Section.Stats) }
+        NavItem(androidx.compose.ui.res.stringResource(com.evgarct.echo.R.string.nav_more), current == Section.More) { onSelect(Section.More) }
+    }
+}
+
+@Composable
+private fun NavItem(label: String, current: Boolean, onClick: () -> Unit) {
+    Box(Modifier.height(48.dp).pressable(onClick, 0.95f).padding(horizontal = 12.dp), contentAlignment = Alignment.Center) {
+        BasicText(
+            label,
+            Modifier.drawBehind {
+                if (current) {
+                    val y = size.height + 6.dp.toPx()
+                    drawLine(Ink.Leaf, androidx.compose.ui.geometry.Offset(0f, y), androidx.compose.ui.geometry.Offset(size.width, y), 2.dp.toPx())
+                }
+            },
+            style = Type.body.copy(
+                fontSize = 15.sp,
+                fontWeight = if (current) FontWeight.Medium else FontWeight.Normal,
+                color = if (current) Ink.Graphite else Ink.Soft,
+            ),
+        )
+    }
 }
 
 /** Launches [block] once the composable has been on screen for [ms]. */
