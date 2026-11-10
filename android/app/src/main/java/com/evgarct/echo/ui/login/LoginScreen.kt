@@ -78,6 +78,7 @@ fun LoginScreen(
     error: String?,
     onSubmit: (email: String, password: String) -> Unit,
     onCreateAccount: () -> Unit,
+    onLanguage: () -> Unit,
     onSoon: () -> Unit,
 ) {
     var email by rememberSaveable { mutableStateOf("") }
@@ -113,7 +114,7 @@ fun LoginScreen(
                 style = Type.hand.copy(fontSize = 36.sp, lineHeight = 36.sp, color = Ink.Graphite),
             )
             SwitchSentence(
-                listOf(Word(stringResource(R.string.login_language), onSoon)),
+                listOf(Word(stringResource(R.string.login_language), onLanguage)),
                 Type.mono.copy(fontSize = 13.sp, color = Ink.Graphite),
                 Modifier.padding(horizontal = 12.dp).semantics { contentDescription = languageLabel },
             )

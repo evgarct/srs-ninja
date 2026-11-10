@@ -1,11 +1,9 @@
 package com.evgarct.echo
 
-import android.app.LocaleManager
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.os.LocaleList
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -31,11 +29,8 @@ class MainActivity : ComponentActivity(), Speaker {
             navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
-        // Iteration 1 ships Russian copy only: pin the app locale so plurals ("9 карточек") and
-        // dates follow Russian rules even on a phone set to another language.
-        getSystemService(LocaleManager::class.java)?.let { lm ->
-            if (lm.applicationLocales.isEmpty) lm.applicationLocales = LocaleList.forLanguageTags("ru")
-        }
+        // The interface language follows the phone (ru / cs, otherwise English) until the user
+        // picks one in the app; see ui/AppLanguage.kt.
         setContent {
             EchoTheme {
                 CompositionLocalProvider(LocalSpeaker provides this) { EchoApp() }

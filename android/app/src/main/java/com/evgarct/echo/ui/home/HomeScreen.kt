@@ -72,6 +72,7 @@ import com.evgarct.echo.ui.SwitchSentence
 import com.evgarct.echo.ui.TextAction
 import com.evgarct.echo.ui.TitleLine
 import com.evgarct.echo.ui.Word
+import com.evgarct.echo.ui.currentLocale
 import com.evgarct.echo.ui.art.SelfDrawingCheck
 import com.evgarct.echo.ui.art.SittingCat
 import com.evgarct.echo.ui.riseIn
@@ -259,10 +260,11 @@ private fun ListNote(text: String) {
     BasicText(text, Modifier.padding(horizontal = 14.dp, vertical = 18.dp), style = Type.hand.copy(fontSize = 24.sp))
 }
 
+@Composable
 private fun todayLabel(): String {
-    val ru = Locale.forLanguageTag("ru")
-    val s = LocalDate.now().format(DateTimeFormatter.ofPattern("EEEE, d MMMM", ru))
-    return s.replaceFirstChar { it.titlecase(ru) }
+    val locale = currentLocale()
+    val s = LocalDate.now().format(DateTimeFormatter.ofPattern(stringResource(R.string.date_long), locale))
+    return s.replaceFirstChar { it.titlecase(locale) }
 }
 
 /**
@@ -284,7 +286,7 @@ private fun HomeTitle(remote: Remote<List<Deck>>, selected: Deck?) {
         remote !is Remote.Ready -> " "
         empty -> stringResource(R.string.home_empty_line2)
         selected == null && totalDue == 0 -> stringResource(R.string.home_title_idle_line2_none)
-        selected == null -> stringResource(R.string.home_title_idle_line2)
+        selected == null -> pluralStringResource(R.plurals.home_title_idle_line2, totalDue)
         selected.due > 0 -> stringResource(R.string.home_title_deck_due_line2, selected.due)
         else -> stringResource(R.string.home_title_deck_done_line2)
     }
@@ -326,7 +328,7 @@ private fun DeckRow(
         drafts,
         if (deck.due == 0) stringResource(R.string.home_deck_done_meta) else null,
     ).joinToString(" · ")
-    val ru = LocaleList("ru")
+    val ru = LocaleList(currentLocale().toLanguageTag())
 
     Box(
         Modifier

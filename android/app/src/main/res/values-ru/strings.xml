@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Echo</string>
+    <string name="wordmark">echo</string>
+
+    <!-- Home title: two independent lines, never wrapped (second line ≤ 18 chars for translators). -->
+    <plurals name="home_title_idle_line1">
+        <item quantity="one">%d карточка</item>
+        <item quantity="few">%d карточки</item>
+        <item quantity="many">%d карточек</item>
+        <item quantity="other">%d карточки</item>
+    </plurals>
+    <plurals name="home_title_idle_line2">
+        <item quantity="one">ждёт тебя.</item>
+        <item quantity="few">ждут тебя.</item>
+        <item quantity="many">ждут тебя.</item>
+        <item quantity="other">ждут тебя.</item>
+    </plurals>
+    <!-- java.time patterns for the home date line and the summary date. -->
+    <string name="date_long">EEEE, d MMMM</string>
+    <string name="date_short">d MMMM</string>
+    <string name="home_title_idle_line2_none">всё на сегодня.</string>
+    <string name="home_title_deck_line1">%s:</string>
+    <string name="home_title_deck_due_line2">%d на сегодня.</string>
+    <string name="home_title_deck_done_line2">всё готово.</string>
+
+    <plurals name="drafts">
+        <item quantity="one">%d черновик</item>
+        <item quantity="few">%d черновика</item>
+        <item quantity="many">%d черновиков</item>
+        <item quantity="other">%d черновика</item>
+    </plurals>
+    <string name="home_deck_group">Колода</string>
+    <string name="home_deck_done_meta">на сегодня готово</string>
+    <string name="home_deck_done_a11y">На сегодня всё повторено</string>
+    <string name="home_pick_first">Выбери колоду, чтобы начать</string>
+    <string name="home_cat_a11y">Кот сидит на верхнем краю экрана, свесив лапы и хвост</string>
+    <string name="home_review_today">Ревью на сегодня</string>
+    <string name="home_review_extra">Дополнительное ревью</string>
+    <string name="home_extra_prefix">Ещё</string>
+    <string name="home_extra_suffix">из этой колоды.</string>
+    <string name="home_count_arrow">%d →</string>
+
+    <string name="nav_sections">Разделы</string>
+    <string name="nav_decks">Колоды</string>
+    <string name="nav_stats">Статистика</string>
+    <string name="nav_more">Ещё</string>
+    <string name="next_iteration">Появится в следующей итерации</string>
+
+    <string name="extra_kind_hard">сложных</string>
+    <string name="extra_kind_new">новых</string>
+    <string name="extra_kind_random">случайных</string>
+    <string name="extra_kind_forgotten">забытых</string>
+
+    <string name="login_title_line1">Слова ждут.</string>
+    <string name="login_title_line2">Заходи.</string>
+    <string name="login_cat_a11y">Кот держится лапами за стопку карточек и машет хвостом</string>
+    <string name="login_language">RU</string>
+    <string name="login_language_a11y">Язык интерфейса: русский</string>
+    <string name="login_email">Почта</string>
+    <string name="login_email_placeholder">you@example.com</string>
+    <string name="login_password">Пароль</string>
+    <string name="login_submit">Войти</string>
+    <string name="login_busy">Входим…</string>
+    <string name="login_create">Создать аккаунт</string>
+    <string name="login_forgot">Забыл пароль</string>
+    <string name="login_error_credentials">не тот пароль или почта</string>
+    <string name="login_error_network">не достучались до Echo, проверь сеть</string>
+    <string name="login_error_config">сборка без ключей Supabase</string>
+
+    <string name="home_loading">открываю колоды…</string>
+    <string name="home_error">колоды не загрузились</string>
+    <string name="home_retry">Ещё раз</string>
+    <string name="home_empty_line1">Колод пока</string>
+    <string name="home_empty_line2">нет.</string>
+    <string name="home_empty_hint">создай первую на сайте, и она появится здесь</string>
+    <string name="more_sign_out">Выйти</string>
+    <string name="more_new_deck">Новая колода,</string>
+    <string name="more_drafts">Черновики,</string>
+    <string name="more_import">Импорт,</string>
+    <string name="more_agents">AI-агенты,</string>
+    <string name="more_voices">Голоса.</string>
+    <!-- Preferences written as a sentence; the pieces are joined in code. -->
+    <string name="more_pref_interface">Интерфейс</string>
+    <string name="more_lang_current">на русском</string>
+    <string name="more_pref_theme">тема</string>
+    <string name="more_theme_light">светлая</string>
+    <string name="pref_slip">примеры под карточкой</string>
+    <string name="pref_slip_hidden">спрятаны</string>
+    <string name="pref_slip_open">открыты сразу</string>
+    <string name="pref_audio">звук</string>
+    <string name="pref_audio_auto">играет сам</string>
+
+    <string name="review_loading">тасую колоду…</string>
+    <string name="review_load_error">карточки не загрузились</string>
+    <string name="review_empty_line1">Здесь пока</string>
+    <string name="review_empty_line2">пусто.</string>
+    <string name="review_back">К колодам</string>
+    <string name="review_sync_pending">%d оценок ждут сети</string>
+
+    <string name="review_close">Закрыть</string>
+    <string name="review_more">Ещё</string>
+    <string name="review_show_answer">Показать ответ</string>
+    <string name="review_flip_a11y">Перевернуть карточку</string>
+    <string name="review_audio_a11y">Озвучить ещё раз</string>
+    <string name="review_open_sheet_a11y">Показать примеры</string>
+    <string name="review_close_sheet_a11y">Убрать лист под карточку</string>
+    <string name="review_swipe_hint_a11y">Свайп влево тяжелее, вправо легче</string>
+    <string name="grade_again">Снова</string>
+    <string name="grade_hard">Сложно</string>
+    <string name="grade_good">Нормально</string>
+    <string name="grade_easy">Легко</string>
+    <string name="review_last_line1">Это была</string>
+    <string name="review_last_line2">последняя.</string>
+    <string name="review_results">Итоги</string>
+    <string name="review_menu_close_a11y">Закрыть меню</string>
+    <string name="review_menu_edit">Редактировать,</string>
+    <string name="review_menu_snooze">Отложить до завтра,</string>
+    <string name="review_menu_hide">Скрыть карточку.</string>
+    <string name="review_card_hidden">Карточка скрыта до конца сессии</string>
+    <string name="review_end">Закончить ревью</string>
+
+    <string name="done_title_line1">Готово</string>
+    <string name="done_title_line2">на сегодня.</string>
+    <string name="done_caption">ну, допустим, неплохо</string>
+    <string name="done_cat_a11y">Толстый кот с невозмутимым видом смахивает мячик со стола</string>
+    <string name="done_cards">карточек</string>
+    <string name="done_accuracy">точность</string>
+    <string name="done_time">времени</string>
+    <string name="done_hard">сложных</string>
+    <string name="done_to_decks">К колодам</string>
+    <string name="done_more">Ещё %1$d %2$s из этой колоды</string>
+</resources>

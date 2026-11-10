@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.evgarct.echo.R
+import com.evgarct.echo.ui.AppLanguage
 import com.evgarct.echo.ui.LocalPrefs
 import com.evgarct.echo.ui.SwitchSentence
 import com.evgarct.echo.ui.TextAction
@@ -61,6 +62,7 @@ fun Modifier.nudgeable(onClick: () -> Unit): Modifier = composed {
 @Composable
 fun MoreScreen(drafts: Int, email: String, onSoon: () -> Unit, onSignOut: () -> Unit) {
     val prefs = LocalPrefs.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     val items = listOf(
         R.string.more_new_deck to 0,
         R.string.more_drafts to drafts,
@@ -108,7 +110,7 @@ fun MoreScreen(drafts: Int, email: String, onSoon: () -> Unit, onSignOut: () -> 
             SwitchSentence(
                 listOf(
                     Word(stringResource(R.string.more_pref_interface) + " "),
-                    Word(stringResource(R.string.more_lang_ru), onSoon),
+                    Word(stringResource(R.string.more_lang_current)) { AppLanguage.cycle(context) },
                     Word(", " + stringResource(R.string.more_pref_theme) + " "),
                     Word(stringResource(R.string.more_theme_light), onSoon),
                     Word(", " + stringResource(R.string.pref_slip) + " "),

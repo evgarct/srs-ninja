@@ -72,8 +72,9 @@ fun DoneScreen(
         delay(340)
         bar.animateTo(1f, tween(900, easing = com.evgarct.echo.ui.theme.EchoEase))
     }
-    val ru = Locale.forLanguageTag("ru")
-    val date = LocalDate.now().format(DateTimeFormatter.ofPattern("d MMMM", ru))
+    val date = LocalDate.now().format(
+        DateTimeFormatter.ofPattern(stringResource(R.string.date_short), com.evgarct.echo.ui.currentLocale()),
+    )
 
     Column(
         Modifier

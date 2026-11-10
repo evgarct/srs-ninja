@@ -131,6 +131,7 @@ fun EchoApp() {
                         )
                     }
                 },
+                onLanguage = { AppLanguage.cycle(context) },
                 onSoon = { android.widget.Toast.makeText(context, R.string.next_iteration, android.widget.Toast.LENGTH_SHORT).show() },
                 onSubmit = { email, password ->
                     if (!api.isConfigured) {

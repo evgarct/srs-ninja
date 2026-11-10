@@ -41,4 +41,8 @@ A native Android app runs the daily review on the phone against the user's real 
 ## Non-goals
 - Statistics, deck/note editing, drafts, audio files and Google sign-in (all current accounts use email + password).
 - Offline review; grades queue only for the current app run.
-- Localizations other than Russian (strings are already split per line for them).
+- Interface languages other than Russian, English and Czech.
+
+### Languages and icon
+21. The interface is available in Russian, English and Czech, including plurals, dates and the two-line titles. A new install follows the phone's language (English when it is none of the three). The language is switched in the app: the code in the sign-in top bar (RU / EN / CS) and the language word in the "Ещё" sentence, each tap moving to the next language. Card content is never translated.
+22. The launcher icon is the cat holding on to a stack of cards with one green dot on a graphite background; the themed (monochrome) icon and the splash use the same drawing as line art.

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Echo</string>
+    <string name="wordmark">echo</string>
+
+    <!-- Home title: two independent lines, never wrapped (second line ≤ 18 chars for translators). -->
+    <plurals name="home_title_idle_line1">
+        <item quantity="one">%d karta</item>
+        <item quantity="few">%d karty</item>
+        <item quantity="many">%d karty</item>
+        <item quantity="other">%d karet</item>
+    </plurals>
+    <plurals name="home_title_idle_line2">
+        <item quantity="one">na tebe čeká.</item>
+        <item quantity="few">na tebe čekají.</item>
+        <item quantity="many">na tebe čeká.</item>
+        <item quantity="other">na tebe čeká.</item>
+    </plurals>
+    <!-- java.time patterns for the home date line and the summary date. -->
+    <string name="date_long">EEEE d. MMMM</string>
+    <string name="date_short">d. MMMM</string>
+    <string name="home_title_idle_line2_none">pro dnešek vše.</string>
+    <string name="home_title_deck_line1">%s:</string>
+    <string name="home_title_deck_due_line2">%d na dnešek.</string>
+    <string name="home_title_deck_done_line2">vše hotovo.</string>
+
+    <plurals name="drafts">
+        <item quantity="one">%d koncept</item>
+        <item quantity="few">%d koncepty</item>
+        <item quantity="many">%d konceptu</item>
+        <item quantity="other">%d konceptů</item>
+    </plurals>
+    <string name="home_deck_group">Balíček</string>
+    <string name="home_deck_done_meta">pro dnešek hotovo</string>
+    <string name="home_deck_done_a11y">Pro dnešek je vše zopakováno</string>
+    <string name="home_pick_first">Vyber balíček a začni</string>
+    <string name="home_cat_a11y">Kočka sedí na horním okraji obrazovky, tlapky a ocas jí visí dolů</string>
+    <string name="home_review_today">Dnešní opakování</string>
+    <string name="home_review_extra">Opakování navíc</string>
+    <string name="home_extra_prefix">Ještě</string>
+    <string name="home_extra_suffix">z tohoto balíčku.</string>
+    <string name="home_count_arrow">%d →</string>
+
+    <string name="nav_sections">Sekce</string>
+    <string name="nav_decks">Balíčky</string>
+    <string name="nav_stats">Statistiky</string>
+    <string name="nav_more">Další</string>
+    <string name="next_iteration">Přibude v další iteraci</string>
+
+    <string name="extra_kind_hard">těžkých</string>
+    <string name="extra_kind_new">nových</string>
+    <string name="extra_kind_random">náhodných</string>
+    <string name="extra_kind_forgotten">zapomenutých</string>
+
+    <string name="login_title_line1">Slova čekají.</string>
+    <string name="login_title_line2">Pojď dál.</string>
+    <string name="login_cat_a11y">Kočka se drží tlapkami hromádky karet a mává ocasem</string>
+    <string name="login_language">CS</string>
+    <string name="login_language_a11y">Jazyk rozhraní: čeština</string>
+    <string name="login_email">E-mail</string>
+    <string name="login_email_placeholder">you@example.com</string>
+    <string name="login_password">Heslo</string>
+    <string name="login_submit">Přihlásit se</string>
+    <string name="login_busy">Přihlašuji…</string>
+    <string name="login_create">Vytvořit účet</string>
+    <string name="login_forgot">Zapomenuté heslo</string>
+    <string name="login_error_credentials">špatný e-mail nebo heslo</string>
+    <string name="login_error_network">Echo neodpovídá, zkontroluj síť</string>
+    <string name="login_error_config">sestavení bez klíčů Supabase</string>
+
+    <string name="home_loading">otevírám balíčky…</string>
+    <string name="home_error">balíčky se nenačetly</string>
+    <string name="home_retry">Zkusit znovu</string>
+    <string name="home_empty_line1">Zatím žádné</string>
+    <string name="home_empty_line2">balíčky.</string>
+    <string name="home_empty_hint">vytvoř první na webu a objeví se tady</string>
+    <string name="more_sign_out">Odhlásit se</string>
+    <string name="more_new_deck">Nový balíček,</string>
+    <string name="more_drafts">Koncepty,</string>
+    <string name="more_import">Import,</string>
+    <string name="more_agents">AI agenti,</string>
+    <string name="more_voices">Hlasy.</string>
+    <!-- Preferences written as a sentence; the pieces are joined in code. -->
+    <string name="more_pref_interface">Rozhraní</string>
+    <string name="more_lang_current">česky</string>
+    <string name="more_pref_theme">motiv</string>
+    <string name="more_theme_light">světlý</string>
+    <string name="pref_slip">příklady pod kartou</string>
+    <string name="pref_slip_hidden">skryté</string>
+    <string name="pref_slip_open">hned otevřené</string>
+    <string name="pref_audio">zvuk</string>
+    <string name="pref_audio_auto">hraje sám</string>
+
+    <string name="review_loading">míchám balíček…</string>
+    <string name="review_load_error">karty se nenačetly</string>
+    <string name="review_empty_line1">Tady zatím</string>
+    <string name="review_empty_line2">nic není.</string>
+    <string name="review_back">K balíčkům</string>
+    <string name="review_sync_pending">%d hodnocení čeká na síť</string>
+
+    <string name="review_close">Zavřít</string>
+    <string name="review_more">Další</string>
+    <string name="review_show_answer">Ukázat odpověď</string>
+    <string name="review_flip_a11y">Otočit kartu</string>
+    <string name="review_audio_a11y">Přehrát znovu</string>
+    <string name="review_open_sheet_a11y">Ukázat příklady</string>
+    <string name="review_close_sheet_a11y">Zasunout list pod kartu</string>
+    <string name="review_swipe_hint_a11y">Tah doleva těžší, doprava lehčí</string>
+    <string name="grade_again">Znovu</string>
+    <string name="grade_hard">Těžké</string>
+    <string name="grade_good">Dobré</string>
+    <string name="grade_easy">Snadné</string>
+    <string name="review_last_line1">To byla</string>
+    <string name="review_last_line2">poslední.</string>
+    <string name="review_results">Výsledky</string>
+    <string name="review_menu_close_a11y">Zavřít nabídku</string>
+    <string name="review_menu_edit">Upravit,</string>
+    <string name="review_menu_snooze">Odložit na zítra,</string>
+    <string name="review_menu_hide">Skrýt kartu.</string>
+    <string name="review_card_hidden">Karta je skrytá do konce relace</string>
+    <string name="review_end">Ukončit opakování</string>
+
+    <string name="done_title_line1">Hotovo</string>
+    <string name="done_title_line2">pro dnešek.</string>
+    <string name="done_caption">no, řekněme, že to ujde</string>
+    <string name="done_cat_a11y">Tlustá kočka s klidným výrazem shazuje míček ze stolu</string>
+    <string name="done_cards">karet</string>
+    <string name="done_accuracy">přesnost</string>
+    <string name="done_time">čas</string>
+    <string name="done_hard">těžkých</string>
+    <string name="done_to_decks">K balíčkům</string>
+    <string name="done_more">Ještě %1$d %2$s z tohoto balíčku</string>
+</resources>
