@@ -18,6 +18,7 @@
 | [extra-study.md](./extra-study.md) | Фича Extra Study: адаптивный подбор карточек, URL-параметры, поведение FSRS при досрочном повторении |
 | [home-responsive-layout.md](./home-responsive-layout.md) | Responsive-first Home layout: compact nav, calmer summary/streak hierarchy, and one shared mobile-to-desktop composition |
 | [mcp-draft-import.md](./mcp-draft-import.md) | MCP draft import: AI-generated candidate notes, draft-first persistence, import batches и ручной approve flow |
+| [mcp-card-management.md](./mcp-card-management.md) | MCP note management: list/edit/retag/approve/delete notes and drafts through shared services |
 | [note-editor.md](./note-editor.md) | Note editor: редактирование ноты из deck page и review session, shared field helpers и audio regeneration |
 | [card-ordering.md](./card-ordering.md) | Smart card ordering: tier-based queue, sibling separation, new-card cap и bypass для manual/extra modes |
 | [completed-today-deck-state.md](./completed-today-deck-state.md) | Completed-today deck state: persisted due-session completion markers and calm success state on home deck cards |

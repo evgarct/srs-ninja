@@ -16,6 +16,19 @@ vi.mock('@/lib/review-service', async (importOriginal) => ({
   ...reviewService,
 }))
 
+const noteService = vi.hoisted(() => ({
+  listNotesForUser: vi.fn(),
+  getNoteForUser: vi.fn(),
+  updateNotesForUser: vi.fn(),
+  editNoteTagsForUser: vi.fn(),
+  resolveNoteIdsForUser: vi.fn(),
+  approveDraftsForUser: vi.fn(),
+  resolveDraftConflictsForUser: vi.fn(),
+  deleteNotesForUser: vi.fn(),
+}))
+
+vi.mock('@/lib/note-management-service', () => noteService)
+
 const czechDeck = { id: 'deck-cz', name: 'CZ', language: 'czech', translation_language: 'russian', description: null }
 
 function fakeSupabase(decks: unknown[]) {
@@ -70,6 +83,53 @@ describe('get_review_session over MCP', () => {
     expect(payload.cards).toHaveLength(1)
     expect(payload.cards[0]).toMatchObject({ cardId: 'card-1', question: 'яблоко', answer: 'jablko', acceptedAnswers: ['jablko'] })
     expect(payload.instructions.join(' ')).toContain('submit_review')
+  })
+})
+
+describe('note management tools over MCP', () => {
+  it('publishes the full management tool set', async () => {
+    const client = await connectClient()
+    const names = (await client.listTools()).tools.map((tool) => tool.name)
+    expect(names).toEqual(expect.arrayContaining(['list_notes', 'get_note', 'update_notes', 'edit_note_tags', 'approve_drafts', 'resolve_draft_conflict', 'delete_notes', 'delete_draft_batch']))
+    const destructive = (await client.listTools()).tools.filter((tool) => tool.annotations?.destructiveHint).map((tool) => tool.name)
+    expect(destructive).toEqual(expect.arrayContaining(['delete_notes', 'delete_draft_batch']))
+  })
+
+  it('edits tags of a whole draft batch by batchId', async () => {
+    noteService.resolveNoteIdsForUser.mockResolvedValue(['n1', 'n2'])
+    noteService.editNoteTagsForUser.mockResolvedValue([{ noteId: 'n1', ok: true, tags: ['rukodělné práce'] }, { noteId: 'n2', ok: true, tags: ['rukodělné práce'] }])
+    const client = await connectClient()
+
+    const result = await client.callTool({ name: 'edit_note_tags', arguments: { batchId: 'batch-1', addTags: ['rukodělné práce'], removeTags: ['lekce'] } })
+
+    expect(result.isError).toBeFalsy()
+    expect(noteService.resolveNoteIdsForUser).toHaveBeenCalledWith(expect.anything(), 'user-1', { noteIds: undefined, batchId: 'batch-1' })
+    expect(noteService.editNoteTagsForUser).toHaveBeenCalledWith(expect.anything(), 'user-1', ['n1', 'n2'], { addTags: ['rukodělné práce'], removeTags: ['lekce'] })
+    expect(textOf(result)).toContain('Updated tags on 2 notes, 0 failed.')
+  })
+
+  it('refuses a tag edit without a selection or a change', async () => {
+    const client = await connectClient()
+    expect((await client.callTool({ name: 'edit_note_tags', arguments: { addTags: ['x'] } })).isError).toBe(true)
+    expect((await client.callTool({ name: 'edit_note_tags', arguments: { batchId: 'b' } })).isError).toBe(true)
+  })
+
+  it('reports per-item failures from update_notes', async () => {
+    noteService.updateNotesForUser.mockResolvedValue([{ noteId: 'n1', ok: true }, { noteId: 'n2', ok: false, error: 'Note not found' }])
+    const client = await connectClient()
+    const result = await client.callTool({ name: 'update_notes', arguments: { items: [{ noteId: 'n1', fields: { translation: 'x' } }, { noteId: 'n2', addTags: ['y'] }] } })
+    expect(textOf(result)).toContain('Updated 1 notes, 1 failed.')
+  })
+
+  it('requires confirm: true to delete notes', async () => {
+    noteService.deleteNotesForUser.mockResolvedValue([{ noteId: 'n1', ok: true }])
+    const client = await connectClient()
+    const refused = await client.callTool({ name: 'delete_notes', arguments: { noteIds: ['n1'] } })
+    expect(refused.isError).toBe(true)
+    expect(noteService.deleteNotesForUser).not.toHaveBeenCalled()
+    const done = await client.callTool({ name: 'delete_notes', arguments: { noteIds: ['n1'], confirm: true } })
+    expect(done.isError).toBeFalsy()
+    expect(noteService.deleteNotesForUser).toHaveBeenCalledWith(expect.anything(), 'user-1', ['n1'])
   })
 })
 
