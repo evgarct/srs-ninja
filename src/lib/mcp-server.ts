@@ -13,6 +13,19 @@ import { orderCards } from '@/lib/card-ordering'
 import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
 import { buildReviewCardSides, type ReviewDirection } from '@/lib/review-answer-variants'
 import { getDueCardsForUser, getManualStudyCardsForUser, parseReviewRating, submitReviewForUser } from '@/lib/review-service'
+import {
+  approveDraftsForUser,
+  deleteNotesForUser,
+  editNoteTagsForUser,
+  getNoteForUser,
+  listNotesForUser,
+  resolveDraftConflictsForUser,
+  resolveNoteIdsForUser,
+  updateNotesForUser,
+  type ItemResult,
+} from '@/lib/note-management-service'
+import { hasTagEdit } from '@/lib/note-management'
+import { deleteDraftBatchForUser } from '@/lib/draft-import-service'
 
 type TypedSupabaseClient = SupabaseClient<Database>
 const selectorFields = {
@@ -68,12 +81,23 @@ async function resolveOwnedDeck(supabase: TypedSupabaseClient, userId: string, s
   return { deck: resolution.deck }
 }
 
+const tagEditFields = {
+  setTags: z.array(z.string()).optional().describe('Replace all tags with this list (applied first).'),
+  addTags: z.array(z.string()).optional().describe('Tags to add.'),
+  removeTags: z.array(z.string()).optional().describe('Tags to remove (case-insensitive).'),
+}
+
+function summarizeItems(results: ItemResult[]) {
+  const failed = results.filter((result) => !result.ok)
+  return { updated: results.length - failed.length, failed: failed.length, results }
+}
+
 function selectorFromInput(input: { deckId?: string; language?: typeof MCP_DECK_LANGUAGES[number]; name?: string }): DeckSelector {
   return { deckId: input.deckId, language: input.language, name: input.name }
 }
 
 export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupabaseClient; userId: string }) {
-  const server = new McpServer({ name: brand.mcp.serverName, version: '0.3.1' })
+  const server = new McpServer({ name: brand.mcp.serverName, version: '0.4.0' })
 
   server.registerTool('list_decks', {
     title: 'List Echo decks',
@@ -110,7 +134,7 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
 
   server.registerTool('save_draft_notes', {
     title: 'Save Echo draft notes',
-    description: 'Create draft notes only. Select by unique language, exact name, or deckId. Call get_deck_contract first and use exact field keys and enum values. The user approves drafts later in Echo.',
+    description: 'Create draft notes. Select by unique language, exact name, or deckId. Call get_deck_contract first and use exact field keys and enum values. To change existing notes use update_notes or edit_note_tags instead of saving duplicates. Drafts are published in Echo or with approve_drafts when the user asks.',
     inputSchema: {
       ...selectorFields,
       items: z.array(z.object({ fields: z.record(z.string(), z.unknown()), tags: z.array(z.string()).optional() })).min(1),
@@ -149,14 +173,124 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
   })
 
   server.registerTool('list_draft_notes', {
-    title: 'List Echo draft notes', description: 'List owned draft notes by optional deck selector or batchId. This tool cannot approve or publish notes.', annotations: { readOnlyHint: true }, inputSchema: { ...selectorFields, batchId: z.string().min(1).optional() },
+    title: 'List Echo draft notes', description: 'List owned draft notes by optional deck selector or batchId. Edit them with update_notes or edit_note_tags, publish with approve_drafts.', annotations: { readOnlyHint: true }, inputSchema: { ...selectorFields, batchId: z.string().min(1).optional() },
   }, async ({ batchId, ...input }) => {
     let deckId: string | undefined
     if (hasDeckSelector(selectorFromInput(input))) {
       const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input)); if (resolved.error) return resolved.error; deckId = resolved.deck!.id
     }
-    try { const notes = await listDraftNotesForUser(supabase, userId, { deckId, batchId }); return toTextResult(`Found ${notes.length} draft notes. Approval remains in Echo.`, { notes }) }
+    try { const notes = await listDraftNotesForUser(supabase, userId, { deckId, batchId }); return toTextResult(`Found ${notes.length} draft notes.`, { notes }) }
     catch (error) { return toToolError('Failed to list draft notes.', { code: 'LIST_DRAFT_NOTES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to list draft notes.') }) }
+  })
+
+  server.registerTool('list_notes', {
+    title: 'List Echo notes',
+    description: 'List notes of one deck with their fields, tags, memory state and cards. status "approved" (default) lists published notes, "draft" drafts, "all" both. Filter by tags (all must match), FSRS states, or a text query matched against any field ignoring case and diacritics. Paginate with offset/limit.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      ...selectorFields,
+      status: z.enum(['approved', 'draft', 'all']).default('approved'),
+      tags: z.array(z.string().min(1)).optional(),
+      states: z.array(z.enum(['new', 'learning', 'relearning', 'review'])).optional(),
+      query: z.string().optional(),
+      limit: z.number().int().min(1).max(200).default(50),
+      offset: z.number().int().min(0).default(0),
+    },
+  }, async ({ status, tags, states, query, limit, offset, ...input }) => {
+    const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
+    if (resolved.error) return resolved.error
+    try {
+      const result = await listNotesForUser(supabase, userId, resolved.deck!.id, { status, tags, states, query, limit, offset })
+      return toTextResult(`Found ${result.total} matching notes in ${resolved.deck!.name}; returned ${result.notes.length} from offset ${offset}.`, { deck: { id: resolved.deck!.id, name: resolved.deck!.name, language: resolved.deck!.language }, ...result })
+    } catch (error) { return toToolError('Failed to list notes.', { code: 'LIST_NOTES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to list notes.', { tool: 'list_notes' }) }) }
+  })
+
+  server.registerTool('get_note', {
+    title: 'Get one Echo note', description: 'Get one owned note (draft or approved) with fields, tags, memory state and cards.', annotations: { readOnlyHint: true },
+    inputSchema: { noteId: z.string().min(1) },
+  }, async ({ noteId }) => {
+    try { const note = await getNoteForUser(supabase, userId, noteId); return toTextResult(`Note ${note.primaryText} (${note.status}).`, { note }) }
+    catch (error) { return toToolError('Failed to load the note.', { code: 'GET_NOTE_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to load the note.', { tool: 'get_note' }) }) }
+  })
+
+  server.registerTool('update_notes', {
+    title: 'Edit Echo notes',
+    description: 'Edit drafts or approved notes, up to 200 per call. fields is a partial patch merged into the stored fields (use exact keys and enum values from get_deck_contract; an empty string clears a field). Tags: setTags replaces, then addTags/removeTags apply. Approved notes keep their cards and review history; their audio is regenerated when the word changes, like the web editor. Each item reports ok or an error.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    inputSchema: {
+      items: z.array(z.object({ noteId: z.string().min(1), fields: z.record(z.string(), z.unknown()).optional(), ...tagEditFields })).min(1).max(200),
+    },
+  }, async ({ items }) => {
+    if (items.some((item) => !item.fields && !hasTagEdit(item))) return toToolError('Each item needs fields or a tag change.', { code: 'EMPTY_UPDATE' })
+    try {
+      const summary = summarizeItems(await updateNotesForUser(supabase, userId, items))
+      return toTextResult(`Updated ${summary.updated} notes, ${summary.failed} failed.`, summary)
+    } catch (error) { return toToolError('Failed to update notes.', { code: 'UPDATE_NOTES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to update notes.', { tool: 'update_notes', itemCount: items.length }) }) }
+  })
+
+  server.registerTool('edit_note_tags', {
+    title: 'Edit tags on many Echo notes',
+    description: 'Change tags on many notes at once, drafts or approved. Select notes by noteIds or by batchId (every note of that draft batch). setTags replaces, then addTags/removeTags apply.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    inputSchema: { noteIds: z.array(z.string().min(1)).max(500).optional(), batchId: z.string().min(1).optional(), ...tagEditFields },
+  }, async ({ noteIds, batchId, ...edit }) => {
+    if (!noteIds?.length && !batchId) return toToolError('Pass noteIds or batchId.', { code: 'SELECTION_REQUIRED', nextTool: 'list_draft_batches' })
+    if (!hasTagEdit(edit)) return toToolError('Pass setTags, addTags or removeTags.', { code: 'EMPTY_TAG_EDIT' })
+    try {
+      const ids = await resolveNoteIdsForUser(supabase, userId, { noteIds, batchId })
+      if (!ids.length) return toToolError('No notes matched the selection.', { code: 'NO_NOTES', batchId })
+      const summary = summarizeItems(await editNoteTagsForUser(supabase, userId, ids, edit))
+      return toTextResult(`Updated tags on ${summary.updated} notes, ${summary.failed} failed.`, summary)
+    } catch (error) { return toToolError('Failed to edit tags.', { code: 'EDIT_TAGS_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to edit tags.', { tool: 'edit_note_tags' }) }) }
+  })
+
+  server.registerTool('approve_drafts', {
+    title: 'Approve Echo drafts',
+    description: 'Publish drafts so they become study cards, exactly like Approve in Echo. Pass noteIds, or batchId to approve every draft of a batch. Drafts with an open similar-note conflict are skipped until resolve_draft_conflict. Only approve when the user asked for it.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    inputSchema: { noteIds: z.array(z.string().min(1)).max(500).optional(), batchId: z.string().min(1).optional() },
+  }, async ({ noteIds, batchId }) => {
+    if (!noteIds?.length && !batchId) return toToolError('Pass noteIds or batchId.', { code: 'SELECTION_REQUIRED', nextTool: 'list_draft_batches' })
+    try {
+      const result = await approveDraftsForUser(supabase, userId, { noteIds, batchId })
+      if ('results' in result) {
+        const summary = summarizeItems(result.results)
+        return toTextResult(`Approved ${summary.updated} drafts, ${summary.failed} failed.`, summary)
+      }
+      return toTextResult(`Approved ${result.approvedNoteIds.length} drafts; ${result.skippedNoteIds.length} skipped because of open conflicts.`, { ...result })
+    } catch (error) { return toToolError('Failed to approve drafts.', { code: 'APPROVE_DRAFTS_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to approve drafts.', { tool: 'approve_drafts' }) }) }
+  })
+
+  server.registerTool('resolve_draft_conflict', {
+    title: 'Resolve a similar-note conflict',
+    description: 'A draft with draft_conflict.resolution "open" resembles an existing note. kept_separate keeps both, ignored dismisses the warning, apply_to_existing copies the draft fields into the existing note, merges tags and deletes the draft. Same actions as the drafts screen in Echo.',
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false },
+    inputSchema: { noteId: z.string().min(1), resolution: z.enum(['kept_separate', 'ignored', 'apply_to_existing']) },
+  }, async ({ noteId, resolution }) => {
+    try { const result = await resolveDraftConflictsForUser(supabase, userId, noteId, resolution); return toTextResult(`Conflict resolved: ${resolution}.`, { ...result, resolution }) }
+    catch (error) { return toToolError('Failed to resolve the conflict.', { code: 'RESOLVE_CONFLICT_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to resolve the conflict.', { tool: 'resolve_draft_conflict' }) }) }
+  })
+
+  server.registerTool('delete_notes', {
+    title: 'Delete Echo notes',
+    description: 'Permanently delete notes by noteIds. Drafts are removed from their batch; approved notes are deleted with their cards and review history, which cannot be undone. Requires confirm: true; only call after the user explicitly asked to delete these notes.',
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
+    inputSchema: { noteIds: z.array(z.string().min(1)).min(1).max(500), confirm: z.literal(true).describe('Must be true: the user confirmed this deletion.') },
+  }, async ({ noteIds }) => {
+    try {
+      const summary = summarizeItems(await deleteNotesForUser(supabase, userId, noteIds))
+      return toTextResult(`Deleted ${summary.updated} notes, ${summary.failed} failed.`, summary)
+    } catch (error) { return toToolError('Failed to delete notes.', { code: 'DELETE_NOTES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to delete notes.', { tool: 'delete_notes' }) }) }
+  })
+
+  server.registerTool('delete_draft_batch', {
+    title: 'Delete an Echo draft batch',
+    description: 'Delete a draft batch and all its drafts. Refused when any note of the batch is already approved. Requires confirm: true after the user asked for it.',
+    annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: true },
+    inputSchema: { batchId: z.string().min(1), confirm: z.literal(true).describe('Must be true: the user confirmed this deletion.') },
+  }, async ({ batchId }) => {
+    try { const result = await deleteDraftBatchForUser(supabase, userId, batchId); return toTextResult('Draft batch deleted.', { ...result }) }
+    catch (error) { return toToolError('Failed to delete the draft batch.', { code: 'DELETE_DRAFT_BATCH_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to delete the draft batch.', { tool: 'delete_draft_batch' }) }) }
   })
 
   server.registerTool('get_review_session', {
