@@ -40,7 +40,7 @@ AI может помогать подготовить note, но не долже
 
 ### 3. Audio Is Separate
 
-Озвучка не является частью MCP import flow и остаётся отдельным ручным шагом после проверки.
+Озвучка не является частью `save_draft_notes` и остаётся отдельным шагом. Её запускает пользователь в Echo или агент отдельным тулом `generate_note_audio` по просьбе пользователя (см. [SRS_NINJA_MCP_CARD_MANAGEMENT.md](./SRS_NINJA_MCP_CARD_MANAGEMENT.md)).
 
 ### 4. Imports Must Be Traceable
 

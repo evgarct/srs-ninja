@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { encryptSecret, decryptSecret } from '@/lib/server/secret-encryption'
 import { fetchElevenLabsAccount } from '@/lib/server/elevenlabs-account'
+import { getElevenLabsSettingsForUser } from '@/lib/server/elevenlabs-settings'
 import { ELEVENLABS_LANGUAGES, getUnavailableVoiceIds, type ElevenLabsVoiceSelections } from '@/lib/elevenlabs-types'
 
 async function requireUser() {
@@ -15,28 +16,7 @@ async function requireUser() {
 
 export async function getElevenLabsSettings() {
   const user = await requireUser()
-  const admin = createAdminClient()
-  const { data } = await admin.from('user_elevenlabs_settings').select('*').eq('user_id', user.id).maybeSingle()
-  if (!data) return { connected: false, tier: null, voices: [], selections: {} }
-  let account
-  try {
-    account = await fetchElevenLabsAccount(decryptSecret(data.encrypted_api_key))
-  } catch {
-    return {
-      connected: true,
-      connectionError: true,
-      tier: data.account_tier,
-      voices: [],
-      selections: { english: data.english_voice_id, czech: data.czech_voice_id, turkish: data.turkish_voice_id },
-    }
-  }
-  return {
-    connected: true,
-    connectionError: false,
-    tier: data.account_tier,
-    voices: account.voices,
-    selections: { english: data.english_voice_id, czech: data.czech_voice_id, turkish: data.turkish_voice_id },
-  }
+  return getElevenLabsSettingsForUser(user.id)
 }
 
 export async function connectElevenLabs(apiKey: string) {

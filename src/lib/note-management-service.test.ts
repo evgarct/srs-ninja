@@ -9,6 +9,7 @@ const draftService = vi.hoisted(() => ({
   approveDraftBatchForUser: vi.fn(),
   resolveDraftConflictForUser: vi.fn(),
   applyDraftConflictToExistingNoteForUser: vi.fn(),
+  saveDraftNotesForUser: vi.fn(),
 }))
 vi.mock('@/lib/draft-import-service', () => draftService)
 vi.mock('@/lib/tts', () => ({ generateAndCacheAudio: vi.fn() }))
@@ -18,7 +19,7 @@ import { deleteNotesForUser, editNoteTagsForUser, LIST_PAGE, listNotesForUser, u
 type Row = { id: string; deck_id: string; status: string; fields: Record<string, unknown>; tags: string[]; import_batch_id: string | null; cards: [] }
 
 /** Minimal chainable Supabase fake: records updates/deletes on notes and answers selects. */
-function fakeSupabase(notes: Row[]) {
+function fakeSupabase(notes: Row[], audio: Array<{ note_id: string; storage_path: string }> = []) {
   const writes: Array<{ op: string; values?: unknown; filters: Record<string, unknown> }> = []
   const pageCalls: Array<[number, number]> = []
   const client = {
@@ -37,6 +38,7 @@ function fakeSupabase(notes: Row[]) {
         then(resolve: (value: unknown) => unknown) {
           if (op !== 'select') { writes.push({ op, values, filters: { ...filters } }); return Promise.resolve({ error: null }).then(resolve) }
           if (table === 'decks') return Promise.resolve({ data: [{ id: 'deck-cz', language: 'czech' }], error: null }).then(resolve)
+          if (table === 'audio_cache') return Promise.resolve({ data: audio, error: null }).then(resolve)
           if (filters.range) {
             const [from, to] = filters.range as [number, number]
             pageCalls.push([from, to])
@@ -107,6 +109,18 @@ describe('listNotesForUser', () => {
     expect(pageCalls).toEqual([[0, LIST_PAGE - 1], [LIST_PAGE, 2 * LIST_PAGE - 1]])
     expect(result.total).toBe(1)
     expect(result.notes[0].noteId).toBe(`n${LIST_PAGE + 4}`)
+  })
+})
+
+describe('listNotesForUser audio', () => {
+  it('reports audio per note and filters like the deck page', async () => {
+    const { client } = fakeSupabase([draft, approved], [{ note_id: 'a1', storage_path: 'https://cdn/a1.mp3' }])
+
+    const without = await listNotesForUser(client, 'user-1', 'deck-cz', { audioFilter: 'without_audio' })
+    expect(without.notes.map((note) => note.noteId)).toEqual(['d1'])
+
+    const all = await listNotesForUser(client, 'user-1', 'deck-cz', {})
+    expect(all.notes.find((note) => note.noteId === 'a1')).toMatchObject({ hasAudio: true, audioUrl: 'https://cdn/a1.mp3' })
   })
 })
 

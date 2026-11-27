@@ -12,9 +12,10 @@ import { brand } from '@/lib/brand'
 import { orderCards } from '@/lib/card-ordering'
 import { REGULAR_DUE_REVIEW_LIMIT } from '@/lib/review-config'
 import { buildReviewCardSides, type ReviewDirection } from '@/lib/review-answer-variants'
-import { getDueCardsForUser, getManualStudyCardsForUser, parseReviewRating, submitReviewForUser } from '@/lib/review-service'
+import { EXTRA_STUDY_KINDS, getDueCardsForUser, getExtraStudyCardsByKind, getExtraStudyCardsForUser, getManualStudyCardsForUser, parseReviewRating, submitReviewForUser } from '@/lib/review-service'
 import {
   approveDraftsForUser,
+  createNotesForUser,
   deleteNotesForUser,
   editNoteTagsForUser,
   getNoteForUser,
@@ -26,6 +27,13 @@ import {
 } from '@/lib/note-management-service'
 import { hasTagEdit } from '@/lib/note-management'
 import { deleteDraftBatchForUser } from '@/lib/draft-import-service'
+import { DeckAudioError, generateDeckAudioForUser } from '@/lib/note-audio-service'
+import { summarizeBatchAudioResults } from '@/lib/tts-batch'
+import { getElevenLabsSettingsForUser } from '@/lib/server/elevenlabs-settings'
+import { createDeckForUser, markReviewSessionCompletedForUser } from '@/lib/deck-service'
+import { getDashboardStatsForUser } from '@/lib/dashboard-stats'
+import { getCardStateDistributionForUser, getReviewHistoryForUser, getTodayStatsForUser, getWeeklyActivityStatsForUser } from '@/lib/study-stats-service'
+import { TRANSLATION_LANGUAGES } from '@/lib/deck-languages'
 
 type TypedSupabaseClient = SupabaseClient<Database>
 const selectorFields = {
@@ -97,7 +105,7 @@ function selectorFromInput(input: { deckId?: string; language?: typeof MCP_DECK_
 }
 
 export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupabaseClient; userId: string }) {
-  const server = new McpServer({ name: brand.mcp.serverName, version: '0.4.0' })
+  const server = new McpServer({ name: brand.mcp.serverName, version: '0.5.0' })
 
   server.registerTool('list_decks', {
     title: 'List Echo decks',
@@ -185,7 +193,7 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
 
   server.registerTool('list_notes', {
     title: 'List Echo notes',
-    description: 'List notes of one deck with their fields, tags, memory state and cards. status "approved" (default) lists published notes, "draft" drafts, "all" both. Filter by tags (all must match), FSRS states, or a text query matched against any field ignoring case and diacritics. Paginate with offset/limit.',
+    description: 'List notes of one deck with their fields, tags, memory state, audio (hasAudio, audioUrl) and cards. status "approved" (default) lists published notes, "draft" drafts, "all" both. Filter by tags (all must match), FSRS states, audioFilter, or a text query matched against any field ignoring case and diacritics. Paginate with offset/limit.',
     annotations: { readOnlyHint: true },
     inputSchema: {
       ...selectorFields,
@@ -193,14 +201,15 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
       tags: z.array(z.string().min(1)).optional(),
       states: z.array(z.enum(['new', 'learning', 'relearning', 'review'])).optional(),
       query: z.string().optional(),
+      audioFilter: z.enum(['all', 'with_audio', 'without_audio']).default('all'),
       limit: z.number().int().min(1).max(200).default(50),
       offset: z.number().int().min(0).default(0),
     },
-  }, async ({ status, tags, states, query, limit, offset, ...input }) => {
+  }, async ({ status, tags, states, query, audioFilter, limit, offset, ...input }) => {
     const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
     if (resolved.error) return resolved.error
     try {
-      const result = await listNotesForUser(supabase, userId, resolved.deck!.id, { status, tags, states, query, limit, offset })
+      const result = await listNotesForUser(supabase, userId, resolved.deck!.id, { status, tags, states, query, audioFilter, limit, offset })
       return toTextResult(`Found ${result.total} matching notes in ${resolved.deck!.name}; returned ${result.notes.length} from offset ${offset}.`, { deck: { id: resolved.deck!.id, name: resolved.deck!.name, language: resolved.deck!.language }, ...result })
     } catch (error) { return toToolError('Failed to list notes.', { code: 'LIST_NOTES_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to list notes.', { tool: 'list_notes' }) }) }
   })
@@ -246,7 +255,7 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
 
   server.registerTool('approve_drafts', {
     title: 'Approve Echo drafts',
-    description: 'Publish drafts so they become study cards, exactly like Approve in Echo. Pass noteIds, or batchId to approve every draft of a batch. Drafts with an open similar-note conflict are skipped until resolve_draft_conflict. Only approve when the user asked for it.',
+    description: 'Move drafts to approved so they become study cards, exactly like Approve in Echo. Pass noteIds, or batchId to approve every draft of a batch. Drafts with an open similar-note conflict are skipped until resolve_draft_conflict. Approve when the user (or their standing instructions for this agent) asks for published cards.',
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
     inputSchema: { noteIds: z.array(z.string().min(1)).max(500).optional(), batchId: z.string().min(1).optional() },
   }, async ({ noteIds, batchId }) => {
@@ -293,33 +302,174 @@ export function createEchoMcpServer({ supabase, userId }: { supabase: TypedSupab
     catch (error) { return toToolError('Failed to delete the draft batch.', { code: 'DELETE_DRAFT_BATCH_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to delete the draft batch.', { tool: 'delete_draft_batch' }) }) }
   })
 
+  server.registerTool('create_notes', {
+    title: 'Create published Echo notes',
+    description: 'Create notes that are immediately study cards (like adding a note in Echo). Same contract, validation and duplicate skip as save_draft_notes; the batch is then approved. Notes with an open similar-note conflict stay drafts and are listed in leftAsDraftNoteIds. Use save_draft_notes instead when the user wants to review first.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    inputSchema: {
+      ...selectorFields,
+      items: z.array(z.object({ fields: z.record(z.string(), z.unknown()), tags: z.array(z.string()).optional() })).min(1).max(200),
+      metadata: z.object({ modelName: z.string().optional(), promptVersion: z.string().optional(), topic: z.string().optional(), requestedTags: z.array(z.string()).optional() }).optional(),
+    },
+  }, async ({ items, metadata, ...input }) => {
+    const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
+    if (resolved.error) return resolved.error
+    try {
+      const result = await createNotesForUser(supabase, userId, resolved.deck!.id, items as DraftCandidateInput[], (metadata ?? {}) as DraftBatchMetadata)
+      return toTextResult(`Created ${result.approvedNoteIds.length} published notes in ${resolved.deck!.name}; ${result.leftAsDraftNoteIds.length} left as drafts, ${result.skippedItems.length} skipped.`, { deck: resolved.deck, ...result })
+    } catch (error) {
+      const diagnostic = buildToolErrorDiagnostic(error, 'Failed to create notes.', { tool: 'create_notes', deckId: resolved.deck!.id, itemCount: items.length })
+      return toToolError(diagnostic.message, { code: diagnostic.code ?? 'CREATE_NOTES_FAILED', diagnostic, nextTool: 'get_deck_contract' })
+    }
+  })
+
+  server.registerTool('generate_note_audio', {
+    title: 'Generate Echo audio',
+    description: 'Voice notes with the user\'s ElevenLabs voice for the deck language, like "Generate audio" on the deck page. By default voices only notes without audio (drafts or approved); force regenerates existing audio. Pass noteIds to limit the selection. Each call voices at most `limit` notes; call again while remaining > 0.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true },
+    inputSchema: {
+      ...selectorFields,
+      noteIds: z.array(z.string().min(1)).max(500).optional(),
+      force: z.boolean().default(false),
+      limit: z.number().int().min(1).max(60).default(40),
+    },
+  }, async ({ noteIds, force, limit, ...input }) => {
+    const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
+    if (resolved.error) return resolved.error
+    try {
+      const { results, alreadyVoiced, remaining } = await generateDeckAudioForUser(supabase, userId, resolved.deck!.id, { noteIds, force, limit })
+      const summary = summarizeBatchAudioResults(results).body
+      return toTextResult(`Generated audio for ${summary.generated} notes, ${summary.errors} errors, ${summary.skipped} without text; ${remaining} remaining.`, { ...summary, alreadyVoiced, remaining })
+    } catch (error) {
+      if (error instanceof DeckAudioError) return toToolError(error.message, { code: 'AUDIO_UNAVAILABLE', nextTool: 'get_audio_settings' })
+      return toToolError('Failed to generate audio.', { code: 'GENERATE_AUDIO_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to generate audio.', { tool: 'generate_note_audio' }) })
+    }
+  })
+
+  server.registerTool('get_audio_settings', {
+    title: 'Get Echo audio settings',
+    description: 'Whether ElevenLabs is connected, the account tier, and the voice chosen for each language. Connecting a key or changing voices is done in Echo settings.',
+    annotations: { readOnlyHint: true },
+  }, async () => {
+    try {
+      const settings = await getElevenLabsSettingsForUser(userId)
+      const voices = settings.voices as Array<{ voice_id: string; name: string }>
+      const selections = settings.selections as Record<string, string | null | undefined>
+      const languages = Object.fromEntries(MCP_DECK_LANGUAGES.map((language) => {
+        const voiceId = selections[language] ?? null
+        return [language, { voiceId, voiceName: voices.find((voice) => voice.voice_id === voiceId)?.name ?? null, ready: Boolean(voiceId) && !settings.connectionError }]
+      }))
+      return toTextResult(settings.connected ? `ElevenLabs connected (${settings.tier ?? 'unknown'} tier).` : 'ElevenLabs is not connected; connect it in Echo settings.', { connected: settings.connected, connectionError: settings.connectionError ?? false, tier: settings.tier, languages })
+    } catch (error) { return toToolError('Failed to read audio settings.', { code: 'GET_AUDIO_SETTINGS_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to read audio settings.', { tool: 'get_audio_settings' }) }) }
+  })
+
+  server.registerTool('create_deck', {
+    title: 'Create an Echo deck',
+    description: 'Create a deck like "New deck" in Echo: a name, the study language and the translation language (must differ).',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    inputSchema: {
+      name: z.string().min(1).max(120),
+      language: z.enum(MCP_DECK_LANGUAGES),
+      translationLanguage: z.enum(TRANSLATION_LANGUAGES),
+    },
+  }, async ({ name, language, translationLanguage }) => {
+    try {
+      const deck = await createDeckForUser(supabase, userId, { name, language, translationLanguage })
+      return toTextResult(`Created deck ${deck.name}.`, { deck: addAgentSelectors([deck as McpDeck])[0] })
+    } catch (error) { return toToolError('Failed to create the deck.', { code: 'CREATE_DECK_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to create the deck.', { tool: 'create_deck' }) }) }
+  })
+
+  server.registerTool('get_dashboard', {
+    title: 'Get the Echo home dashboard',
+    description: 'Per deck, the numbers of the Echo home screen: cards due now (minus those already reviewed today), total cards, drafts, and whether today\'s session is done.',
+    annotations: { readOnlyHint: true },
+    inputSchema: { timeZone: z.string().default('Europe/Prague').describe('IANA time zone for "today".') },
+  }, async ({ timeZone }) => {
+    try {
+      const rows = await getDashboardStatsForUser(supabase, userId, timeZone)
+      const decks = rows.map((row) => ({ deckId: row.deck.id, name: row.deck.name, language: row.deck.language, due: row.due, totalCards: row.total, drafts: row.drafts, completedToday: row.completedToday }))
+      return toTextResult(`${decks.length} decks, ${decks.reduce((sum, deck) => sum + deck.due, 0)} cards due.`, { timeZone, decks })
+    } catch (error) { return toToolError('Failed to load the dashboard.', { code: 'GET_DASHBOARD_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to load the dashboard.', { tool: 'get_dashboard' }) }) }
+  })
+
+  server.registerTool('get_study_stats', {
+    title: 'Get Echo study statistics',
+    description: 'The Echo statistics page: today\'s reviews and accuracy, card counts per FSRS state, this week\'s activity with the streak, and daily review counts for the last `days` days.',
+    annotations: { readOnlyHint: true },
+    inputSchema: {
+      timeZone: z.string().default('Europe/Prague'),
+      days: z.number().int().min(1).max(365).default(30),
+    },
+  }, async ({ timeZone, days }) => {
+    try {
+      const [today, cardStates, week, history] = await Promise.all([
+        getTodayStatsForUser(supabase),
+        getCardStateDistributionForUser(supabase),
+        getWeeklyActivityStatsForUser(supabase, timeZone),
+        getReviewHistoryForUser(supabase, days),
+      ])
+      const perDay = new Map<string, { reviews: number; correct: number }>()
+      for (const review of history) {
+        const key = review.reviewed_at.slice(0, 10)
+        const entry = perDay.get(key) ?? { reviews: 0, correct: 0 }
+        entry.reviews += 1
+        if (review.rating >= 2) entry.correct += 1
+        perDay.set(key, entry)
+      }
+      const dailyReviews = [...perDay.entries()].map(([date, entry]) => ({ date, ...entry }))
+      return toTextResult(`Today ${today.total} reviews (${today.accuracy}% correct), streak ${week.streak} days.`, { today, cardStates, week, dailyReviews })
+    } catch (error) { return toToolError('Failed to load statistics.', { code: 'GET_STUDY_STATS_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to load statistics.', { tool: 'get_study_stats' }) }) }
+  })
+
+  server.registerTool('complete_review_session', {
+    title: 'Mark an Echo session as done',
+    description: 'Record that today\'s session for a deck is finished, so the home screen shows it as done on every device. Call after the last card of a get_review_session run.',
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false },
+    inputSchema: { ...selectorFields, sessionType: z.enum(['due', 'manual', 'extra']).default('due') },
+  }, async ({ sessionType, ...input }) => {
+    const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
+    if (resolved.error) return resolved.error
+    try {
+      await markReviewSessionCompletedForUser(supabase, userId, resolved.deck!.id, sessionType)
+      return toTextResult(`Marked the ${sessionType} session for ${resolved.deck!.name} as done.`, { deckId: resolved.deck!.id, sessionType })
+    } catch (error) { return toToolError('Failed to record the session.', { code: 'COMPLETE_SESSION_FAILED', diagnostic: buildToolErrorDiagnostic(error, 'Failed to record the session.', { tool: 'complete_review_session' }) }) }
+  })
+
   server.registerTool('get_review_session', {
     title: 'Get an Echo review session',
-    description: 'Load cards to review out loud. mode "due" returns today\'s due cards ordered like the app; mode "tag" returns cards of notes with all given tags regardless of due date. Default direction "production" asks the Russian side and expects the target-language answer. Grade each card with submit_review right after the user answers.',
+    description: 'Load cards to review out loud, with the same modes as the app. "due": today\'s due cards ordered like the app. "tag" (manual study): cards of notes matching all given tags, FSRS states and audio filter, regardless of due date. "extra": extra study after the due queue; extraKind hard / new / forgotten / random picks that pool, otherwise new cards first, then the soonest upcoming. Default direction "production" asks the Russian side and expects the target-language answer. Grade each card with submit_review right after the user answers, then call complete_review_session.',
     annotations: { readOnlyHint: true },
     inputSchema: {
       ...selectorFields,
-      mode: z.enum(['due', 'tag']).default('due'),
-      tags: z.array(z.string().min(1)).optional().describe('Required for mode "tag"; a note must have every tag.'),
+      mode: z.enum(['due', 'tag', 'extra']).default('due'),
+      tags: z.array(z.string().min(1)).optional().describe('mode "tag": a note must have every tag.'),
+      states: z.array(z.enum(['new', 'learning', 'relearning', 'review'])).optional().describe('mode "tag": FSRS states to include.'),
+      audioFilter: z.enum(['all', 'with_audio', 'without_audio']).default('all').describe('mode "tag": audio filter like the deck page.'),
+      extraKind: z.enum(EXTRA_STUDY_KINDS).optional().describe('mode "extra": hard, new, forgotten or random.'),
       direction: z.enum(['production', 'recognition', 'both']).default('production').describe('production: RU question, target-language answer. recognition: target-language question, RU answer.'),
       limit: z.number().int().min(1).max(100).default(30),
     },
-  }, async ({ mode, tags, direction, limit, ...input }) => {
+  }, async ({ mode, tags, states, audioFilter, extraKind, direction, limit, ...input }) => {
     const resolved = await resolveOwnedDeck(supabase, userId, selectorFromInput(input))
     if (resolved.error) return resolved.error
     const deck = resolved.deck!
-    if (mode === 'tag' && !tags?.length) return toToolError('mode "tag" needs at least one tag.', { code: 'TAGS_REQUIRED', nextTool: 'get_review_session' })
+    if (mode === 'tag' && !tags?.length && !states?.length && audioFilter === 'all') return toToolError('mode "tag" needs tags, states or an audio filter.', { code: 'TAGS_REQUIRED', nextTool: 'get_review_session' })
 
     try {
       const language = deck.language as Language
       const matchesDirection = (card: { card_type: string }) =>
         direction === 'both' ? card.card_type === 'production' || card.card_type === 'recognition' : card.card_type === direction
 
+      // Same card sources as the web review screens: due queue, manual study, extra study.
       const rawCards = mode === 'tag'
-        ? await getManualStudyCardsForUser(supabase, deck.id, { tags }, userId)
-        : await getDueCardsForUser(supabase, deck.id, REGULAR_DUE_REVIEW_LIMIT, userId)
+        ? await getManualStudyCardsForUser(supabase, deck.id, { tags, states, audioFilter }, userId)
+        : mode === 'extra'
+          ? extraKind
+            ? await getExtraStudyCardsByKind(supabase, deck.id, extraKind, limit)
+            : await getExtraStudyCardsForUser(supabase, deck.id, limit)
+          : await getDueCardsForUser(supabase, deck.id, REGULAR_DUE_REVIEW_LIMIT, userId)
       const candidates = rawCards.filter(matchesDirection)
-      const selected = (mode === 'tag' ? candidates : orderCards(candidates)).slice(0, limit)
+      const selected = (mode === 'due' ? orderCards(candidates) : candidates).slice(0, limit)
 
       const cards = selected.map((card) => ({
         cardId: card.id,

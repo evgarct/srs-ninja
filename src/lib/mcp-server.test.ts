@@ -4,12 +4,25 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database.types'
 import { buildToolErrorDiagnostic, createEchoMcpServer, toTextResult, toToolError } from '@/lib/mcp-server'
+import { buildEchoGuide } from '@/lib/mcp-guide'
 
 const reviewService = vi.hoisted(() => ({
   getDueCardsForUser: vi.fn(),
   getManualStudyCardsForUser: vi.fn(),
+  getExtraStudyCardsForUser: vi.fn(),
+  getExtraStudyCardsByKind: vi.fn(),
   submitReviewForUser: vi.fn(),
 }))
+
+const audioService = vi.hoisted(() => {
+  class DeckAudioError extends Error { constructor(message: string, readonly status: number) { super(message) } }
+  return { DeckAudioError, generateDeckAudioForUser: vi.fn(), getAudioMapForNotes: vi.fn() }
+})
+vi.mock('@/lib/note-audio-service', () => audioService)
+
+const deckService = vi.hoisted(() => ({ createDeckForUser: vi.fn(), markReviewSessionCompletedForUser: vi.fn() }))
+vi.mock('@/lib/deck-service', () => deckService)
+vi.mock('@/lib/server/elevenlabs-settings', () => ({ getElevenLabsSettingsForUser: vi.fn() }))
 
 vi.mock('@/lib/review-service', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/review-service')>()),
@@ -25,6 +38,7 @@ const noteService = vi.hoisted(() => ({
   approveDraftsForUser: vi.fn(),
   resolveDraftConflictsForUser: vi.fn(),
   deleteNotesForUser: vi.fn(),
+  createNotesForUser: vi.fn(),
 }))
 
 vi.mock('@/lib/note-management-service', () => noteService)
@@ -130,6 +144,56 @@ describe('note management tools over MCP', () => {
     const done = await client.callTool({ name: 'delete_notes', arguments: { noteIds: ['n1'], confirm: true } })
     expect(done.isError).toBeFalsy()
     expect(noteService.deleteNotesForUser).toHaveBeenCalledWith(expect.anything(), 'user-1', ['n1'])
+  })
+})
+
+describe('web feature coverage over MCP', () => {
+  it('describes every registered tool in get_echo_guide', async () => {
+    const client = await connectClient()
+    const names = (await client.listTools()).tools.map((tool) => tool.name)
+    expect(Object.keys(buildEchoGuide().tools).sort()).toEqual(names.sort())
+  })
+
+  it('voices drafts and reports what remains', async () => {
+    audioService.generateDeckAudioForUser.mockResolvedValue({ results: [{ noteId: 'n1', status: 'ok', audioUrl: 'u1' }, { noteId: 'n2', status: 'ok', audioUrl: 'u2' }], alreadyVoiced: 3, remaining: 41 })
+    const client = await connectClient()
+
+    const result = await client.callTool({ name: 'generate_note_audio', arguments: { language: 'czech', limit: 2 } })
+
+    expect(result.isError).toBeFalsy()
+    expect(audioService.generateDeckAudioForUser).toHaveBeenCalledWith(expect.anything(), 'user-1', 'deck-cz', { noteIds: undefined, force: false, limit: 2 })
+    expect(textOf(result)).toContain('Generated audio for 2 notes, 0 errors, 0 without text; 41 remaining.')
+  })
+
+  it('points to get_audio_settings when ElevenLabs is not ready', async () => {
+    audioService.generateDeckAudioForUser.mockRejectedValue(new audioService.DeckAudioError('Connect ElevenLabs and choose a voice for this language', 500))
+    const client = await connectClient()
+    const result = await client.callTool({ name: 'generate_note_audio', arguments: { language: 'czech' } })
+    expect(result.isError).toBe(true)
+    expect(textOf(result)).toContain('"nextTool":"get_audio_settings"')
+  })
+
+  it('loads extra study by kind like the app', async () => {
+    reviewService.getExtraStudyCardsByKind.mockResolvedValue([
+      { id: 'card-9', note_id: 'note-9', card_type: 'production', state: 'review', notes: { fields: { word: 'nit', translation: 'нитка' } } },
+    ])
+    const client = await connectClient()
+    const result = await client.callTool({ name: 'get_review_session', arguments: { language: 'czech', mode: 'extra', extraKind: 'hard', limit: 20 } })
+    expect(reviewService.getExtraStudyCardsByKind).toHaveBeenCalledWith(expect.anything(), 'deck-cz', 'hard', 20)
+    expect(textOf(result)).toContain('"cardId":"card-9"')
+  })
+
+  it('marks a session as done for the selected deck', async () => {
+    const client = await connectClient()
+    await client.callTool({ name: 'complete_review_session', arguments: { language: 'czech', sessionType: 'extra' } })
+    expect(deckService.markReviewSessionCompletedForUser).toHaveBeenCalledWith(expect.anything(), 'user-1', 'deck-cz', 'extra')
+  })
+
+  it('creates published notes and reports conflicts left as drafts', async () => {
+    noteService.createNotesForUser.mockResolvedValue({ batchId: 'b', createdNoteIds: ['n1', 'n2'], skippedItems: [], warnings: [], approvedNoteIds: ['n1'], leftAsDraftNoteIds: ['n2'] })
+    const client = await connectClient()
+    const result = await client.callTool({ name: 'create_notes', arguments: { language: 'czech', items: [{ fields: { word: 'nit', translation: 'нитка' } }, { fields: { word: 'jehla', translation: 'игла' } }] } })
+    expect(textOf(result)).toContain('Created 1 published notes in CZ; 1 left as drafts, 0 skipped.')
   })
 })
 
