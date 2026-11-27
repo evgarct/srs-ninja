@@ -21,7 +21,7 @@ fun quoted(v: String?) = "\"${v.orEmpty()}\""
 
 // `vercel env pull` writes sensitive variables as a placeholder ("[SENSITIVE]"), so APP_URL from
 // .env.local is used only when it really is a URL; otherwise the production address is the default.
-val productionApi = "https://echo-phi-one.vercel.app"
+val productionApi = "https://echo.safronov.dev"
 val apiBase: String = ((project.findProperty("echo.apiBase") as String?)
     ?: webEnv["APP_URL"]?.takeIf { it.startsWith("https://") }
     ?: productionApi).trimEnd('/')
