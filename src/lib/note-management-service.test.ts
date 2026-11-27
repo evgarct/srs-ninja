@@ -13,13 +13,14 @@ const draftService = vi.hoisted(() => ({
 vi.mock('@/lib/draft-import-service', () => draftService)
 vi.mock('@/lib/tts', () => ({ generateAndCacheAudio: vi.fn() }))
 
-import { deleteNotesForUser, editNoteTagsForUser, updateNotesForUser } from '@/lib/note-management-service'
+import { deleteNotesForUser, editNoteTagsForUser, LIST_PAGE, listNotesForUser, updateNotesForUser } from '@/lib/note-management-service'
 
 type Row = { id: string; deck_id: string; status: string; fields: Record<string, unknown>; tags: string[]; import_batch_id: string | null; cards: [] }
 
 /** Minimal chainable Supabase fake: records updates/deletes on notes and answers selects. */
 function fakeSupabase(notes: Row[]) {
   const writes: Array<{ op: string; values?: unknown; filters: Record<string, unknown> }> = []
+  const pageCalls: Array<[number, number]> = []
   const client = {
     from(table: string) {
       const filters: Record<string, unknown> = {}
@@ -31,9 +32,16 @@ function fakeSupabase(notes: Row[]) {
         delete: () => { op = 'delete'; return builder },
         eq: (column: string, value: unknown) => { filters[column] = value; return builder },
         in: (column: string, list: unknown[]) => { filters[column] = list; return builder },
+        order: () => builder,
+        range: (from: number, to: number) => { filters.range = [from, to]; return builder },
         then(resolve: (value: unknown) => unknown) {
           if (op !== 'select') { writes.push({ op, values, filters: { ...filters } }); return Promise.resolve({ error: null }).then(resolve) }
           if (table === 'decks') return Promise.resolve({ data: [{ id: 'deck-cz', language: 'czech' }], error: null }).then(resolve)
+          if (filters.range) {
+            const [from, to] = filters.range as [number, number]
+            pageCalls.push([from, to])
+            return Promise.resolve({ data: notes.slice(from, to + 1), error: null }).then(resolve)
+          }
           const ids = (filters.id as string[]) ?? []
           return Promise.resolve({ data: notes.filter((note) => ids.includes(note.id)), error: null }).then(resolve)
         },
@@ -41,7 +49,7 @@ function fakeSupabase(notes: Row[]) {
       return builder
     },
   }
-  return { client: client as unknown as SupabaseClient, writes }
+  return { client: client as unknown as SupabaseClient, writes, pageCalls }
 }
 
 const draft: Row = { id: 'd1', deck_id: 'deck-cz', status: 'draft', fields: { word: 'nit', translation: 'нитка' }, tags: ['lekce'], import_batch_id: 'b1', cards: [] }
@@ -70,11 +78,35 @@ describe('updateNotesForUser', () => {
     expect(writes[0].values).toMatchObject({ fields: { word: 'nit', translation: 'нить' }, tags: ['lekce', 'rukodělné práce'] })
   })
 
+  it('builds a repeated note on the previous item instead of the original snapshot', async () => {
+    const { client, writes } = fakeSupabase([draft])
+    const results = await updateNotesForUser(client, 'user-1', [
+      { noteId: 'd1', fields: { translation: 'нить' } },
+      { noteId: 'd1', addTags: ['rukodělné práce'] },
+    ])
+
+    expect(results.every((result) => result.ok)).toBe(true)
+    expect(writes[1].values).toMatchObject({ fields: { translation: 'нить' }, tags: ['lekce', 'rukodělné práce'] })
+  })
+
   it('does not write when the patch fails validation', async () => {
     const { client, writes } = fakeSupabase([draft])
     const [result] = await updateNotesForUser(client, 'user-1', [{ noteId: 'd1', fields: { word: '' } }])
     expect(result.ok).toBe(false)
     expect(writes).toEqual([])
+  })
+})
+
+describe('listNotesForUser', () => {
+  it('reads every database page so total and offset cover the whole deck', async () => {
+    const many: Row[] = Array.from({ length: LIST_PAGE + 5 }, (_, index) => ({ ...approved, id: `n${index}`, tags: index === LIST_PAGE + 4 ? ['last'] : [] }))
+    const { client, pageCalls } = fakeSupabase(many)
+
+    const result = await listNotesForUser(client, 'user-1', 'deck-cz', { tags: ['last'] })
+
+    expect(pageCalls).toEqual([[0, LIST_PAGE - 1], [LIST_PAGE, 2 * LIST_PAGE - 1]])
+    expect(result.total).toBe(1)
+    expect(result.notes[0].noteId).toBe(`n${LIST_PAGE + 4}`)
   })
 })
 

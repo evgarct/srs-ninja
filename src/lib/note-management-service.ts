@@ -28,6 +28,7 @@ import type { Language } from '@/lib/types'
 
 const NOTE_COLUMNS = 'id, deck_id, status, fields, tags, import_batch_id, created_at, updated_at, cards(id, card_type, state, due_at)'
 const ID_CHUNK = 100
+export const LIST_PAGE = 1000
 
 export type ItemResult = { noteId: string; ok: true; [key: string]: unknown } | { noteId: string; ok: false; error: string }
 
@@ -70,11 +71,18 @@ export async function listNotesForUser(
   deckId: string,
   options: NoteListFilters & { status?: NoteStatusFilter; limit?: number; offset?: number } = {}
 ) {
-  let query = supabase.from('notes').select(NOTE_COLUMNS).eq('user_id', userId).eq('deck_id', deckId)
-  if (options.status && options.status !== 'all') query = query.eq('status', options.status)
-  const { data, error } = await query.order('created_at', { ascending: false })
-  if (error) throw error
-  const matching = filterManagedNotes((data ?? []) as ManagedNoteRow[], options)
+  // PostgREST caps a response (1000 rows by default), so read the deck in pages before
+  // filtering in memory; otherwise total and offsets would only cover the first page.
+  const rows: ManagedNoteRow[] = []
+  for (let from = 0; ; from += LIST_PAGE) {
+    let query = supabase.from('notes').select(NOTE_COLUMNS).eq('user_id', userId).eq('deck_id', deckId)
+    if (options.status && options.status !== 'all') query = query.eq('status', options.status)
+    const { data, error } = await query.order('created_at', { ascending: false }).order('id').range(from, from + LIST_PAGE - 1)
+    if (error) throw error
+    rows.push(...((data ?? []) as ManagedNoteRow[]))
+    if (!data || data.length < LIST_PAGE) break
+  }
+  const matching = filterManagedNotes(rows, options)
   const offset = options.offset ?? 0
   const limit = options.limit ?? 50
   return { total: matching.length, offset, notes: matching.slice(offset, offset + limit).map(toManagedNote) }
@@ -107,6 +115,8 @@ export async function updateNotesForUser(supabase: SupabaseClient, userId: strin
       const { error } = await supabase.from('notes').update({ fields: prepared.fields, tags: prepared.tags }).eq('id', noteId).eq('user_id', userId)
       if (error) throw error
       touchedDecks.add(note.deck_id)
+      // A later item for the same note must build on this write, not on the original snapshot.
+      notes.set(noteId, { ...note, fields: prepared.fields, tags: prepared.tags })
 
       // Same rule as the web editor: only approved notes regenerate audio, and only when the word changed.
       let audioError: string | undefined
@@ -138,7 +148,7 @@ export async function editNoteTagsForUser(supabase: SupabaseClient, userId: stri
   const notes = await getOwnedNotesByIds(supabase, userId, noteIds)
   const touchedDecks = new Set<string>()
   const results: ItemResult[] = []
-  for (const noteId of noteIds) {
+  for (const noteId of [...new Set(noteIds)]) {
     const note = notes.get(noteId)
     if (!note) { results.push({ noteId, ok: false, error: 'Note not found' }); continue }
     const tags = applyTagEdit(note.tags ?? [], edit)
