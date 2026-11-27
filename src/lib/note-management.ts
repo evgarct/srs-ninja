@@ -98,9 +98,11 @@ export interface NoteListFilters {
 }
 
 /** Shapes a stored note for MCP output: compact cards and a single memory state like the deck page. */
-export function toManagedNote(note: ManagedNoteRow) {
+export function toManagedNote(note: ManagedNoteRow, audioUrl?: string | null) {
   const cards = note.cards ?? []
   return {
+    hasAudio: Boolean(audioUrl),
+    audioUrl: audioUrl ?? null,
     noteId: note.id,
     deckId: note.deck_id,
     status: note.status,

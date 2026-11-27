@@ -1,5 +1,5 @@
 import { mobileUnauthorized, resolveMobileContext } from '@/lib/mobile-api'
-import { isMissingCompletionTableError } from '@/lib/review-session-completions'
+import { markReviewSessionCompletedForUser } from '@/lib/deck-service'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,10 +12,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ dec
   const body = (await request.json().catch(() => null)) as { sessionType?: unknown } | null
   const sessionType = body?.sessionType === 'extra' ? 'extra' : 'due'
 
-  const { error } = await context.supabase
-    .from('review_session_completions')
-    .insert({ deck_id: deckId, user_id: context.userId, session_type: sessionType })
-  if (error && !isMissingCompletionTableError(error)) throw error
+  await markReviewSessionCompletedForUser(context.supabase, context.userId, deckId, sessionType)
 
   return Response.json({ ok: true })
 }

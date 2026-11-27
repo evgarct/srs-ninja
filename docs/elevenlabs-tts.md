@@ -68,6 +68,8 @@ ElevenLabs расходуется отдельно для каждого пол�
 
 Это позволяет не дублировать TTS-логику между single и batch routes.
 
+Batch-логика (выбор нот без аудио, проверка языка и голоса, пауза 500 мс между запросами) живёт в `generateDeckAudioForUser` (`src/lib/note-audio-service.ts`). Её вызывают и `/api/tts/batch`, и MCP-тул `generate_note_audio`; у MCP есть ещё `force` (перегенерация) и `limit` с полем `remaining`, чтобы один вызов укладывался в `maxDuration = 300` маршрута `/api/mcp`. Чтение настроек без ключа: `getElevenLabsSettingsForUser` (`src/lib/server/elevenlabs-settings.ts`), его использует страница настроек и тул `get_audio_settings`.
+
 ## Supported-Language Guard
 
 TTS поддерживается только для языков, описанных в `src/lib/tts-config.ts`.

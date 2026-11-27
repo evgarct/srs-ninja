@@ -2,146 +2,32 @@
 
 import { createClient } from '@/lib/supabase/server'
 import {
-  getCurrentWeekDateKeys,
-  getWeeklyQueryStartUtc,
-  toDateKeyInTimeZone,
-  type ActivityDaySummary,
-} from '@/lib/activity'
+  getCardStateDistributionForUser,
+  getReviewHistoryForUser,
+  getTodayStatsForUser,
+  getWeeklyActivityStatsForUser,
+} from '@/lib/study-stats-service'
 
-export interface WeeklyActivityStats {
-  days: ActivityDaySummary[]
-  streak: number
-  activeDays: number
-  weekStartKey: string
-  todayKey: string
-}
+export type { WeeklyActivityStats } from '@/lib/study-stats-service'
 
-/**
- * Retrieves the user's historical review data over a specified lookback period.
- * 
- * @param days - The number of days in the past to fetch reviews from (default: 30).
- * @returns A promise resolving to an array of review data (time, user rating, card state).
- */
+// Thin cookie-session wrappers; the logic lives in study-stats-service and is shared with MCP.
+
+/** Reviews over the last `days` days (time, rating, card state). */
 export async function getReviewStats(days = 30) {
-  const supabase = await createClient()
-  const since = new Date()
-  since.setDate(since.getDate() - days)
-
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('reviewed_at, rating, state')
-    .gte('reviewed_at', since.toISOString())
-    .order('reviewed_at', { ascending: true })
-  if (error) throw error
-  return data
+  return getReviewHistoryForUser(await createClient(), days)
 }
 
-/**
- * Calculates real-time analytics for the current day's review activity.
- * 
- * This aggregates the number of reviews done today, calculates accuracy 
- * (ratings of 'Hard', 'Good', or 'Easy' vs 'Again'), and determines the 
- * average time spent reviewing each card.
- * 
- * @returns An object containing `total` reviews, `correct` reviews, overall `accuracy` percentage, and `avgDuration` in milliseconds.
- */
+/** Today's review count, correct answers, accuracy % and average duration in ms. */
 export async function getTodayStats() {
-  const supabase = await createClient()
-  const todayStart = new Date()
-  todayStart.setHours(0, 0, 0, 0)
-
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('rating, review_duration_ms')
-    .gte('reviewed_at', todayStart.toISOString())
-  if (error) throw error
-
-  const total = data.length
-  const correct = data.filter((r) => r.rating >= 2).length
-  const avgDuration = total > 0
-    ? data.reduce((sum, r) => sum + (r.review_duration_ms ?? 0), 0) / total
-    : 0
-
-  return { total, correct, accuracy: total > 0 ? Math.round((correct / total) * 100) : 0, avgDuration }
+  return getTodayStatsForUser(await createClient())
 }
 
-/**
- * Retrieves the overall distribution of card states across the user's entire collection.
- * 
- * A card state defines where it is in the FSRS lifecycle:
- * - `new`: Never reviewed.
- * - `learning`: In the initial learning phase.
- * - `review`: An accumulated mature card.
- * - `relearning`: A card the user previously knew but forgot.
- * 
- * @returns An object with counts for each state category.
- */
+/** Card counts per FSRS state (new, learning, review, relearning). */
 export async function getCardStateDistribution() {
-  const supabase = await createClient()
-  const { data, error } = await supabase.from('cards').select('state')
-  if (error) throw error
-
-  const counts = { new: 0, learning: 0, review: 0, relearning: 0 }
-  for (const card of data) {
-    counts[card.state as keyof typeof counts] = (counts[card.state as keyof typeof counts] ?? 0) + 1
-  }
-  return counts
+  return getCardStateDistributionForUser(await createClient())
 }
 
-/**
- * Retrieves review activity for the current calendar week (Monday-first)
- * and calculates the streak ending today.
- */
+/** Review activity for the current Monday-first week and the streak ending today. */
 export async function getWeeklyActivityStats(timeZone: string) {
-  const supabase = await createClient()
-  const now = new Date()
-  const { todayKey, weekStartKey, weekDateKeys } = getCurrentWeekDateKeys(timeZone, now)
-  const since = getWeeklyQueryStartUtc(weekStartKey)
-  const weekDateKeySet = new Set(weekDateKeys)
-
-  const { data, error } = await supabase
-    .from('reviews')
-    .select('reviewed_at, card_id, rating, state')
-    .gte('reviewed_at', since.toISOString())
-    .order('reviewed_at', { ascending: true })
-  if (error) throw error
-
-  const reviewCountByDay = new Map<string, number>()
-  const masteredCardIdsByDay = new Map<string, Set<string>>()
-
-  for (const review of data) {
-    const key = toDateKeyInTimeZone(new Date(review.reviewed_at), timeZone)
-    if (!weekDateKeySet.has(key)) continue
-
-    reviewCountByDay.set(key, (reviewCountByDay.get(key) ?? 0) + 1)
-
-    if (review.rating >= 3 && review.state === 'review') {
-      const ids = masteredCardIdsByDay.get(key) ?? new Set<string>()
-      ids.add(review.card_id)
-      masteredCardIdsByDay.set(key, ids)
-    }
-  }
-
-  const days: ActivityDaySummary[] = weekDateKeys.map((key) => ({
-    date: key,
-    reviews: reviewCountByDay.get(key) ?? 0,
-    masteredWords: masteredCardIdsByDay.get(key)?.size ?? 0,
-    isToday: key === todayKey,
-    isFuture: key > todayKey,
-  }))
-
-  let streak = 0
-  for (let index = days.findIndex((day) => day.isToday); index >= 0; index--) {
-    if (index < 0) break
-    if (days[index].reviews < 1) break
-    streak++
-  }
-
-  return {
-    days,
-    streak,
-    activeDays: days.filter((day) => day.reviews > 0).length,
-    weekStartKey,
-    todayKey,
-  }
+  return getWeeklyActivityStatsForUser(await createClient(), timeZone)
 }

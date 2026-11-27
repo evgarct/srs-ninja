@@ -8,7 +8,10 @@ import {
   approveDraftNoteForUser,
   deleteDraftNoteForUser,
   resolveDraftConflictForUser,
+  saveDraftNotesForUser,
+  type DraftBatchMetadata,
 } from '@/lib/draft-import-service'
+import type { DraftCandidateInput } from '@/lib/draft-import'
 import {
   applyTagEdit,
   filterManagedNotes,
@@ -21,6 +24,8 @@ import {
   type TagEdit,
 } from '@/lib/note-management'
 import type { Language } from '@/lib/types'
+import type { AudioFilter } from '@/lib/deck-notes'
+import { getAudioMapForNotes } from '@/lib/note-audio-service'
 
 // Shared by the MCP tools. Draft approval, draft deletion and conflict resolution reuse the
 // exact services behind the web drafts screen; field normalization and audio rules reuse the
@@ -69,7 +74,7 @@ export async function listNotesForUser(
   supabase: SupabaseClient,
   userId: string,
   deckId: string,
-  options: NoteListFilters & { status?: NoteStatusFilter; limit?: number; offset?: number } = {}
+  options: NoteListFilters & { status?: NoteStatusFilter; limit?: number; offset?: number; audioFilter?: AudioFilter } = {}
 ) {
   // PostgREST caps a response (1000 rows by default), so read the deck in pages before
   // filtering in memory; otherwise total and offsets would only cover the first page.
@@ -82,16 +87,21 @@ export async function listNotesForUser(
     rows.push(...((data ?? []) as ManagedNoteRow[]))
     if (!data || data.length < LIST_PAGE) break
   }
-  const matching = filterManagedNotes(rows, options)
+  let matching = filterManagedNotes(rows, options)
   const offset = options.offset ?? 0
   const limit = options.limit ?? 50
-  return { total: matching.length, offset, notes: matching.slice(offset, offset + limit).map(toManagedNote) }
+  const audioFilter = options.audioFilter ?? 'all'
+  // Same audio filter as the deck page: needs the audio map for every match, otherwise only the page.
+  const audioMap = await getAudioMapForNotes(supabase, (audioFilter === 'all' ? matching.slice(offset, offset + limit) : matching).map((note) => note.id))
+  if (audioFilter !== 'all') matching = matching.filter((note) => Boolean(audioMap[note.id]) === (audioFilter === 'with_audio'))
+  return { total: matching.length, offset, notes: matching.slice(offset, offset + limit).map((note) => toManagedNote(note, audioMap[note.id])) }
 }
 
 export async function getNoteForUser(supabase: SupabaseClient, userId: string, noteId: string) {
   const note = (await getOwnedNotesByIds(supabase, userId, [noteId])).get(noteId)
   if (!note) throw new Error('Note not found')
-  return toManagedNote(note)
+  const audioMap = await getAudioMapForNotes(supabase, [noteId])
+  return toManagedNote(note, audioMap[noteId])
 }
 
 export async function updateNotesForUser(supabase: SupabaseClient, userId: string, items: NoteUpdateInput[]): Promise<ItemResult[]> {
@@ -169,6 +179,24 @@ export async function approveDraftsForUser(supabase: SupabaseClient, userId: str
     catch (error) { results.push({ noteId, ok: false, error: errorMessage(error) }) }
   }
   return { results }
+}
+
+/**
+ * Creates published notes: saves them as a draft batch (same validation, duplicate skip and
+ * similar-note detection as save_draft_notes), then approves that batch like Approve in Echo.
+ * Drafts with an open similar-note conflict stay drafts and are reported.
+ */
+export async function createNotesForUser(
+  supabase: SupabaseClient,
+  userId: string,
+  deckId: string,
+  items: DraftCandidateInput[],
+  metadata: DraftBatchMetadata = {}
+) {
+  const saved = await saveDraftNotesForUser(supabase, userId, deckId, items, metadata)
+  if (!saved.batchId) return { ...saved, approvedNoteIds: [] as string[], leftAsDraftNoteIds: [] as string[] }
+  const approved = await approveDraftBatchForUser(supabase, userId, saved.batchId)
+  return { ...saved, approvedNoteIds: approved.approvedNoteIds, leftAsDraftNoteIds: approved.skippedNoteIds }
 }
 
 export async function resolveDraftConflictsForUser(

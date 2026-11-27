@@ -17,6 +17,26 @@ Requirements: [specs/SRS_NINJA_MCP_CARD_MANAGEMENT.md](../specs/SRS_NINJA_MCP_CA
 
 `confirm` is `z.literal(true)`, so the SDK rejects a call without it before the handler runs.
 
+### Web feature parity (server 0.5.0)
+
+Every web action now has an MCP tool backed by the same function:
+
+| Web feature | Shared function | MCP tool |
+| --- | --- | --- |
+| Add note (published) | `saveDraftNotesForUser` + `approveDraftBatchForUser` via `createNotesForUser` | `create_notes` |
+| Deck "Generate audio" (`/api/tts/batch`) | `generateDeckAudioForUser` (`note-audio-service.ts`) | `generate_note_audio` (`force`, `limit`, `remaining`) |
+| Audio column / filter on the deck page | `getAudioMapForNotes` | `list_notes` / `get_note` (`hasAudio`, `audioUrl`, `audioFilter`) |
+| ElevenLabs settings (read) | `getElevenLabsSettingsForUser` (`server/elevenlabs-settings.ts`) | `get_audio_settings` (never returns the key) |
+| New deck | `createDeckForUser` (`deck-service.ts`) | `create_deck` |
+| Home dashboard | `getDashboardStatsForUser` | `get_dashboard` |
+| Stats page | `study-stats-service.ts` (today, card states, week + streak, history) | `get_study_stats` |
+| Manual study / extra study | `getManualStudyCardsForUser` (tags, states, audio), `getExtraStudyCardsForUser`, `getExtraStudyCardsByKind` | `get_review_session` modes `tag` / `extra` |
+| Session done | `markReviewSessionCompletedForUser` | `complete_review_session` |
+
+The web server actions (`actions/decks.ts`, `actions/stats.ts`, `actions/elevenlabs.ts`), `/api/tts/batch` and `/api/mobile/decks/[deckId]/complete` were moved onto these functions, so web, Android and MCP share one implementation. Not exposed on purpose: connecting or disconnecting an ElevenLabs key and choosing voices (secrets stay in the settings page), Anki file import (needs a file upload), locale and sign-in.
+
+`src/lib/mcp-server.test.ts` asserts that `get_echo_guide` describes exactly the registered tools, so a new tool cannot ship undocumented.
+
 ## Layers
 
 - `src/lib/note-management.ts` holds the pure logic: `applyTagEdit` (setTags first, then add/remove, case-insensitive), `prepareNoteUpdate` (merge the field patch, normalize with `normalizeNoteFields`, validate the raw merged fields with `validateDraftCandidate`, and keep only issues in patched fields or a missing primary word so legacy notes stay editable), `noteMatchesQuery` (NFD + diacritic strip), `filterManagedNotes` and `toManagedNote` (memory state from `getNoteFsrsState`, like the deck page).

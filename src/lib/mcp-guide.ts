@@ -70,7 +70,7 @@ export function buildDeckContract(deck: McpDeck) {
 
 export function buildEchoGuide(deck?: McpDeck) {
   return {
-    safety: 'MCP can read and edit your Echo notes and drafts, approve drafts, delete notes, and review cards. Approve or delete only when the user asked; deletion needs confirm: true and approved-note deletion also removes review history.',
+    safety: 'MCP can create decks, read, create, edit, voice, approve and delete your Echo notes and drafts, review cards, and read statistics. Approve or delete when the user (or their standing instructions) asks; deletion needs confirm: true and approved-note deletion also removes review history. ElevenLabs keys and voices are set only in Echo settings.',
     workflow: [
       'Call list_decks when the requested deck is not obvious.',
       'Use language to select a unique deck; otherwise add its exact name or deckId.',
@@ -80,7 +80,8 @@ export function buildEchoGuide(deck?: McpDeck) {
     managementWorkflow: [
       'Find notes with list_notes (approved, draft or all; filter by tags, states or text) or list_draft_notes / list_draft_batches.',
       'Edit fields or tags with update_notes (per note) or edit_note_tags (many notes, or a whole batch by batchId).',
-      'Publish drafts with approve_drafts; resolve open similar-note conflicts first with resolve_draft_conflict.',
+      'Publish drafts with approve_drafts (or create published notes directly with create_notes); resolve open similar-note conflicts first with resolve_draft_conflict.',
+      'Voice notes with generate_note_audio (check get_audio_settings if it fails); call again while remaining > 0.',
       'Delete with delete_notes or delete_draft_batch, always with confirm: true after the user asked.',
     ],
     tools: {
@@ -98,13 +99,21 @@ export function buildEchoGuide(deck?: McpDeck) {
       resolve_draft_conflict: 'Keeps both, ignores, or applies a draft to the similar existing note.',
       delete_notes: 'Deletes notes (confirm: true); approved notes lose their cards and review history.',
       delete_draft_batch: 'Deletes a draft-only batch (confirm: true).',
-      get_review_session: 'Loads due cards (or cards by tag) for a spoken review, with question, answer and accepted variants.',
+      create_notes: 'Creates notes that are study cards right away (saved and approved in one step).',
+      generate_note_audio: 'Voices notes without audio (or force-regenerates) with the user\'s ElevenLabs voice; repeat while remaining > 0.',
+      get_audio_settings: 'Shows whether ElevenLabs is connected and which voice each language uses.',
+      create_deck: 'Creates a deck with a study and a translation language.',
+      get_dashboard: 'Home screen numbers per deck: due, total, drafts, done today.',
+      get_study_stats: 'Statistics page: today, card states, weekly activity and streak, daily reviews.',
+      complete_review_session: 'Marks today\'s session for a deck as done after the last card.',
+      get_review_session: 'Loads due cards, manual-study cards (tags, states, audio) or extra-study cards for a spoken review, with question, answer and accepted variants.',
       submit_review: 'Grades one card (again/hard/good/easy) and updates the spaced-repetition schedule like the app.',
     },
     reviewWorkflow: [
       'Call get_review_session with a deck selector (mode due, or mode tag with tags).',
       'Read each question, check the spoken answer against acceptedAnswers ignoring diacritics, and judge by sound.',
       'Call submit_review immediately after each card.',
+      'Call complete_review_session after the last card so the deck shows as done today.',
     ],
     selectorExamples: [
       { language: 'turkish' },

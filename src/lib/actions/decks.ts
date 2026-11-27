@@ -1,11 +1,9 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { revalidatePath } from 'next/cache'
 import type { Deck, Language, TranslationLanguage } from '@/lib/types'
-import { assertValidLanguagePair } from '@/lib/deck-languages'
 import { getDashboardStatsForUser } from '@/lib/dashboard-stats'
-import { isMissingCompletionTableError } from '@/lib/review-session-completions'
+import { createDeckForUser, markReviewSessionCompletedForUser } from '@/lib/deck-service'
 import { getDeckById } from '@/lib/server/deck'
 
 /**
@@ -101,20 +99,11 @@ export async function createDeck(
   language: Language,
   translationLanguage: TranslationLanguage
 ) {
-  assertValidLanguagePair(language, translationLanguage)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { data, error } = await supabase
-    .from('decks')
-    .insert({ name, language, translation_language: translationLanguage, user_id: user.id })
-    .select()
-    .single()
-  if (error) throw error
-
-  revalidatePath('/')
-  return data
+  return createDeckForUser(supabase, user.id, { name, language, translationLanguage })
 }
 
 export async function markReviewSessionCompleted(
@@ -125,15 +114,5 @@ export async function markReviewSessionCompleted(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Not authenticated')
 
-  const { error } = await supabase
-    .from('review_session_completions')
-    .insert({
-      deck_id: deckId,
-      user_id: user.id,
-      session_type: sessionType,
-    })
-
-  if (error && !isMissingCompletionTableError(error)) throw error
-
-  revalidatePath('/')
+  await markReviewSessionCompletedForUser(supabase, user.id, deckId, sessionType)
 }
